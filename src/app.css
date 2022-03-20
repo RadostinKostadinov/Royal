@@ -1,0 +1,328 @@
+* {
+	box-sizing: border-box;
+}
+
+body {
+	padding: 0px;
+	margin: 0px;
+}
+
+#container {
+	/* MAIN CONTAINER FOR RENDERING  */
+	width: 100vw;
+	height: 100vh;
+}
+
+/* TABLE CONTROLS */
+
+#tableControls {
+	display: grid;
+	grid-template-columns: 1fr 0.2fr 1fr;
+	grid-template-rows: 1fr 0.2fr repeat(2, 0.3fr) 0.2fr 0.5fr;
+	gap: 0px 0px;
+	grid-auto-flow: row;
+	grid-template-areas:
+		"categories addons products"
+		"categories addons products"
+		"categories addons products"
+		"addedProducts total products"
+		"addedProducts controls xButtons"
+		"addedProducts controls bills";
+	width: 100%;
+	height: 100%;
+	border-bottom: 1px solid black;
+	border-right: 1px solid black;
+}
+
+#tableControls > div {
+	border-top: 1px solid black;
+	border-left: 1px solid black;
+}
+
+#tableControls .categories {
+	grid-area: categories;
+}
+
+#tableControls .addedProducts {
+	grid-area: addedProducts;
+}
+
+#tableControls .addons {
+	grid-area: addons;
+}
+
+#tableControls .total {
+	grid-area: total;
+}
+
+#tableControls .controls {
+	grid-area: controls;
+	display: flex;
+	flex-direction: column;
+	justify-content: space-around;
+	padding: 0px 0.3rem;
+}
+
+#tableControls .xButtons {
+	grid-area: xButtons;
+	display: flex;
+	padding: 0.3rem 0px;
+	justify-content: space-around;
+}
+
+#tableControls .products {
+	grid-area: products;
+}
+
+#tableControls .bills {
+	grid-area: bills;
+}
+
+/* #tablesView containts inside, outside buttons AND the tables grid */
+#tablesView {
+	display: flex;
+	flex-direction: column;
+	row-gap: 20px;
+	width: 100%;
+	height: 100%;
+}
+
+#tablesView .outsideInsideButtonsDiv {
+	display: flex;
+	justify-content: space-between;
+}
+
+/* .tablesGrid is the default container for all tables grids */
+.tablesGrid {
+	height: 100%;
+}
+
+.tablesGrid * {
+	/* make all elements take their full grid spaces */
+	width: 100%;
+	height: 100%;
+}
+
+.tablesGrid .table {
+	background-color: transparent;
+	display: flex;
+	border: 3px solid black;
+	justify-content: center; /* center text inside table */
+	align-items: center;
+	font-size: 1.5rem;
+}
+
+.tablesGrid .table:active {
+	background-color: #0d6efd;
+	color: white;
+}
+
+.tablesGrid .bar {
+	display: flex;
+	border: 3px solid black;
+	justify-content: center; /* center text inside table */
+	align-items: center;
+	font-size: 1.5rem;
+}
+
+/* Change the colors for the Z tables (koito sa vutre v zalata) */
+.tablesGrid .tablez1,
+.tablesGrid .tablez2 {
+	border-color: red;
+}
+
+/* CSS FOR MIDDLE TABLES */
+#middleTables {
+	display: grid;
+	grid-template-columns: repeat(6, 1fr);
+	grid-template-rows: repeat(3, 1fr);
+	gap: 50px 10px;
+	grid-auto-flow: row;
+}
+
+.table1 {
+	grid-area: 1 / 1 / 2 / 2;
+}
+
+.table2 {
+	grid-area: 1 / 2 / 2 / 3;
+}
+
+.table3 {
+	grid-area: 1 / 3 / 2 / 4;
+}
+
+.table4 {
+	grid-area: 1 / 4 / 2 / 5;
+}
+
+.table5 {
+	grid-area: 1 / 5 / 2 / 6;
+}
+
+.table6 {
+	grid-area: 2 / 1 / 3 / 2;
+}
+
+.table7 {
+	grid-area: 2 / 2 / 3 / 3;
+}
+
+.table8 {
+	grid-area: 2 / 3 / 3 / 4;
+}
+
+.table9 {
+	grid-area: 2 / 4 / 3 / 5;
+}
+
+.table10 {
+	grid-area: 2 / 5 / 3 / 6;
+}
+
+.table11 {
+	grid-area: 2 / 6 / 3 / 7;
+}
+
+.table12 {
+	grid-area: 3 / 1 / 4 / 2;
+}
+
+.table13 {
+	grid-area: 3 / 2 / 4 / 3;
+}
+
+.table14 {
+	grid-area: 3 / 3 / 4 / 4;
+}
+
+.table15 {
+	grid-area: 3 / 4 / 4 / 5;
+}
+
+.table16 {
+	grid-area: 3 / 5 / 4 / 6;
+}
+
+/* CSS FOR INSIDE TABLES */
+#insideTables {
+	display: grid;
+	grid-template-columns: repeat(5, 1fr);
+	grid-template-rows: repeat(3, 1fr);
+	gap: 50px 10px;
+	grid-auto-flow: row;
+}
+
+.bar {
+	grid-area: 1 / 1 / 2 / 2;
+}
+
+.tablev1 {
+	grid-area: 3 / 2 / 4 / 3;
+}
+
+.tablev2 {
+	grid-area: 3 / 3 / 4 / 4;
+}
+
+.tablevbar {
+	grid-area: 3 / 4 / 4 / 5;
+}
+
+.tablev4 {
+	grid-area: 3 / 5 / 4 / 6;
+}
+
+.tablev5 {
+	grid-area: 2 / 2 / 3 / 3;
+}
+
+.tablev6 {
+	grid-area: 2 / 3 / 3 / 4;
+}
+
+.tablev7 {
+	grid-area: 2 / 4 / 3 / 5;
+}
+
+.tablev8 {
+	grid-area: 2 / 5 / 3 / 6;
+}
+
+.tablev9 {
+	grid-area: 1 / 3 / 2 / 4;
+}
+
+.tablev10 {
+	grid-area: 1 / 4 / 2 / 5;
+}
+
+.tablev11 {
+	grid-area: 1 / 5 / 2 / 6;
+}
+
+.tablez1 {
+	grid-area: 2 / 1 / 3 / 2;
+}
+
+.tablez2 {
+	grid-area: 3 / 1 / 4 / 2;
+}
+
+/* CSS FOR OUTSIDE TABLES */
+#outsideTables {
+	display: grid;
+	grid-template-columns: repeat(2, 1fr);
+	grid-template-rows: repeat(2, 1fr);
+	gap: 50px 50px;
+	grid-auto-flow: row;
+}
+
+.tablen2 {
+	grid-area: 1 / 2 / 2 / 3;
+}
+
+.tablen1 {
+	grid-area: 1 / 1 / 2 / 2;
+}
+
+.tablen3 {
+	grid-area: 2 / 1 / 3 / 2;
+}
+
+.tablen4 {
+	grid-area: 2 / 2 / 3 / 3;
+}
+
+/* PIN CODE NUMPAD */
+
+#numpad-wrapper #code {
+	display: flex;
+	justify-content: center;
+}
+
+#numpad-wrapper #code {
+	font-size: 5rem;
+}
+
+#numpad-wrapper #numpad {
+	display: grid;
+	gap: 2rem;
+	grid-template-columns: 1fr 1fr 1fr;
+}
+
+#numpad-wrapper #numpad button {
+	font-size: 5rem;
+}
+
+#numpad-wrapper #numpad button:last-of-type {
+	grid-column: 2/3;
+}
+
+.wrong-pin {
+	color: red !important;
+}
+
+.cursor-pointer {
+	cursor: pointer;
+}

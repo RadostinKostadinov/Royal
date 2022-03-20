@@ -1,0 +1,29 @@
+{
+	"name": "Royal App",
+	"version": "1.0.0",
+	"dependencies": {
+		"axios": "^0.26.1",
+		"jquery": "^3.6.0",
+		"lit": "^2.2.0",
+		"page": "^1.11.6",
+		"sortablejs": "^1.14.0"
+	},
+	"scripts": {
+		"3. Build DEV": "webpack --config webpack.dev.config.js --mode=development",
+		"Build LIVE": "webpack --config webpack.prod.config.js --mode=production",
+		"Start Emulators": "firebase emulators:start",
+		"Deploy DEV": "firebase hosting:channel:deploy dev",
+		"Deploy LIVE": "firebase deploy"
+	},
+	"devDependencies": {
+		"compression-webpack-plugin": "^9.2.0",
+		"css-loader": "^6.7.1",
+		"javascript-obfuscator": "^4.0.0",
+		"mini-css-extract-plugin": "^2.6.0",
+		"sass-loader": "^12.6.0",
+		"style-loader": "^3.3.1",
+		"webpack": "^5.70.0",
+		"webpack-cli": "^4.9.2",
+		"webpack-obfuscator": "^3.5.1"
+	}
+}
