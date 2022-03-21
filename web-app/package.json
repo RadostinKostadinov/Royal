@@ -9,11 +9,8 @@
 		"sortablejs": "^1.14.0"
 	},
 	"scripts": {
-		"3. Build DEV": "webpack --config webpack.dev.config.js --mode=development",
-		"Build LIVE": "webpack --config webpack.prod.config.js --mode=production",
-		"Start Emulators": "firebase emulators:start",
-		"Deploy DEV": "firebase hosting:channel:deploy dev",
-		"Deploy LIVE": "firebase deploy"
+		"Build DEV": "webpack --config webpack.dev.config.js --mode=development",
+		"Build LIVE": "webpack --config webpack.prod.config.js --mode=production"
 	},
 	"devDependencies": {
 		"compression-webpack-plugin": "^9.2.0",

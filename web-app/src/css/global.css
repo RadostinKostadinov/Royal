@@ -1,0 +1,66 @@
+/* Import fonts*/
+@import url("./fonts/Montserrat/Montserrat.css");
+
+/* --name: #hex; FIGMA NAME */
+:root {
+	--bg-dark: #0c0c1d; /* Dark - background */
+	--bg-menu: #19192c; /* Background Sidemenu */
+	--table-taken: #9d5066; /* Маса - заета */
+	--table-free: #00c892; /* Маса - свободна */
+	--bg-btn: rgba(255, 255, 255, 0.2); /* Background button */
+	--bg-btn-active: rgba(
+		0,
+		103,
+		210,
+		0.2
+	); /* Background for active (selected) button */
+	--border-btn-active: #0067d2; /* Border color for active button */
+	--color-sidemenu: #ffffff; /* Sidemenu text */
+}
+
+* {
+	box-sizing: border-box;
+}
+
+body {
+	padding: 0px;
+	margin: 0px;
+	width: 100vw;
+	height: 100vh;
+	font-family: "Montserrat", sans-serif;
+	font-weight: 400;
+	background-color: var(--bg-dark);
+	color: white;
+}
+
+/* PIN CODE NUMPAD */
+#numpad-wrapper #code {
+	display: flex;
+	justify-content: center;
+}
+
+#numpad-wrapper #code {
+	font-size: 5rem;
+}
+
+#numpad-wrapper #numpad {
+	display: grid;
+	gap: 2rem;
+	grid-template-columns: 1fr 1fr 1fr;
+}
+
+#numpad-wrapper #numpad button {
+	font-size: 5rem;
+}
+
+#numpad-wrapper #numpad button:last-of-type {
+	grid-column: 2/3;
+}
+
+.wrong-pin {
+	color: red !important;
+}
+
+.cursor-pointer {
+	cursor: pointer;
+}

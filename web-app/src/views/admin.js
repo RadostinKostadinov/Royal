@@ -1,9 +1,10 @@
 import page from 'page';
-import { container } from "../app";
+import { container, auth } from "../app";
 import { html, render } from 'lit/html.js';
 import $ from "jquery";
 import Sortable from 'sortablejs';
-import { sortCategories, getProductById, getCategoryById, getAllUsers, editCategory, deleteCategory, deleteUser, createUser, editUser, createCategory, changeQtyProduct, createProduct, deleteProduct, editProduct, getAllCategories, getAllProducts } from '../api';
+import { sortCategories, getProductById, getCategoryById, getAllUsers, editCategory, deleteCategory, deleteUser, createUser, editUser, createCategory, changeQtyProduct, createProduct, deleteProduct, editProduct, getAllCategories, getAllProducts, sortProducts, logout } from '../api';
+
 const backBtn = html`<button @click=${()=> page('/admin')} class="btn btn-secondary fs-3 mt-2 ms-2">Назад</button>`;
 
 async function loadProducts(e) {
@@ -392,6 +393,79 @@ export async function editProductPage() {
     render(productFields(), container);
 }
 
+export async function sortProductsPage() {
+    const categories = await getAllCategories();
+    async function saveOrder() {
+        const sortedProducts = sortable.toArray(); // returns array with the 'data-id' attr for sorted categories
+
+        if (sortedProducts === null) return;
+
+        const res = await sortProducts(sortedProducts);
+
+        if (res.status === 200) {// Successfully sorted products
+            alert(res.data);
+            page('/');
+        } else if (res.status === 400) {
+            alert(res.data);
+        } else {
+            alert('Възникна грешка!');
+            console.error(res);
+        }
+    }
+
+    async function getProducts(e) {
+        const _id = e.target.value; // get selected category id
+
+        if (_id === null || _id === 'Избери')
+            return alert('Избери категория!');
+
+        const res = await getCategoryById(_id);
+        const category = res.data;
+
+        
+        
+        render(productsTemplate(category.products), document.getElementById('products'));// render all products in sorting div
+    }
+
+    const productsTemplate = (products) => html`
+        ${products.map((product) => html`<li class="list-group-item cursor-pointer" data-id=${product._id}>${product.name}</li>
+        `)}
+    `;
+
+    const reorderDiv = () => html`
+        ${backBtn}
+
+        <div class="mb-3">
+            <label for="categoryId" class="form-label">1. Избери категория</label>
+            <select @change=${getProducts} required type="text" class="form-control fs-4" name="categoryId" id="categoryId">
+                <option selected disabled>Избери</option>
+                ${categories.map((category) => {
+                    if (category.hasOwnProperty('parent')) // if it has a parent, it means its a subcategory (child)
+                        return html`<option value=${category._id}>    ${category.name}</option>`
+
+                    return html`<option value=${category._id}>${category.name}</option>`
+                })}
+            </select>
+        </div>
+
+        <div id="listAndBtn" class="p-3 fs-3 text-center">
+            <ul id="products" style="width: 80%" class="list-group fs-4 text-center mt-4">
+                
+            </ul>
+            <button @click=${saveOrder} class="btn btn-primary mt-3 w-100 fs-3">Запази</button>
+        </div>
+    `;
+
+    render(reorderDiv(), container);
+    // Activate the sorting http://sortablejs.github.io/Sortable/#simple-list
+    var list = document.getElementById('products');
+    var sortable = new Sortable(list, {
+        animation: 150,
+        ghostClass: "active",  // Class name for the drop placeholder
+        chosenClass: "list-group-item-action",  // Class name for the chosen item
+    })
+}
+
 export function createEmployeePage() {
     async function getDataFromForm(e) {
         e.preventDefault();
@@ -589,7 +663,7 @@ export async function createCategoryPage() {
         // Get data from form
         const formData = new FormData(e.target);
         const name = formData.get('name');
-        
+
         const res = await createCategory(name);
 
         if (res.status === 200) {// Successfully created category
@@ -711,9 +785,8 @@ export async function sortCategoriesPage() {
     const categories = await getAllCategories();
     async function saveOrder() {
         const sortedCategories = sortable.toArray(); // returns array with the 'data-id' attr for sorted categories
-        
-        if (sortedCategories === null)
-            return alert('Избери категория!');
+
+        if (sortedCategories === null) return;
 
         const res = await sortCategories(sortedCategories);
 
@@ -730,10 +803,11 @@ export async function sortCategoriesPage() {
 
     const reorderDiv = () => html`
         ${backBtn}
-
+        
         <div id="listAndBtn" class="p-3 fs-3 text-center">
             <ul id="categories" style="width: 80%" class="list-group fs-4 text-center mt-4">
-                ${categories.map((category) => html`<li class="list-group-item cursor-pointer" data-id=${category._id}>${category.name}</li>`)}
+                ${categories.map((category) => html`<li class="list-group-item cursor-pointer" data-id=${category._id}>
+                    ${category.name}</li>`)}
             </ul>
             <button @click=${saveOrder} class="btn btn-primary mt-3 w-100 fs-3">Запази</button>
         </div>
@@ -845,37 +919,41 @@ export async function inventoryPage() {
 
 export function showAdminDashboard() {
     const dashboard = () => html`
-        <div class="text-center mt-4">
-            <h1>Стока</h1>
-            <div class="d-inline-flex flex-row flex-wrap gap-3 justify-content-center">
-                <button @click=${() => page('/admin/product/addQty') } class="btn btn-primary fs-4">Зареди</button>
-                <button @click=${() => page('/admin/product/removeQty')} class="btn btn-danger fs-4">Бракувай</button>
+        <div class="p-3">
+            <div class="text-center mt-4">
+                <h1>Стока</h1>
                 <div class="d-inline-flex flex-row flex-wrap gap-3 justify-content-center">
-                    <button @click=${() => page('/admin/product/create') } class="btn btn-success fs-4">Създай</button>
-                    <button @click=${() => page('/admin/product/delete') } class="btn btn-danger fs-4">Изтрий</button>
-                    <button @click=${() => page('/admin/product/edit') } class="btn btn-secondary fs-4">Редактирай</button>
-                    <button @click=${() => page('/admin/inventory') } class="btn btn-secondary fs-4">Склад</button>
+                    <button @click=${() => page('/admin/product/addQty') } class="btn btn-primary fs-4">Зареди</button>
+                    <button @click=${() => page('/admin/product/removeQty')} class="btn btn-danger fs-4">Бракувай</button>
+                    <div class="d-inline-flex flex-row flex-wrap gap-3 justify-content-center">
+                        <button @click=${() => page('/admin/product/create') } class="btn btn-success fs-4">Създай</button>
+                        <button @click=${() => page('/admin/product/delete') } class="btn btn-danger fs-4">Изтрий</button>
+                        <button @click=${() => page('/admin/product/edit') } class="btn btn-secondary fs-4">Редактирай</button>
+                        <button @click=${() => page('/admin/product/reorder') } class="btn btn-secondary fs-4">Подреди</button>
+                        <button @click=${() => page('/admin/inventory') } class="btn btn-secondary fs-4">Склад</button>
+                    </div>
                 </div>
             </div>
-        </div>
-        <div class="text-center mt-4">
-            <h1>Категории</h1>
-            <div class="d-inline-flex flex-row flex-wrap gap-3 justify-content-center">
-                <button @click=${() => page('/admin/category/create')} class="btn btn-success fs-4">Създай</button>
-                <button @click=${() => page('/admin/category/delete') } class="btn btn-danger fs-4">Изтрий</button>
-                <button @click=${() => page('/admin/category/edit') } class="btn btn-secondary fs-4">Редактирай</button>
-                <button @click=${() => page('/admin/category/reorder') } class="btn btn-secondary fs-4">Подреди</button>
+            <div class="text-center mt-4">
+                <h1>Категории</h1>
+                <div class="d-inline-flex flex-row flex-wrap gap-3 justify-content-center">
+                    <button @click=${() => page('/admin/category/create')} class="btn btn-success fs-4">Създай</button>
+                    <button @click=${() => page('/admin/category/delete') } class="btn btn-danger fs-4">Изтрий</button>
+                    <button @click=${() => page('/admin/category/edit') } class="btn btn-secondary fs-4">Редактирай</button>
+                    <button @click=${() => page('/admin/category/reorder') } class="btn btn-secondary fs-4">Подреди</button>
+                </div>
             </div>
-        </div>
-        <div class="text-center mt-4">
-            <h1>Служители</h1>
-            <div class="d-inline-flex flex-row flex-wrap gap-3 justify-content-center">
-                <button @click=${() => page('/admin/employee/create') } class="btn btn-success fs-4">Създай</button>
-                <button @click=${() => page('/admin/employee/delete') } class="btn btn-danger fs-4">Изтрий</button>
-                <button @click=${() => page('/admin/employee/edit') } class="btn btn-secondary fs-4">Редактирай</button>
+            <div class="text-center mt-4">
+                <h1>Служители</h1>
+                <div class="d-inline-flex flex-row flex-wrap gap-3 justify-content-center">
+                    <button @click=${() => page('/admin/employee/create') } class="btn btn-success fs-4">Създай</button>
+                    <button @click=${() => page('/admin/employee/delete') } class="btn btn-danger fs-4">Изтрий</button>
+                    <button @click=${() => page('/admin/employee/edit') } class="btn btn-secondary fs-4">Редактирай</button>
+                </div>
             </div>
+            <button @click=${logout} class="btn btn-danger fs-4 float-end">Изход</button>
         </div>
-        `;
+    `;
 
     render(dashboard(), container);
 } 

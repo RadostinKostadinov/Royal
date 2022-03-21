@@ -4,7 +4,7 @@
 	"main": "app.js",
 	"type": "module",
 	"scripts": {
-		"2. Start Node": "nodemon app.js"
+		"Start Node": "nodemon app.js"
 	},
 	"author": "",
 	"license": "ISC",

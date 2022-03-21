@@ -1,53 +1,45 @@
 import page from 'page';
 import $ from 'jquery';
-import './app.css'
+import './css/global.css'
 import { html, render } from 'lit/html.js';
-import { getAllProducts, getAllCategories, getAllParentCategories, getAllUsers, login, user } from './api';
-import { showAdminDashboard, createCategoryPage, deleteCategoryPage, editCategoryPage, sortCategoriesPage, createEmployeePage, deleteEmployeePage, editEmployeePage, addQtyProductPage, createProductPage, deleteProductPage, editProductPage, removeQtyProductPage, inventoryPage } from './views/admin';
-import { showTableControls, showWaiterDashboard } from './views/waiter';
+import { getAllUsers, login, user } from './api';
+import { showAdminDashboard, createCategoryPage, deleteCategoryPage, editCategoryPage, sortCategoriesPage, createEmployeePage, deleteEmployeePage, editEmployeePage, addQtyProductPage, createProductPage, deleteProductPage, editProductPage, removeQtyProductPage, inventoryPage, sortProductsPage } from './views/admin';
+import { tableControlsPage, waiterDashboardPage } from './views/waiter.js';
 
-export const container = document.getElementById('container'); // where to render everything
-let runPage = true;
+export const container = document.querySelector('body'); // where to render everything
 
-// TODO Constantly listen and update the products variable
-initialize();
-async function initialize() {
-    // Run page.js here so it can wait for the products to load for the first time
-    if (runPage == true) {
-        page('/', checkIfUserLoggedIn);
+page('/', checkIfUserLoggedIn);
 
-        // Waiter pages
-        page('/waiter', auth, showWaiterDashboard)
-        page('/waiter/table/:_id', auth, showTableControls)
+// Waiter pages
+page('/waiter', auth, waiterDashboardPage);
+page('/waiter/table/:_id', auth, tableControlsPage);
 
-        // Admin pages
-        page('/admin', auth, showAdminDashboard);
-        page('/admin/inventory', auth, inventoryPage);
-        page('/admin/product/removeQty', auth, removeQtyProductPage);
-        page('/admin/product/addQty', auth, addQtyProductPage);
-        page('/admin/product/create', auth, createProductPage);
-        page('/admin/product/delete', auth, deleteProductPage);
-        page('/admin/product/edit', auth, editProductPage);
-        page('/admin/category/create', auth, createCategoryPage);
-        page('/admin/category/delete', auth, deleteCategoryPage);
-        page('/admin/category/edit', auth, editCategoryPage);
-        page('/admin/category/reorder', auth, sortCategoriesPage);
-        page('/admin/employee/create', auth, createEmployeePage);
-        page('/admin/employee/delete', auth, deleteEmployeePage);
-        page('/admin/employee/edit', auth, editEmployeePage);
-        page();
-        runPage = false;
-    }
-}
+// Admin pages
+page('/admin', auth, showAdminDashboard);
+page('/admin/inventory', auth, inventoryPage);
+page('/admin/product/removeQty', auth, removeQtyProductPage);
+page('/admin/product/addQty', auth, addQtyProductPage);
+page('/admin/product/create', auth, createProductPage);
+page('/admin/product/delete', auth, deleteProductPage);
+page('/admin/product/edit', auth, editProductPage);
+page('/admin/product/reorder', auth, sortProductsPage);
+page('/admin/category/create', auth, createCategoryPage);
+page('/admin/category/delete', auth, deleteCategoryPage);
+page('/admin/category/edit', auth, editCategoryPage);
+page('/admin/category/reorder', auth, sortCategoriesPage);
+page('/admin/employee/create', auth, createEmployeePage);
+page('/admin/employee/delete', auth, deleteEmployeePage);
+page('/admin/employee/edit', auth, editEmployeePage);
+page();
 
 async function checkIfUserLoggedIn() {
     if (user) {
         if (user.role === 'admin') {
             page('/admin');
         } else if (user.role === 'waiter') {
-            page('/waiter')
+            page('/waiter');
         } else if (user.role === 'bartender') {
-            page('/bartender')
+            page('/bartender');
         }
     } else {
         let selectedUser,

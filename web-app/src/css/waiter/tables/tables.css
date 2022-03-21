@@ -1,0 +1,41 @@
+.tablesGrid {
+	background-color: var(--bg-dark);
+	width: 100%;
+	height: 100%;
+	padding: 1% 0% 1% 1.5%;
+}
+
+.tablesGrid .table {
+	background-color: var(--table-free);
+}
+
+.tablesGrid .table.taken {
+	color: white;
+	background-color: var(--table-taken);
+}
+
+.tablesGrid .table .name {
+	font-size: 1.2rem;
+	position: absolute;
+	top: 5px;
+	left: 0;
+	right: 0;
+}
+
+.tablesGrid .table .total {
+	font-size: 1.5rem;
+}
+
+.tablesGrid button {
+	position: relative;
+	margin: 0px;
+	padding: 0px;
+	font-weight: 600;
+
+	border: none;
+	color: black;
+}
+
+.tablesGrid button > span {
+	border: none !important; /* Bootstrap sets a border because the tables button has a .table class */
+}

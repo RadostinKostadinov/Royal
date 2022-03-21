@@ -1,20 +1,12 @@
 import axios from 'axios';
+import page from 'page';
 
-export let userToken;
 export let user = JSON.parse(sessionStorage.getItem('user'));
 // Set base url so you dont type ${url} in every request
 axios.defaults.baseURL = 'http://localhost:80';
 // Set the token in headers
 if (user)
     axios.defaults.headers.common['authorization'] = user.token;
-
-export async function sortCategories(categories) {
-    return await axios.post('/sortCategories', {
-        categories
-    }).catch((err) => {
-        return err.response;
-    });
-}
 
 export async function changeQtyProduct(_id, qty, action) {
     return await axios.post('/changeQtyProduct', {
@@ -61,6 +53,14 @@ export async function editProduct(_id, name, qty, buyPrice, sellPrice, categoryI
     });
 }
 
+export async function sortProducts(products) {
+    return await axios.post('/sortProducts', {
+        products
+    }).catch((err) => {
+        return err.response;
+    });
+}
+
 export async function getCategoryById(_id) {
     return await axios.post('/getCategoryById', {
         _id
@@ -75,6 +75,11 @@ export async function getProductById(_id) {
     }).catch((err) => {
         return err.response;
     });
+}
+
+export async function getAllTables() {
+    const res = await axios.get('/getAllTables');
+    return res.data;
 }
 
 export async function getAllProducts() {
@@ -171,9 +176,25 @@ export async function editCategory(_id, name) {
     });
 }
 
+export async function sortCategories(categories) {
+    return await axios.post('/sortCategories', {
+        categories
+    }).catch((err) => {
+        return err.response;
+    });
+}
 
+export async function generateBills(_id, numberOfBills) {
+    return await axios.post('/generateBills', {
+        _id,
+        numberOfBills
+    }).catch((err) => {
+        return err.response;
+    });
+}
 
-
-
-
-
+export function logout() {
+    user = undefined;
+    sessionStorage.clear();
+    page('/');
+}

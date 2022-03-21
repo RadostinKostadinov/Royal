@@ -1,12 +1,385 @@
 import { User } from '../model/user.js';
 import { Category } from '../model/category.js';
 import { Product } from '../model/product.js';
+import { Bill } from '../model/bill.js';
 import { verifyToken as auth } from '../middleware/auth.js';
 
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
+import { Table } from '../model/table.js';
 
 function routesConfig(app) {
+
+    //TODO DELETE THIS DEFAULTS WHEN FINALIZING APP
+    async function createDefaultUsers() {
+        const hashPin = await bcrypt.hash("1234", 10);
+        const users = [
+            {
+                name: "Анатоли",
+                pin: hashPin,
+                role: "admin"
+            },
+            {
+                name: "Димитър",
+                pin: hashPin,
+                role: "waiter"
+            },
+            {
+                name: "Ивелин",
+                pin: hashPin,
+                role: "bartender"
+            }
+        ]
+
+        // await User.deleteMany();
+        await User.insertMany(users);
+
+        console.log('Created default users with pin: 1234');
+    }
+
+    async function createDefaultTables() {
+        const middleTables = [
+            {
+                type: 'table',
+                number: '1',
+                name: 'Маса 1',
+                location: 'middle',
+            },
+            {
+                type: 'table',
+                number: '2',
+                name: 'Маса 2',
+                location: 'middle',
+            },
+            {
+                type: 'table',
+                number: '3',
+                name: 'Маса 3',
+                location: 'middle',
+            },
+            {
+                type: 'table',
+                number: '4',
+                name: 'Маса 4',
+                location: 'middle',
+            },
+            {
+                type: 'table',
+                number: '5',
+                name: 'Маса 5',
+                location: 'middle',
+            },
+            {
+                type: 'table',
+                number: '6',
+                name: 'Маса 6',
+                location: 'middle',
+            },
+            {
+                type: 'table',
+                number: '7',
+                name: 'Маса 7',
+                location: 'middle',
+            },
+            {
+                type: 'table',
+                number: '8',
+                name: 'Маса 8',
+                location: 'middle',
+            },
+            {
+                type: 'table',
+                number: '9',
+                name: 'Маса 9',
+                location: 'middle',
+            },
+            {
+                type: 'table',
+                number: '10',
+                name: 'Маса 10',
+                location: 'middle',
+            },
+            {
+                type: 'table',
+                number: '11',
+                name: 'Маса 11',
+                location: 'middle',
+            },
+            {
+                type: 'table',
+                number: '12',
+                name: 'Маса 12',
+                location: 'middle',
+            },
+            {
+                type: 'table',
+                number: '13',
+                name: 'Маса 13',
+                location: 'middle',
+            },
+            {
+                type: 'table',
+                number: '14',
+                name: 'Маса 14',
+                location: 'middle',
+            },
+            {
+                type: 'table',
+                number: '15',
+                name: 'Маса 15',
+                location: 'middle',
+            },
+            {
+                type: 'table',
+                number: '16',
+                name: 'Маса 16',
+                location: 'middle',
+            },
+        ];
+
+        const insideTables = [
+            {
+                type: 'bar',
+                name: 'Бар',
+                location: 'inside'
+            },
+            {
+                type: 'bar',
+                name: 'Бар2',
+                location: 'inside'
+            },
+            {
+                type: 'table',
+                number: 'v1',
+                name: 'Маса В1',
+                location: 'inside',
+            },
+            {
+                type: 'table',
+                number: 'v2',
+                name: 'Маса В2',
+                location: 'inside',
+            },
+            {
+                type: 'table',
+                number: 'vbar',
+                name: 'Маса Бар',
+                location: 'inside',
+            },
+            {
+                type: 'table',
+                number: 'v4',
+                name: 'Маса В4',
+                location: 'inside',
+            },
+            {
+                type: 'table',
+                number: 'v5',
+                name: 'Маса В5',
+                location: 'inside',
+            },
+            {
+                type: 'table',
+                number: 'v6',
+                name: 'Маса В6',
+                location: 'inside',
+            },
+            {
+                type: 'table',
+                number: 'v7',
+                name: 'Маса В7',
+                location: 'inside',
+            },
+            {
+                type: 'table',
+                number: 'v8',
+                name: 'Маса В8',
+                location: 'inside',
+            },
+            {
+                type: 'table',
+                number: 'v9',
+                name: 'Маса В9',
+                location: 'inside',
+            },
+            {
+                type: 'table',
+                number: 'v10',
+                name: 'Маса В10',
+                location: 'inside',
+            },
+            {
+                type: 'table',
+                number: 'v11',
+                name: 'Маса В11',
+                location: 'inside',
+            },
+            {
+                type: 'table',
+                number: 'z1',
+                name: 'Маса Z1',
+                location: 'inside',
+            },
+            {
+                type: 'table',
+                number: 'z2',
+                name: 'Маса Z2',
+                location: 'inside',
+            },
+        ]
+
+        const outsideTables = [
+            {
+                type: 'table',
+                number: 'n1',
+                name: 'Маса Н1',
+                location: 'outside',
+            },
+            {
+                type: 'table',
+                number: 'n2',
+                name: 'Маса Н2',
+                location: 'outside',
+            },
+            {
+                type: 'table',
+                number: 'n3',
+                name: 'Маса Н3',
+                location: 'outside',
+            },
+            {
+                type: 'table',
+                number: 'n4',
+                name: 'Маса Н4',
+                location: 'outside',
+            },
+        ]
+
+        await Table.deleteMany();
+        await Table.insertMany(middleTables);
+        await Table.insertMany(insideTables);
+        await Table.insertMany(outsideTables);
+
+        console.log('Created default tables');
+    }
+
+    async function createDefaultCategories() {
+        const categories = [
+            {
+                name: 'Безалкохолни',
+                order: 1,
+            },
+            {
+                name: 'Топли напитки',
+                order: 2,
+            },
+            {
+                name: 'Кафе',
+                order: 3,
+            },
+            {
+                name: 'Летни напитки',
+                order: 4,
+            },
+            {
+                name: 'Български алкохол',
+                order: 5,
+            },
+            {
+                name: 'Водка внос',
+                order: 6,
+            },
+            {
+                name: 'Уиски внос',
+                order: 7,
+            },
+            {
+                name: 'Алкохол внош',
+                order: 8,
+            },
+            {
+                name: 'Бира',
+                order: 9,
+            },
+            {
+                name: 'Ядки',
+                order: 10,
+            },
+            {
+                name: 'Торти',
+                order: 11,
+            },
+            {
+                name: 'Други',
+                order: 12,
+            },
+        ]
+
+        await Category.deleteMany();
+        await Category.insertMany(categories);
+
+        console.log('Created default categories');
+    }
+
+    function sortByOrder(a, b) {
+        if (a.order < b.order)
+            return -1
+        if (a.order > b.order)
+            return 1;
+        return 0;
+    }
+
+    app.get('/getAllTables', auth, async (req, res) => {
+        const middleTables = await Table.find({ location: 'middle' });
+        const insideTables = await Table.find({ location: 'inside' });
+        const outsideTables = await Table.find({ location: 'outside' });
+
+        return res.json({ middleTables, insideTables, outsideTables });
+    });
+
+    app.post('/generateBills', auth, async (req, res) => {
+        // Check if user is waiter
+        if (req.user.role !== 'waiter')
+            return res.status(401).send('Нямате админски достъп!')
+
+        // Get selected table id
+        const { _id, numberOfBills } = req.body;
+
+        if (!(_id && numberOfBills))
+            return res.status(400).send('Трябва _id на маса и брой на сметки!');
+
+        if (typeof numberOfBills !== 'number')
+            return res.status(400).send('Брой на сметки трябва да е число!');
+
+        if (numberOfBills < 0)
+            return res.status(400).send('Брой на сметки трябва да е по-голямо от 0!');
+
+        // Check if table exists
+        const table = await Table.findById({ _id });
+
+        if (!table)
+            return res.status(400).send('Масата не съществува!');
+
+        // Check if bills were ALREADY initialized
+        if (table.bills.length > 0)
+            return res.status(200).json(table.bills); // return bills IDS only
+
+        // Create bills in database
+        let emptyArray = [];
+        for (let i = 0; i < numberOfBills; i++)
+            emptyArray.push({}); // generate empty objects
+
+        const bills = await Bill.create(emptyArray);
+
+        // Add reference of bills to table's "bills" array
+        for (let bill of bills)
+            table.bills.push(bill._id);
+        table.save(); // Save (because we are editing)
+
+        // Done
+        res.status(201).json(table.bills);
+    });
+
     app.post('/login', async (req, res) => {
         try {
             // Get user input
@@ -85,7 +458,7 @@ function routesConfig(app) {
             console.error(error);
             res.status(500).send('Възникна грешка!');
         }
-    })
+    });
 
     app.post('/createProduct', auth, async (req, res) => {
         try {
@@ -257,6 +630,29 @@ function routesConfig(app) {
         }
     });
 
+    app.post('/sortProducts', auth, async (req, res) => {
+        try {
+            // Check if user is admin
+            if (req.user.role !== 'admin')
+                return res.status(401).send('Нямате админски достъп!')
+
+            // Get array of products in new order
+            const products = req.body.products;
+
+            for (let i = 0; i < products.length; i++) {
+                // i will be the order number
+                // i+1 because 'order' always starts at 1 (if 0 it doesnt show 'order' and breaks code)
+                // products[i] is the products _id
+                await Product.findByIdAndUpdate(products[i], { order: i + 1 });
+            }
+
+            res.send('Успешна подредба!');
+        } catch (error) {
+            console.error(error);
+            res.status(500).send('Възникна грешка!');
+        }
+    });
+
     app.post('/createUser', auth, async (req, res) => {
         try {
             // Check if user is admin
@@ -385,7 +781,7 @@ function routesConfig(app) {
             console.error(error);
             res.status(500).send('Възникна грешка!');
         }
-    })
+    });
 
     app.get('/getAllCategories', auth, async (req, res) => {
         try {
@@ -396,14 +792,6 @@ function routesConfig(app) {
             res.status(500).send('Възникна грешка!');
         }
     });
-
-    function sortByOrder(a, b) {
-        if (a.order < b.order)
-            return -1
-        if (a.order > b.order)
-            return 1;
-        return 0;
-    }
 
     app.post('/createCategory', auth, async (req, res) => {
         try {
@@ -502,15 +890,15 @@ function routesConfig(app) {
             // Create category in database
             const category = await Category.findById({ _id }).populate(['products']);
 
-            if (category.hasOwnProperty('products') && category.products.length > 0)
-                category.products.sort(sortByOrder);
+            if (category.products !== undefined)
+                category.products.sort(sortByOrder); // sort products by order property
 
             res.json(category);
         } catch (error) {
             console.error(error);
             res.status(500).send('Възникна грешка!');
         }
-    })
+    });
 
     app.post('/getProductById', auth, async (req, res) => {
         try {
@@ -527,7 +915,7 @@ function routesConfig(app) {
             console.error(error);
             res.status(500).send('Възникна грешка!');
         }
-    })
+    });
 }
 
 export { routesConfig };

@@ -1,0 +1,79 @@
+#middleTables {
+	/* https://grid.layoutit.com/?id=f1eVamO */
+	display: grid;
+	grid-template-columns: 133fr 89fr 39fr 187fr 73fr 117fr 99fr 91fr 122fr 40fr 25fr 155fr;
+	grid-template-rows: 47fr 133fr 60fr 180fr 60fr 180fr;
+	gap: 0px 3px;
+	grid-auto-flow: row;
+	grid-template-areas:
+		"table1 table1 . table2 table2 table3 table3 table4 table4 . . ."
+		"table1 table1 . table2 table2 table3 table3 table4 table4 . table5 table5"
+		". . . . . . . . . . . ."
+		"table6 table7 . table8 table9 table9 table10 table10 table11 table11 table11 ."
+		". . . . . . . . . . . ."
+		"table12 table12 . table13 table14 table14 table15 table15 table16 table16 table16 .";
+}
+
+.table1 {
+	grid-area: table1;
+}
+
+.table6 {
+	grid-area: table6;
+}
+
+.table7 {
+	grid-area: table7;
+}
+
+.table12 {
+	grid-area: table12;
+}
+
+.table13 {
+	grid-area: table13;
+}
+
+.table8 {
+	grid-area: table8;
+}
+
+.table2 {
+	grid-area: table2;
+}
+
+.table9 {
+	grid-area: table9;
+}
+
+.table10 {
+	grid-area: table10;
+}
+
+.table11 {
+	grid-area: table11;
+}
+
+.table14 {
+	grid-area: table14;
+}
+
+.table15 {
+	grid-area: table15;
+}
+
+.table16 {
+	grid-area: table16;
+}
+
+.table3 {
+	grid-area: table3;
+}
+
+.table4 {
+	grid-area: table4;
+}
+
+.table5 {
+	grid-area: table5;
+}
