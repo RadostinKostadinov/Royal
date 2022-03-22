@@ -6,7 +6,7 @@ import '../css/waiter/tableControls.css';
 import { container } from "../app";
 import { html, render } from 'lit/html.js';
 import $ from "jquery";
-import { generateBills, getAllCategories, getAllTables, getCategoryById, logout } from '../api';
+import { addProductToBill, generateBills, getAllCategories, getAllTables, getCategoryById, logout, getProductsInBill } from '../api';
 const backBtn = html`<button @click=${()=> page('/waiter')} class="btn btn-secondary fs-3 mt-2 ms-2">Назад</button>`;
 
 // Dashboard contains all the code for rendering the tables view (grid with tables)
@@ -97,17 +97,21 @@ export async function tableControlsPage(ctx) {
     const categories = await getAllCategories(); // Get all categories to display
 
     let selectedBillId, // by default the first one is selected, so its never undefiend
-        selectedX; // can be 2,3... (number) or undefined (no X selected)
+        selectedX = 1; // can be 2,3... (number) or undefined (no X selected)
     
-    async function addProductToBill(e) {
-        //TODO
+    async function addToBill(e) {
         const _id = $(e.target).attr('_id');
 
-        // use selectedX AND selectedBillId here also
-        
-        console.log(_id);
-    }
+        const res = await addProductToBill(_id, selectedX, selectedBillId);
 
+        if (res.status === 200) {
+            //TODO
+            console.log('ok')// get bill and render all products inside it
+        } else {
+            console.error(res);
+            alert('Възникна грешка');
+        }
+    }
 
     // Loads all products from category to display
     async function loadProductsFromCategory(e) {
@@ -136,19 +140,20 @@ export async function tableControlsPage(ctx) {
         if (res.status === 200) {
             const category = res.data;
 
-            //FIXME DELETE NEXT LINE
+            //FIXME DELETE NEXT 3 LINE
             for (let i = 0; i < 15; i++) {
                 category.products.push(category.products[i]);
             }
             
-            render(productsTemplate(category.products), document.querySelector('#tableControls .products'))
+            if (category.products.length > 0)
+                render(productsTemplate(category.products), document.querySelector('#tableControls .products'))
         } else {
             alert('Възникна грешка!')
             console.error(res);
         }
     }
 
-    function changeSelectedX(e) {
+    function changeSelectedBill(e) {
         const selectedBillEl = $(e.target);
         selectedBillId = selectedBillEl.attr('_id'); // set new bill as selected
 
@@ -157,6 +162,8 @@ export async function tableControlsPage(ctx) {
 
         // add active class to new bill
         selectedBillEl.addClass('active');
+
+        //TODO get all products in bill and display them in .addedProducts
     }
 
     function changeSelectedX(e) {
@@ -167,6 +174,7 @@ export async function tableControlsPage(ctx) {
         if (selectedX === newX) {
             selectedX = undefined;
             selectedXEl.removeClass('active');
+            selectedX = 1;
         } else {
             selectedX = newX; // set new X as selected
     
@@ -186,22 +194,63 @@ export async function tableControlsPage(ctx) {
         if (res.status === 201 || res.status === 200) {
             // 201 == created, 200 == already created (no problem)
             const bills = res.data;
-            selectedBillId = bills[0]._id;// set first bill as selected automatically
-
+            selectedBillId = bills[0]; // set first bill as selected automatically
+            await showProductsInBill();// load its products
+            
             render(billsTemplate(bills), document.querySelector('#tableControls .bills'));
         } else {
             console.error(res);
-            alert('Възникна грешка!')
+            alert('Възникна грешка!');
         }
     }
 
+    async function showProductsInBill() {
+        const _id = selectedBillId;
+
+        // Get products in bill
+        const res = await getProductsInBill(_id);
+
+        if (res.status === 200) {
+            const bill = res.data;
+            
+            render(productsInBill(bill.products), document.querySelector('#tableControls .addedProducts'));
+        } else {
+            console.error(res);
+            alert('Възникна грешка!');
+        }
+    }
+
+    const productsInBill = (productsInBill) => html`
+        <table>
+            <thead>
+                <tr>
+                    <th>Артикул</th>
+                    <th>Количество</th>
+                    <th>Ед. цена</th>
+                    <th>Сума</th>
+                </tr>
+            </thead>
+            <tbody>
+                ${productsInBill.map((productInBill) => {
+                    return html`
+                    <tr>
+                        <td>${productInBill.product.name}</td>
+                        <td>${productInBill.billQty}</td>
+                        <td>${productInBill.product.sellPrice}</td>
+                        <td>${(productInBill.product.sellPrice * productInBill.billQty).toFixed(2)}</td>
+                    </tr>`
+                })}
+            </tbody>
+        </table>
+    `;
+
     const productsTemplate = (products) => html`
-        ${products.map((product) => html`<button @click=${addProductToBill} _id=${product._id}>${product.name}</button>`)}
+        ${products.map((product) => html`<button @click=${addToBill} _id=${product._id}>${product.name}</button>`)}
     `;
 
     // i==0 (if first bill, mark it as "active")
     const billsTemplate = (bills) => html`
-        ${bills.map((_id, i) => html`<button @click=${changeSelectedX} class=${i === 0 ? 'active' : ''} _id=${_id}>${i+1}</button>`) }
+        ${bills.map((_id, i) => html`<button @click=${changeSelectedBill} class=${i === 0 ? 'active' : ''} _id=${_id}>${i+1}</button>`) }
     `;
 
     const controlsTemplate = () => html`
@@ -220,18 +269,19 @@ export async function tableControlsPage(ctx) {
                     <button @click=${changeSelectedX}>6</button>
                 </div>
             </div>
-            <div class="bills ">
+            <div class="bills">
             </div>
-            <div class="controlsAndAddons">
+            <div class="controlsAndAddons d-flex flex-column justify-content-between">
                 <div class="addons">
                     Addons will be shown here.
                     (example: milk for coffee, honey etc)
                 </div>
-                <div class="controls">
-                    <button class="btn btn-danger">Бракувай</button>
-                    <button class="btn btn-secondary">Извади</button>
-                    <button class="btn btn-success">Приключи</button>
-                    <button class="btn btn-primary">Назад</button>
+                <div class="controls d-flex flex-column justify-content-evenly">
+                    <button>Брак</button>
+                    <button>Извади</button>
+                    <button>Приключи с принт</button>
+                    <button>Приключи</button>
+                    <button @click=${() => page('/waiter')}>Назад</button>
                 </div>
             </div>
             <div class="addedProducts">

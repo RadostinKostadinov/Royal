@@ -8,6 +8,25 @@ axios.defaults.baseURL = 'http://localhost:80';
 if (user)
     axios.defaults.headers.common['authorization'] = user.token;
 
+export async function addProductToBill(_id, selectedX, selectedBillId) {
+    //TODO
+    return await axios.post('/addProductToBill', {
+        _id, // product _id
+        selectedX, // 1,2,3,4,5 (how many qty of this product)
+        selectedBillId
+    }).catch((err) => {
+        return err.response;
+    });
+}
+
+export async function getProductsInBill(_id) {
+    return await axios.post('/getProductsInBill', {
+        _id, // bill _id
+    }).catch((err) => {
+        return err.response;
+    });
+}
+
 export async function changeQtyProduct(_id, qty, action) {
     return await axios.post('/changeQtyProduct', {
         _id,

@@ -3,8 +3,8 @@
 	--border-btn: #0067d2;
 	--border-btn-active: #e4582e;
 	--color-btn-active: #e4582e;
-	--bg-btn: rgba(0, 103, 210, 0.05);
-	--bg-btn-active: rgba(228, 88, 46, 0.05);
+	--bg-btn-categories: rgba(0, 103, 210, 0.05);
+	--bg-btn-categories-active: rgba(228, 88, 46, 0.05);
 	--border-btn-x: #00c892;
 	--bg-btn-x: rgba(0, 200, 146, 0.05);
 	--bg-btn-bills: rgba(255, 255, 255, 0.05);
@@ -26,7 +26,7 @@
 }
 
 #tableControls .categories button {
-	background-color: var(--bg-btn);
+	background-color: var(--bg-btn-categories);
 	border: 2px solid var(--border-btn);
 	color: white;
 	border-radius: 40px;
@@ -37,7 +37,7 @@
 #tableControls .categories button.active {
 	color: var(--color-btn-active);
 	border-color: var(--border-btn-active);
-	background-color: var(--bg-btn-active);
+	background-color: var(--bg-btn-categories-active);
 }
 
 #tableControls .categories {
@@ -59,7 +59,7 @@
 }
 
 #tableControls .products button {
-	background-color: var(--bg-btn);
+	background-color: var(--bg-btn-categories);
 	border: 2px solid var(--border-btn);
 	color: white;
 	border-radius: 40px;
@@ -70,7 +70,7 @@
 #tableControls .products button:active {
 	color: var(--color-btn-active);
 	border-color: var(--border-btn-active);
-	background-color: var(--bg-btn-active);
+	background-color: var(--bg-btn-categories-active);
 }
 
 #tableControls .xButtons button {
@@ -86,7 +86,7 @@
 #tableControls .xButtons button.active {
 	color: var(--color-btn-active);
 	border-color: var(--border-btn-active);
-	background-color: var(--bg-btn-active);
+	background-color: var(--bg-btn-categories-active);
 }
 
 #tableControls .xButtons button:before {
@@ -100,6 +100,27 @@
 #tableControls .controlsAndAddons {
 	grid-area: controlsAndAddons;
 	background-color: var(--bg-menu);
+}
+
+#tableControls .controls {
+	height: 50%;
+	padding: 0rem 1.5rem;
+	/* gap: 1rem; */
+}
+
+#tableControls .controls button {
+	color: var(--color-sidemenu);
+	background-color: var(--bg-btn);
+	border: 1px solid transparent;
+	border-radius: 20px;
+	font-weight: 600;
+	font-size: 1.1rem;
+	padding: 0.5rem 0rem;
+	text-transform: uppercase;
+}
+
+#tableControls .addons {
+	height: 50%;
 }
 
 #tableControls .productsAndXButtons {
@@ -127,5 +148,5 @@
 #tableControls .bills button.active {
 	color: var(--color-btn-active);
 	border-color: var(--border-btn-active);
-	background-color: var(--bg-btn-active);
+	background-color: var(--bg-btn-categories-active);
 }

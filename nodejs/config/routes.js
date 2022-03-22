@@ -31,7 +31,7 @@ function routesConfig(app) {
             }
         ]
 
-        // await User.deleteMany();
+        await User.deleteMany();
         await User.insertMany(users);
 
         console.log('Created default users with pin: 1234');
@@ -321,6 +321,9 @@ function routesConfig(app) {
         console.log('Created default categories');
     }
 
+
+    //createDefaultUsers(); createDefaultTables(); createDefaultCategories();
+
     function sortByOrder(a, b) {
         if (a.order < b.order)
             return -1
@@ -329,7 +332,24 @@ function routesConfig(app) {
         return 0;
     }
 
+    app.post('/getProductsInBill', auth, async (req, res) => {
+        // Check if user is waiter
+        if (req.user.role !== 'waiter')
+            return res.status(401).send('Нямате достъп!');
+
+        const { _id } = req.body;
+
+        // Get bill and populate its products
+        const bill = await Bill.findById(_id).populate('products')
+
+        res.json(bill);
+    });
+
     app.get('/getAllTables', auth, async (req, res) => {
+        // Check if user is waiter
+        if (req.user.role !== 'waiter')
+            return res.status(401).send('Нямате достъп!')
+
         const middleTables = await Table.find({ location: 'middle' });
         const insideTables = await Table.find({ location: 'inside' });
         const outsideTables = await Table.find({ location: 'outside' });
@@ -340,7 +360,7 @@ function routesConfig(app) {
     app.post('/generateBills', auth, async (req, res) => {
         // Check if user is waiter
         if (req.user.role !== 'waiter')
-            return res.status(401).send('Нямате админски достъп!')
+            return res.status(401).send('Нямате достъп!')
 
         // Get selected table id
         const { _id, numberOfBills } = req.body;

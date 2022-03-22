@@ -3,7 +3,12 @@ import mongoose from "mongoose";
 const { Schema } = mongoose;
 
 const billSchema = new Schema({
-    products: [{ type: Schema.Types.ObjectId, ref: 'Product' }],
+    products: [
+        {
+            name: { type: Schema.Types.ObjectId, ref: 'Product' },
+            qtyBill: { type: Number, default: 1 }
+        }
+    ],
     total: { type: Number, default: 0 }
 });
 
