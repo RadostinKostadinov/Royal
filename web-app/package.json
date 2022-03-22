@@ -1,5 +1,5 @@
 {
-	"name": "Royal App",
+	"name": "Royal-App",
 	"version": "1.0.0",
 	"dependencies": {
 		"axios": "^0.26.1",
