@@ -8,12 +8,55 @@ axios.defaults.baseURL = 'http://localhost:80';
 if (user)
     axios.defaults.headers.common['authorization'] = user.token;
 
+export async function editIngredient(_id, name, qty, buyPrice, sellPrice) {
+    return await axios.post('/editIngredient', {
+        _id,
+        name,
+        qty,
+        buyPrice,
+        sellPrice
+    }).catch((err) => {
+        return err.response;
+    });
+}
+
+export async function createIngredient(name, qty, buyPrice, sellPrice) {
+    return await axios.post('/createIngredient', {
+        name,
+        qty,
+        buyPrice,
+        sellPrice
+    }).catch((err) => {
+        return err.response;
+    });
+}
+
+export async function deleteIngredient(_id) {
+    return await axios.post('/deleteIngredient', {
+        _id
+    }).catch((err) => {
+        return err.response;
+    });
+}
+
+export async function getIngredientById(_id) {
+    return await axios.post('/getIngredientById', {
+        _id
+    }).catch((err) => {
+        return err.response;
+    });
+}
+
+export async function getAllIngredients() {
+    const res = await axios.get('/getAllIngredients');
+    return res.data;
+}
+
 export async function addProductToBill(_id, selectedX, selectedBillId) {
-    //TODO
     return await axios.post('/addProductToBill', {
         _id, // product _id
-        selectedX, // 1,2,3,4,5 (how many qty of this product)
-        selectedBillId
+        selectedX, // 1,2,3,4,5 (how many qty of this product to add)
+        selectedBillId // bill _id
     }).catch((err) => {
         return err.response;
     });
@@ -37,10 +80,11 @@ export async function changeQtyProduct(_id, qty, action) {
     });
 }
 
-export async function createProduct(name, qty, buyPrice, sellPrice, categoryId, forBartender) {
+export async function createProduct(name, qty, selectedIngredients, buyPrice, sellPrice, categoryId, forBartender) {
     return await axios.post('/createProduct', {
         name,
         qty,
+        ingredients: selectedIngredients,
         buyPrice,
         sellPrice,
         categoryId,
@@ -58,11 +102,12 @@ export async function deleteProduct(_id) {
     });
 }
 
-export async function editProduct(_id, name, qty, buyPrice, sellPrice, categoryId, forBartender) {
+export async function editProduct(_id, name, qty, selectedIngredients, buyPrice, sellPrice, categoryId, forBartender) {
     return await axios.post('/editProduct', {
         _id,
         name,
         qty,
+        ingredients: selectedIngredients,
         buyPrice,
         sellPrice,
         categoryId,
@@ -107,7 +152,6 @@ export async function getAllProducts() {
 }
 
 export async function getAllCategories() {
-    // Returns ALL CATEGORIES and SUBCATEGORIES (Alcohol, Alcohol -> Beer, etc)
     const res = await axios.get('/getAllCategories');
     return res.data;
 }

@@ -7,6 +7,7 @@ import { verifyToken as auth } from '../middleware/auth.js';
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
 import { Table } from '../model/table.js';
+import { Ingredient } from '../model/ingredient.js';
 
 function routesConfig(app) {
 
@@ -255,6 +256,7 @@ function routesConfig(app) {
             },
         ]
 
+        await Bill.deleteMany();
         await Table.deleteMany();
         await Table.insertMany(middleTables);
         await Table.insertMany(insideTables);
@@ -321,8 +323,120 @@ function routesConfig(app) {
         console.log('Created default categories');
     }
 
+    async function createDefaultIngredients() {
+        const ingredients = [
+            {
+                name: 'Мляко',
+                qty: 1500,
+                buyPrice: 7,
+                sellPrice: 9
+            },
+            {
+                name: 'Кафе',
+                qty: 1000,
+                buyPrice: 5,
+                sellPrice: 6
+            }
+        ];
 
-    //createDefaultUsers(); createDefaultTables(); createDefaultCategories();
+        await Ingredient.deleteMany();
+        await Ingredient.insertMany(ingredients);
+
+        console.log('Created default ingredients');
+    }
+
+    async function createDefaultProducts() {
+        const categories = [
+            {
+                categoryName: 'Безалкохолни',
+                products: [
+                    {
+                        name: "Сок Капи",
+                        qty: 50,
+                        buyPrice: 1,
+                        sellPrice: 1.5
+                    },
+                    {
+                        name: "Минерална вода",
+                        qty: 100,
+                        buyPrice: 0.6,
+                        sellPrice: 1
+                    },
+                    {
+                        name: "Сок Деллос",
+                        qty: 155,
+                        buyPrice: 1.4,
+                        sellPrice: 2
+                    }
+                ]
+            },
+            {
+                categoryName: 'Кафе',
+                products: [
+                    {
+                        name: "Дълго кафе",
+                        buyPrice: 1,
+                        sellPrice: 1.5,
+                        ingredients: [
+                            {
+                                ingredient: "Кафе",
+                                qty: 30
+                            }
+                        ]
+                    },
+                    {
+                        name: "Кафе с мляко",
+                        buyPrice: 1,
+                        sellPrice: 1.5,
+                        ingredients: [
+                            {
+                                ingredient: "Кафе",
+                                qty: 20
+                            },
+                            {
+                                ingredient: "Мляко",
+                                qty: 15
+                            }
+                        ]
+                    },
+                ]
+            }
+        ];
+
+        await Product.deleteMany();
+
+        for (let category of categories) {
+            const cat = await Category.findOne({ name: category.categoryName }); // find category id by name
+
+            for (let product of category.products) {
+                product.category = cat._id; // set category._id in product
+
+                if (product.hasOwnProperty('ingredients')) {
+                    for (let ingredient of product.ingredients) { // if any ingredients
+                        const ing = await Ingredient.findOne({ name: ingredient.ingredient }); // find ingredient id by name
+                        ingredient.ingredient = ing._id;
+                    }
+                }
+
+                const pr = await Product.create(product);
+
+                cat.products.push(pr._id); // add reference to product._id in category
+            }
+            cat.save(); // save references
+        }
+
+        console.log('Created default products');
+    }
+
+    async function createDefaults() {
+        await createDefaultUsers();
+        await createDefaultTables();
+        await createDefaultCategories();
+        await createDefaultIngredients();
+        await createDefaultProducts();
+    }
+    // createDefaults();
+
 
     function sortByOrder(a, b) {
         if (a.order < b.order)
@@ -332,72 +446,285 @@ function routesConfig(app) {
         return 0;
     }
 
+    app.post('/createIngredient', auth, async (req, res) => {
+        try {
+            // Check if user is admin
+            if (req.user.role !== 'admin')
+                return res.status(401).send('Нямате достъп!');
+
+            // Get user input
+            const { name, qty, buyPrice, sellPrice } = req.body;
+
+            // Validate user input
+            if (!(name && qty && buyPrice && sellPrice))
+                return res.status(400).send('Всички полета са задължителни!');
+
+            // Check if prices are okay
+            const pricesRegex = new RegExp(/^\d{1,}(\.\d{1,2})?$/);
+            if (!pricesRegex.test(buyPrice) || !pricesRegex.test(sellPrice))
+                return res.status(400).send('Цената трябва да е: пример 5.0, 3, 1.20!');
+
+            // Check if qty is integer
+            if (qty % 1 !== 0)
+                return res.status(400).send('Бройката трябва да е цяло число (примерно 10, 500)!');
+
+            // Create user in database
+            await Ingredient.create({
+                name,
+                qty,
+                buyPrice,
+                sellPrice
+            });
+
+            // Done
+            res.status(201).send('Успешно създадена съставка!');
+        } catch (err) {
+            console.error(err);
+            res.status(500).send('Възникна грешка!');
+        }
+    });
+
+    app.post('/deleteIngredient', auth, async (req, res) => {
+        try {
+            // Check if user is admin
+            if (req.user.role !== 'admin')
+                return res.status(401).send('Нямате достъп!');
+
+            // Get user input
+            const { _id } = req.body;
+
+            if (!_id)
+                return res.status(400).send('Изберете съставка!');
+
+            // Get references to ingredient
+            const ingredient = await Ingredient.findById(_id);
+            if (!ingredient)
+                return res.status(400).send('Няма съставка с това _id!');
+
+            await ingredient.remove(); // Delete the ingredient
+
+            res.send('Успешно изтрихте тази съставка!');
+        } catch (err) {
+            console.error(err);
+            res.status(500).send('Възникна грешка!');
+        }
+    });
+
+    app.post('/editIngredient', auth, async (req, res) => {
+        try {
+            // Check if user is admin
+            if (req.user.role !== 'admin')
+                return res.status(401).send('Нямате достъп!')
+
+
+            // Get user input
+            const { _id, name, qty, buyPrice, sellPrice } = req.body;
+
+            // Validate user input
+            if (!(_id && name && qty && buyPrice && sellPrice))
+                return res.status(400).send('Всички полета са задължителни!');
+
+            // Check if prices are okay
+            const pricesRegex = new RegExp(/^\d{1,}(\.\d{1,2})?$/);
+            if (!pricesRegex.test(buyPrice) || !pricesRegex.test(sellPrice))
+                return res.status(400).send('Цената трябва да е: пример 5.0, 3, 1.20!');
+
+            // Check if qty is integer
+            if (qty % 1 !== 0)
+                return res.status(400).send('Бройката трябва да е цяло число (примерно 10, 500)!');
+
+            // Get references to ingredient
+            const ingredient = await Ingredient.findById(_id);
+
+            if (!(ingredient))
+                return res.status(400).send('Съставката не съществува!');
+
+            // Update product values
+            ingredient.name = name;
+            ingredient.qty = qty;
+            ingredient.buyPrice = buyPrice;
+            ingredient.sellPrice = sellPrice;
+            ingredient.save();
+
+            // Done
+            res.status(200).send('Успешно променена съставка!');
+        } catch (error) {
+            console.error(error);
+            res.status(500).send('Възникна грешка!');
+        }
+    });
+
+    app.post('/getIngredientById', auth, async (req, res) => {
+        try {
+            const { _id } = req.body
+
+            // Validate user input
+            if (!_id)
+                return res.status(400).send('Избери съставка!');
+
+            const ingredient = await Ingredient.findById(_id);
+
+            res.json(ingredient);
+        } catch (error) {
+            console.error(error);
+            res.status(500).send('Възникна грешка!');
+        }
+    });
+
+    app.get('/getAllIngredients', auth, async (req, res) => {
+        try {
+            const ingredients = await Ingredient.find();
+
+            res.json(ingredients);
+        } catch (err) {
+            console.error(err);
+            res.status(500).send('Възникна грешка!');
+        }
+    });
+
+    app.post('/addProductToBill', auth, async (req, res) => {
+        try {
+            // Check if user is waiter
+            if (req.user.role !== 'waiter')
+                return res.status(401).send('Нямате достъп!');
+
+            const { _id, selectedX, selectedBillId } = req.body;
+
+            // _id == product id
+            // selectedX == qty
+            // selectedBillId == bill _id
+
+            // Validate data
+            if (!(_id && selectedX && selectedBillId))
+                return res.status(400).send('Всички данни са задължителни!');
+
+            // Check if integer
+            if (selectedX % 1 !== 0)
+                return res.status(400).send('Бройката трябва да е цяло число!');
+
+            // Check if product exists
+            const product = await Product.findById(_id);
+
+            if (!product)
+                return res.status(400).send('Продуктът не съществува!');
+
+            // Check if bill exists
+            const bill = await Bill.findById(selectedBillId);
+
+            if (!bill)
+                return res.status(400).send('Сметката не съществува!');
+
+            // Check if this product is already in bill
+            let productIndex;
+
+            console.log(bill.products.length);
+            for (let i = 0; i < bill.products.length; i++) {
+                // console.log(bill.products[i].product.toString(), _id);
+                if (bill.products[i].product.toString() === _id) { // if product _id matches
+                    productIndex = i; // return index of product in bill.products array and break out of for loop
+                    break;
+                }
+            }
+
+            if (productIndex !== undefined) // found the same product, increase qty
+                bill.products[productIndex].qty += selectedX;
+            else // couldn't find the same product, create it
+                bill.products.push({ product: product._id, qty: selectedX }); // Add reference of product and qty (selectedX) to bill
+
+            // Update bill total
+            bill.total = (bill.total + product.sellPrice * selectedX).toFixed(2);
+            bill.save(); // Save (because we are editing)
+
+            await bill.populate('products.product'); // populate products (+ the one we created)
+            // Done
+            res.json(bill); // return populated bill so frontend can re-render all products
+        } catch (err) {
+            console.error(err);
+            res.status(500).send('Възникна грешка!');
+        }
+    });
+
     app.post('/getProductsInBill', auth, async (req, res) => {
-        // Check if user is waiter
-        if (req.user.role !== 'waiter')
-            return res.status(401).send('Нямате достъп!');
+        try {
+            // Check if user is waiter
+            if (req.user.role !== 'waiter')
+                return res.status(401).send('Нямате достъп!');
 
-        const { _id } = req.body;
+            const { _id } = req.body;
 
-        // Get bill and populate its products
-        const bill = await Bill.findById(_id).populate('products')
+            // Get bill and populate its products
+            const bill = await Bill.findById(_id).populate('products.product');
 
-        res.json(bill);
+            res.json(bill);
+        } catch (err) {
+            console.error(err);
+            res.status(500).send('Възникна грешка!');
+        }
     });
 
     app.get('/getAllTables', auth, async (req, res) => {
-        // Check if user is waiter
-        if (req.user.role !== 'waiter')
-            return res.status(401).send('Нямате достъп!')
+        try {
+            // Check if user is waiter
+            if (req.user.role !== 'waiter')
+                return res.status(401).send('Нямате достъп!')
 
-        const middleTables = await Table.find({ location: 'middle' });
-        const insideTables = await Table.find({ location: 'inside' });
-        const outsideTables = await Table.find({ location: 'outside' });
+            const middleTables = await Table.find({ location: 'middle' });
+            const insideTables = await Table.find({ location: 'inside' });
+            const outsideTables = await Table.find({ location: 'outside' });
 
-        return res.json({ middleTables, insideTables, outsideTables });
+            return res.json({ middleTables, insideTables, outsideTables });
+        } catch (err) {
+            console.error(err);
+            res.status(500).send('Възникна грешка!');
+        }
     });
 
     app.post('/generateBills', auth, async (req, res) => {
-        // Check if user is waiter
-        if (req.user.role !== 'waiter')
-            return res.status(401).send('Нямате достъп!')
+        try {
+            // Check if user is waiter
+            if (req.user.role !== 'waiter')
+                return res.status(401).send('Нямате достъп!')
 
-        // Get selected table id
-        const { _id, numberOfBills } = req.body;
+            // Get selected table id
+            const { _id, numberOfBills } = req.body;
 
-        if (!(_id && numberOfBills))
-            return res.status(400).send('Трябва _id на маса и брой на сметки!');
+            if (!(_id && numberOfBills))
+                return res.status(400).send('Трябва _id на маса и брой на сметки!');
 
-        if (typeof numberOfBills !== 'number')
-            return res.status(400).send('Брой на сметки трябва да е число!');
+            if (typeof numberOfBills !== 'number')
+                return res.status(400).send('Брой на сметки трябва да е число!');
 
-        if (numberOfBills < 0)
-            return res.status(400).send('Брой на сметки трябва да е по-голямо от 0!');
+            if (numberOfBills < 0)
+                return res.status(400).send('Брой на сметки трябва да е по-голямо от 0!');
 
-        // Check if table exists
-        const table = await Table.findById({ _id });
+            // Check if table exists
+            const table = await Table.findById({ _id });
 
-        if (!table)
-            return res.status(400).send('Масата не съществува!');
+            if (!table)
+                return res.status(400).send('Масата не съществува!');
 
-        // Check if bills were ALREADY initialized
-        if (table.bills.length > 0)
-            return res.status(200).json(table.bills); // return bills IDS only
+            // Check if bills were ALREADY initialized
+            if (table.bills.length > 0)
+                return res.json(table.bills); // return bills IDS only
 
-        // Create bills in database
-        let emptyArray = [];
-        for (let i = 0; i < numberOfBills; i++)
-            emptyArray.push({}); // generate empty objects
+            // Create bills in database
+            let emptyArray = [];
+            for (let i = 0; i < numberOfBills; i++)
+                emptyArray.push({}); // generate empty objects
 
-        const bills = await Bill.create(emptyArray);
+            const bills = await Bill.create(emptyArray);
 
-        // Add reference of bills to table's "bills" array
-        for (let bill of bills)
-            table.bills.push(bill._id);
-        table.save(); // Save (because we are editing)
+            // Add reference of bills to table's "bills" array
+            for (let bill of bills)
+                table.bills.push(bill._id);
+            table.save(); // Save (because we are editing)
 
-        // Done
-        res.status(201).json(table.bills);
+            // Done
+            res.status(201).json(table.bills);
+        } catch (err) {
+            console.error(err);
+            res.status(500).send('Възникна грешка!');
+        }
     });
 
     app.post('/login', async (req, res) => {
@@ -487,7 +814,7 @@ function routesConfig(app) {
                 return res.status(401).send('Нямате админски достъп!')
 
             // Get user input
-            let { name, qty, buyPrice, sellPrice, categoryId, forBartender } = req.body;
+            let { name, qty, ingredients, buyPrice, sellPrice, categoryId, forBartender } = req.body;
 
             // Sanitize to boolean
             if (forBartender === true || forBartender === 'true')
@@ -498,8 +825,8 @@ function routesConfig(app) {
                 return res.status(400).send('Грешна стойност от checkbox bartender!');
 
 
-            // Validate user input
-            if (!(name && qty && buyPrice && sellPrice && categoryId))
+            // Validate user input depending on what they chose (create product or create product from ingredients)
+            if (!(name && buyPrice && sellPrice && categoryId))
                 return res.status(400).send('Всички полета са задължителни!');
 
             // Check if prices are okay
@@ -507,19 +834,28 @@ function routesConfig(app) {
             if (!pricesRegex.test(buyPrice) || !pricesRegex.test(sellPrice))
                 return res.status(400).send('Цената трябва да е: пример 5.0, 3, 1.20!');
 
-            // Check if qty is integer
-            if (qty % 1 !== 0)
-                return res.status(400).send('Бройката трябва да е цяло число (примерно 10, 500)!');
-
             // Check if category exists
             const category = await Category.findById({ _id: categoryId });
 
             if (!category)
                 return res.status(400).send('Категорията не съществува!');
 
+            if (qty && ingredients) // Impossible, because product from ingredients cant have qty
+                return res.status(400).send('Невъзможно да има количество и съставки едновременно в 1 продукт!');
+
+            if (qty && ((qty % 1) !== 0)) // User chose to create normal product, check if qty is integer
+                return res.status(400).send('Количеството трябва да е цяло число (примерно 10, 500)!');
+
+            if (ingredients && !ingredients.length) // user chose to create product from ingredients
+                return res.status(400).send('Изберете поне една съставка!'); // Check if no ingredients selected
+
+            if (!qty && !ingredients)
+                return res.status(400).send('Избери тип на продукт!');
+
+
             // Create product in database
             const product = await Product.create({
-                name, qty, buyPrice, sellPrice, category, forBartender
+                name, qty, ingredients, buyPrice, sellPrice, category, forBartender
             });
 
             // Add reference of product to category "products" array
@@ -528,7 +864,6 @@ function routesConfig(app) {
 
             // Done
             res.status(201).send('Успешно създаден продукт!');
-
         } catch (error) {
             console.error(error);
             res.status(500).send('Възникна грешка!');
@@ -551,10 +886,13 @@ function routesConfig(app) {
 
             // Get references to product and its category
             const product = await Product.findById(_id);
+            if (!product)
+                return res.status(400).send('Няма продукт с това _id!');
+
             const productCategory = await Category.findById(product.category);
 
             if (!productCategory)
-                res.status(400).send('Няма категория коята да съдържа този продукт!');
+                return res.status(400).send('Няма категория коята да съдържа този продукт!');
 
             // Remove product reference in category
             const index = productCategory.products.indexOf(_id); // Find the product index in the products array
@@ -567,7 +905,6 @@ function routesConfig(app) {
             await product.remove(); // Delete the product
 
             res.send('Успешно изтрихте този продукт!');
-
         } catch (error) {
             console.error(error);
             res.status(500).send('Възникна грешка!');
@@ -581,7 +918,7 @@ function routesConfig(app) {
                 return res.status(401).send('Нямате админски достъп!')
 
             // Get user input
-            let { _id, name, qty, buyPrice, sellPrice, categoryId, forBartender } = req.body;
+            let { _id, name, qty, ingredients, buyPrice, sellPrice, categoryId, forBartender } = req.body;
 
             // Sanitize to boolean
             if (forBartender === true || forBartender === 'true')
@@ -592,8 +929,8 @@ function routesConfig(app) {
                 return res.status(400).send('Грешна стойност от checkbox bartender!');
 
 
-            // Validate user input
-            if (!(name && qty && buyPrice && sellPrice && categoryId))
+            // Validate user input depending on what they chose (create product or create product from ingredients)
+            if (!(name && buyPrice && sellPrice && categoryId))
                 return res.status(400).send('Всички полета са задължителни!');
 
             // Check if prices are okay
@@ -601,9 +938,23 @@ function routesConfig(app) {
             if (!pricesRegex.test(buyPrice) || !pricesRegex.test(sellPrice))
                 return res.status(400).send('Цената трябва да е: пример 5.0, 3, 1.20!');
 
-            // Check if qty is integer
-            if (qty % 1 !== 0)
-                return res.status(400).send('Бройката трябва да е цяло число (примерно 10, 500)!');
+            // Check if category exists
+            const category = await Category.findById({ _id: categoryId });
+
+            if (!category)
+                return res.status(400).send('Категорията не съществува!');
+
+            if (qty && ingredients) // Impossible, because product from ingredients cant have qty
+                return res.status(400).send('Невъзможно да има количество и съставки едновременно в 1 продукт!');
+
+            if (qty && ((qty % 1) !== 0)) // User chose to create normal product, check if qty is integer
+                return res.status(400).send('Количеството трябва да е цяло число (примерно 10, 500)!');
+
+            if (ingredients && !ingredients.length) // user chose to create product from ingredients
+                return res.status(400).send('Изберете поне една съставка!'); // Check if no ingredients selected
+
+            if (!qty && !ingredients)
+                return res.status(400).send('Избери тип на продукт!');
 
             // Get references to product, new category and old category
             const product = await Product.findById(_id);
@@ -616,11 +967,19 @@ function routesConfig(app) {
 
             // Update product values
             product.name = name;
-            product.qty = qty;
             product.buyPrice = buyPrice;
             product.sellPrice = sellPrice;
             product.categoryId = categoryId;
             product.forBartender = forBartender;
+
+            if (qty) { // if simple product, change qty and remove ingredients (there shouldnt be any)
+                product.ingredients = [];
+                product.qty = qty;
+            } else if (ingredients) { // if product from ingredients, delete qty and update ingredients
+                delete product.qty;
+                product.ingredients = ingredients;
+            }
+
 
             // Do this only if the category has changed
             if (oldCategory._id !== newCategory._id) {
@@ -640,7 +999,6 @@ function routesConfig(app) {
                 newCategory.save(); // Save (because we are editing)
             }
             product.save();
-
 
             // Done
             res.status(200).send('Успешно променен продукт!');
@@ -743,7 +1101,7 @@ function routesConfig(app) {
             if (!userId)
                 return res.status(400).send('Избери служител!');
 
-            await User.deleteOne({ _id: userId })
+            await User.findByIdAndDelete(userId);
 
             res.send('Успешно изтрихте този служител!');
 
@@ -762,6 +1120,7 @@ function routesConfig(app) {
             const userId = req.body._id;
             const selectedChange = req.body.selectedChange;
             let newValue = req.body.newValue;
+
             // Validate user input
             if (!(selectedChange && newValue))
                 return res.status(400).send('Избери промяна и стойност!');
@@ -928,7 +1287,7 @@ function routesConfig(app) {
             if (!_id)
                 return res.status(400).send('Избери продукт!');
 
-            const product = await Product.findById({ _id });
+            const product = await Product.findById(_id).populate('ingredients.ingredient');
 
             res.json(product);
         } catch (error) {

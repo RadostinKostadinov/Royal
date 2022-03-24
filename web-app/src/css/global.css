@@ -1,8 +1,8 @@
 /* Import fonts*/
 @import url("./fonts/Montserrat/Montserrat.css");
-
-/* --name: #hex; FIGMA NAME */
 :root {
+	--scroll-width: 16px;
+	--bg-scroll: #19192c;
 	--bg-dark: #0c0c1d; /* Dark - background */
 	--bg-menu: #19192c; /* Background Sidemenu */
 	--table-taken: #9d5066; /* Маса - заета */
@@ -31,6 +31,30 @@ body {
 	font-weight: 400;
 	background-color: var(--bg-dark);
 	color: white;
+}
+
+/* CUSTOM SCROLL */
+/* Firefox */
+* {
+	scrollbar-width: auto;
+	/* scrollbar-color: #0067d2 rgba(255, 255, 255, 0.1); */
+	scrollbar-color: #0067d2 var(--bg-scroll);
+}
+
+/* Chrome, Edge, and Safari */
+*::-webkit-scrollbar {
+	width: var(--scroll-width);
+}
+
+*::-webkit-scrollbar-track {
+	/* background: rgba(255, 255, 255, 0.1); */
+	background: var(--bg-scroll);
+}
+
+*::-webkit-scrollbar-thumb {
+	background-color: #0067d2;
+	border-radius: 0px;
+	border: 0px;
 }
 
 /* PIN CODE NUMPAD */

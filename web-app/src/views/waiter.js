@@ -105,12 +105,17 @@ export async function tableControlsPage(ctx) {
         const res = await addProductToBill(_id, selectedX, selectedBillId);
 
         if (res.status === 200) {
-            //TODO
-            console.log('ok')// get bill and render all products inside it
+            const bill = res.data; // get bill and render all products inside it
+
+            console.log(bill);
+            renderProductsInBill(bill);
         } else {
             console.error(res);
             alert('Възникна грешка');
         }
+
+        // set X back to 1, so you dont have to click it to reset it
+        changeSelectedX(1);
     }
 
     // Loads all products from category to display
@@ -141,9 +146,9 @@ export async function tableControlsPage(ctx) {
             const category = res.data;
 
             //FIXME DELETE NEXT 3 LINE
-            for (let i = 0; i < 15; i++) {
+            /* for (let i = 0; i < 15; i++) {
                 category.products.push(category.products[i]);
-            }
+            } */
             
             if (category.products.length > 0)
                 render(productsTemplate(category.products), document.querySelector('#tableControls .products'))
@@ -153,7 +158,7 @@ export async function tableControlsPage(ctx) {
         }
     }
 
-    function changeSelectedBill(e) {
+    async function changeSelectedBill(e) {
         const selectedBillEl = $(e.target);
         selectedBillId = selectedBillEl.attr('_id'); // set new bill as selected
 
@@ -163,10 +168,14 @@ export async function tableControlsPage(ctx) {
         // add active class to new bill
         selectedBillEl.addClass('active');
 
-        //TODO get all products in bill and display them in .addedProducts
+        renderProductsInBill();
     }
 
     function changeSelectedX(e) {
+        if (e === 1) { // if coming from addToBill reset
+            selectedX = 1;
+            return $('#tableControls .xButtons button.active').removeClass('active'); // remove active class from old X
+        }
         const selectedXEl = $(e.target);
         const newX = +selectedXEl.text()
 
@@ -195,7 +204,7 @@ export async function tableControlsPage(ctx) {
             // 201 == created, 200 == already created (no problem)
             const bills = res.data;
             selectedBillId = bills[0]; // set first bill as selected automatically
-            await showProductsInBill();// load its products
+            await renderProductsInBill();// load its products
             
             render(billsTemplate(bills), document.querySelector('#tableControls .bills'));
         } else {
@@ -204,7 +213,11 @@ export async function tableControlsPage(ctx) {
         }
     }
 
-    async function showProductsInBill() {
+    async function renderProductsInBill(bill) {
+        if (bill) // if coming from addToBill (we already have the bill returned via json)
+            return render(productsInBill(bill), document.querySelector('#tableControls .addedProducts'));
+
+        // else we changedSelectedBill and dont have anything
         const _id = selectedBillId;
 
         // Get products in bill
@@ -212,35 +225,42 @@ export async function tableControlsPage(ctx) {
 
         if (res.status === 200) {
             const bill = res.data;
-            
-            render(productsInBill(bill.products), document.querySelector('#tableControls .addedProducts'));
+
+            render(productsInBill(bill), document.querySelector('#tableControls .addedProducts'));
         } else {
             console.error(res);
             alert('Възникна грешка!');
         }
     }
 
-    const productsInBill = (productsInBill) => html`
-        <table>
+    const productsInBill = (bill) => html`
+        <table class="text-center">
             <thead>
                 <tr>
-                    <th>Артикул</th>
-                    <th>Количество</th>
-                    <th>Ед. цена</th>
-                    <th>Сума</th>
+                    <th width="40%">Артикул</th>
+                    <th width="20%">Количество</th>
+                    <th width="20%">Ед. цена</th>
+                    <th width="20%">Сума</th>
                 </tr>
             </thead>
             <tbody>
-                ${productsInBill.map((productInBill) => {
+                ${bill.products.map((product) => {
                     return html`
                     <tr>
-                        <td>${productInBill.product.name}</td>
-                        <td>${productInBill.billQty}</td>
-                        <td>${productInBill.product.sellPrice}</td>
-                        <td>${(productInBill.product.sellPrice * productInBill.billQty).toFixed(2)}</td>
+                        <td width="40%">${product.product.name}</td>
+                        <td width="20%">${product.qty}</td>
+                        <td width="20%">${product.product.sellPrice.toFixed(2)}</td>
+                        <td width="20%">${(product.product.sellPrice * product.qty).toFixed(2)}</td>
                     </tr>`
                 })}
             </tbody>
+            <tfoot class="text-uppercase">
+                <tr>
+                    <th width="60%" colspan="2"></th>
+                    <th width="20%">Сметка</th>
+                    <th width="20%">${bill.total.toFixed(2)}</th>
+                </tr>
+            </tfoot>
         </table>
     `;
 
@@ -258,7 +278,7 @@ export async function tableControlsPage(ctx) {
             <div class="categories">
                 ${categories.map((category) => html`<button @click=${loadProductsFromCategory} class=${category.order === 1 ? 'active' : ''} _id=${category._id}>${category.name}</button>`)}
             </div>
-            <div class="productsAndXButtons d-flex flex-column">
+            <div class="productsAndXButtons d-flex flex-column justify-content-between">
                 <div class="products">
                 </div>
                 <div class="xButtons d-flex justify-content-center gap-4">
@@ -269,8 +289,7 @@ export async function tableControlsPage(ctx) {
                     <button @click=${changeSelectedX}>6</button>
                 </div>
             </div>
-            <div class="bills">
-            </div>
+            <div class="bills"></div>
             <div class="controlsAndAddons d-flex flex-column justify-content-between">
                 <div class="addons">
                     Addons will be shown here.
@@ -285,6 +304,7 @@ export async function tableControlsPage(ctx) {
                 </div>
             </div>
             <div class="addedProducts">
+                
             </div>
         </div>
     `;
