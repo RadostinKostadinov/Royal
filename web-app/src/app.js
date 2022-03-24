@@ -4,7 +4,7 @@ import './css/global.css'
 import { html, render } from 'lit/html.js';
 import { getAllUsers, login, user } from './api';
 import { showAdminDashboard, createCategoryPage, deleteCategoryPage, editCategoryPage, sortCategoriesPage, createEmployeePage, deleteEmployeePage, editEmployeePage, addQtyProductPage, createProductPage, deleteProductPage, editProductPage, removeQtyProductPage, inventoryPage, sortProductsPage } from './views/admin';
-import { tableControlsPage, waiterDashboardPage } from './views/waiter.js';
+import { payPartOfBillPage, tableControlsPage, waiterDashboardPage } from './views/waiter.js';
 
 export const container = document.querySelector('body'); // where to render everything
 
@@ -12,7 +12,8 @@ page('/', checkIfUserLoggedIn);
 
 // Waiter pages
 page('/waiter', auth, waiterDashboardPage);
-page('/waiter/table/:_id', auth, tableControlsPage);
+page('/waiter/table/:tableId', auth, tableControlsPage);
+page('/waiter/table/:tableId/bill/:billId', auth, payPartOfBillPage);
 
 // Admin pages
 page('/admin', auth, showAdminDashboard);

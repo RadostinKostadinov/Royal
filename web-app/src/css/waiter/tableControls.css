@@ -1,17 +1,5 @@
 #tableControls {
 	/* Assign colors to vars */
-	--border-btn: #0067d2;
-	--border-btn-active: #e4582e;
-	--color-btn-active: #e4582e;
-	--bg-btn-categories: rgba(0, 103, 210, 0.05);
-	--bg-btn-categories-active: rgba(228, 88, 46, 0.05);
-	--border-btn-x: #00c892;
-	--bg-btn-x: rgba(0, 200, 146, 0.05);
-	--bg-btn-bills: rgba(255, 255, 255, 0.05);
-	--border-btn-bills: #000000;
-	--color-btn-bills: #000000;
-	--border-table: #19192c;
-
 	/* https://grid.layoutit.com/?id=o4EsZ1R */
 	display: grid;
 	grid-template-columns: 660fr 150fr 530fr;
@@ -28,7 +16,7 @@
 
 #tableControls .categories button {
 	background-color: var(--bg-btn-categories);
-	border: 2px solid var(--border-btn);
+	border: 2px solid var(--border-btn-categories);
 	color: white;
 	border-radius: 40px;
 	font-weight: 600;
@@ -36,8 +24,8 @@
 }
 
 #tableControls .categories button.active {
-	color: var(--color-btn-active);
-	border-color: var(--border-btn-active);
+	color: var(--color-btn-bill-active);
+	border-color: var(--border-btn-bill-active);
 	background-color: var(--bg-btn-categories-active);
 }
 
@@ -62,7 +50,7 @@
 
 #tableControls .products button {
 	background-color: var(--bg-btn-categories);
-	border: 2px solid var(--border-btn);
+	border: 2px solid var(--border-btn-categories);
 	color: white;
 	border-radius: 40px;
 	font-weight: 600;
@@ -71,14 +59,14 @@
 }
 
 #tableControls .products button:active {
-	color: var(--color-btn-active);
-	border-color: var(--border-btn-active);
+	color: var(--color-btn-bill-active);
+	border-color: var(--border-btn-bill-active);
 	background-color: var(--bg-btn-categories-active);
 }
 
 #tableControls .xButtons button {
-	background-color: var(--bg-btn-x);
-	border: 2px solid var(--border-btn-x);
+	background-color: var(--bg-btn-xQty);
+	border: 2px solid var(--border-btn-xQty);
 	color: white;
 	border-radius: 40px;
 	font-weight: 600;
@@ -87,8 +75,8 @@
 }
 
 #tableControls .xButtons button.active {
-	color: var(--color-btn-active);
-	border-color: var(--border-btn-active);
+	color: var(--color-btn-bill-active);
+	border-color: var(--border-btn-bill-active);
 	background-color: var(--bg-btn-categories-active);
 }
 
@@ -99,6 +87,11 @@
 #tableControls .addedProducts {
 	grid-area: addedProducts;
 	padding: 0% 5% 2% 5%;
+}
+
+#tableControls .addedProducts .remove {
+	font-size: 1.6rem;
+	padding: 0rem;
 }
 
 #tableControls .addedProducts table {
@@ -207,7 +200,7 @@
 }
 
 #tableControls .bills button.active {
-	color: var(--color-btn-active);
-	border-color: var(--border-btn-active);
+	color: var(--color-btn-bill-active);
+	border-color: var(--border-btn-bill-active);
 	background-color: var(--bg-btn-categories-active);
 }

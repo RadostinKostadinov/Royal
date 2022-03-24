@@ -1,12 +1,17 @@
 /* Import fonts*/
 @import url("./fonts/Montserrat/Montserrat.css");
 :root {
+	--green: #00c892;
+	--orange: #9d5066;
+	--orange-2: #e4582e;
+	--blue: #0067d2;
+	--dark-grey: #19192c;
 	--scroll-width: 16px;
-	--bg-scroll: #19192c;
+	--bg-scroll: var(--dark-grey);
 	--bg-dark: #0c0c1d; /* Dark - background */
-	--bg-menu: #19192c; /* Background Sidemenu */
-	--table-taken: #9d5066; /* Маса - заета */
-	--table-free: #00c892; /* Маса - свободна */
+	--bg-menu: var(--dark-grey); /* Background Sidemenu */
+	--table-taken: var(--orange); /* Маса - заета */
+	--table-free: var(--green); /* Маса - свободна */
 	--bg-btn: rgba(255, 255, 255, 0.2); /* Background button */
 	--bg-btn-active: rgba(
 		0,
@@ -14,8 +19,22 @@
 		210,
 		0.2
 	); /* Background for active (selected) button */
-	--border-btn-active: #0067d2; /* Border color for active button */
+	--border-btn-active: var(--blue); /* Border color for active button */
 	--color-sidemenu: #ffffff; /* Sidemenu text */
+
+	/* Table controls & payBill */
+	--border-btn-categories: var(--blue);
+	--border-btn-bill-active: var(--orange-2);
+	--color-btn-bill-active: var(--orange-2);
+	--bg-btn-categories: rgba(0, 103, 210, 0.05);
+	--bg-btn-categories-active: rgba(228, 88, 46, 0.05);
+	--border-btn-xQty: var(--green);
+	--bg-btn-xQty: rgba(0, 200, 146, 0.05);
+	--bg-btn-bills: rgba(255, 255, 255, 0.05);
+	--border-btn-bills: #000000;
+	--color-btn-bills: #000000;
+	--border-table: #19192c;
+	--bg-totals: rgba(255, 255, 255, 0.06);
 }
 
 * {

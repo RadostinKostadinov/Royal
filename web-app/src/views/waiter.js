@@ -3,10 +3,12 @@ import '../css/waiter/menu.css';
 import '../css/waiter/tables/tables.css';
 import '../css/waiter/tables/middleTables.css';
 import '../css/waiter/tableControls.css';
+import '../css/waiter/payPartOfBill.css';
 import { container } from "../app";
 import { html, render } from 'lit/html.js';
 import $ from "jquery";
-import { addProductToBill, generateBills, getAllCategories, getAllTables, getCategoryById, logout, getProductsInBill } from '../api';
+import 'bootstrap-icons/font/bootstrap-icons.css';
+import { addProductToBill, generateBills, getAllCategories, getAllTables, getCategoryById, logout, getBillById, removeOneFromBill } from '../api';
 const backBtn = html`<button @click=${()=> page('/waiter')} class="btn btn-secondary fs-3 mt-2 ms-2">Назад</button>`;
 
 // Dashboard contains all the code for rendering the tables view (grid with tables)
@@ -14,13 +16,61 @@ export async function waiterDashboardPage() {
     // Get all tables from db
     const { middleTables, insideTables, outsideTables } = await getAllTables();
 
+    function getDay() {
+        const day = new Date().getDay();
+        if (day === 0)
+            return 'Неделя';
+        if (day === 1)
+            return 'Понеделник';
+        if (day === 2)
+            return 'Вторник';
+        if (day === 3)
+            return 'Сряда';
+        if (day === 4)
+            return 'Четвъртък';
+        if (day === 5)
+            return 'Петък';
+        if (day === 6)
+            return 'Събота';
+    }
+
+    function getDate() {
+        const date = new Date();
+
+        let day = date.getDate();
+        if (day < 10)
+            day = '0' + day;
+
+        let month = date.getMonth() + 1;
+        if (month < 10)
+            month = '0'+month;
+
+        return `${day}.${month}.${date.getFullYear()}`
+    }
+
+    function getTime() {
+        const date = new Date();
+
+        let hours = new Date().getHours();
+        if (hours < 10)
+            hours = '0'+hours;
+
+        let minutes = new Date().getMinutes();
+        if (minutes < 10)
+            minutes = '0' + minutes;
+
+        return `${hours}:${minutes}`
+    }
+
     const dashboardTemplate = (grid) => html`
         <div id="waiterDashboard" class="d-flex">
             <div id="waiterMenu" class="d-flex flex-column h-100">
                 <div id="todayInfo" class="d-flex flex-column text-center gap-1 text-uppercase">
-                    <div>Понеделник</div>
-                    <div>20.03.2022</div>
-                    <div>18:30</div>
+                    <div>
+                        ${getDay()}
+                    </div>
+                    <div>${getDate()}</div>
+                    <div>${getTime()}</div>
                 </div>
                 <div class="d-flex flex-column align-items-center mt-5 mb-5 justify-content-between h-100 w-100 ps-2 pe-2">
                     <div id="changeTablesViewButtons" class="d-flex flex-column text-center gap-3 w-100">
@@ -29,7 +79,7 @@ export async function waiterDashboardPage() {
                         <button id="outsideTablesBtn" @click=${(clickedBtn) => changeTablesView(clickedBtn, 'outsideTables')}>Навън</button>
                     </div>
                     <div class="d-flex flex-column text-center gap-3 w-100">
-                        <button @click=${logout}>Меню</button>
+                        <button>Меню</button>
                         <button @click=${logout}>Изход</button>
                     </div>
                 </div>
@@ -48,7 +98,7 @@ export async function waiterDashboardPage() {
     const gridTemplate = (gridId, elements) => html`
         <div id=${gridId} class="tablesGrid">
             ${elements.map((element) => {
-                const taken = element.taken ? 'taken' : '';
+                const taken = element.total > 0 ? 'taken' : '';
                 const allClasses = `${element.type} ${element.type + element.number} ${taken}`;
                 //element.type = [table, bar]
                 //element.number = 1,2,3... || v1,v2,v3... || n1,n2,n3...
@@ -56,8 +106,8 @@ export async function waiterDashboardPage() {
                 //element.total = undefined (if != table) || number (ex. 12.50) (if == table)
                 const btn = html`
                     <button @click=${(e)=> page(`/waiter/table/${$(e.target).attr('_id')}`)} class=${allClasses} _id=${element._id}>
-                        <span class="name">${element.name}</span>
-                        <span class="total">${element.total ? (element.total).toFixed(2) : ''}</span>
+                        <span class="name pe-none">${element.name}</span>
+                        <span class="total pe-none">${element.total ? (element.total).toFixed(2) : ''}</span>
                     </button>`;
                 return btn;
             })}
@@ -90,13 +140,14 @@ export async function waiterDashboardPage() {
 }
 
 export async function tableControlsPage(ctx) {
-    const selectedTable = ctx.params._id; // Get selected (clicked) table _id
+    const selectedTable = ctx.params.tableId; // Get selected (clicked) table _id
 
     if (selectedTable === null) return page('/');
 
     const categories = await getAllCategories(); // Get all categories to display
 
-    let selectedBillId, // by default the first one is selected, so its never undefiend
+    let billData,
+        selectedBillId, // by default the first one is selected, so its never undefined
         selectedX = 1; // can be 2,3... (number) or undefined (no X selected)
     
     async function addToBill(e) {
@@ -107,7 +158,6 @@ export async function tableControlsPage(ctx) {
         if (res.status === 200) {
             const bill = res.data; // get bill and render all products inside it
 
-            console.log(bill);
             renderProductsInBill(bill);
         } else {
             console.error(res);
@@ -144,14 +194,8 @@ export async function tableControlsPage(ctx) {
 
         if (res.status === 200) {
             const category = res.data;
-
-            //FIXME DELETE NEXT 3 LINE
-            /* for (let i = 0; i < 15; i++) {
-                category.products.push(category.products[i]);
-            } */
             
-            if (category.products.length > 0)
-                render(productsTemplate(category.products), document.querySelector('#tableControls .products'))
+            render(productsTemplate(category.products), document.querySelector('#tableControls .products'))
         } else {
             alert('Възникна грешка!')
             console.error(res);
@@ -221,12 +265,26 @@ export async function tableControlsPage(ctx) {
         const _id = selectedBillId;
 
         // Get products in bill
-        const res = await getProductsInBill(_id);
+        const res = await getBillById(_id);
 
         if (res.status === 200) {
-            const bill = res.data;
+            billData = res.data;
+            
+            render(productsInBill(billData), document.querySelector('#tableControls .addedProducts'));
+        } else {
+            console.error(res);
+            alert('Възникна грешка!');
+        }
+    }
 
-            render(productsInBill(bill), document.querySelector('#tableControls .addedProducts'));
+    async function rmvOneFromBill(_id) {
+        // Remove 1 qty of this product from this bill
+
+        const res = await removeOneFromBill(_id, selectedBillId);
+        
+        if (res.status === 200) {
+            const bill = res.data;
+            renderProductsInBill(bill);
         } else {
             console.error(res);
             alert('Възникна грешка!');
@@ -237,26 +295,28 @@ export async function tableControlsPage(ctx) {
         <table class="text-center">
             <thead>
                 <tr>
-                    <th width="40%">Артикул</th>
-                    <th width="20%">Количество</th>
-                    <th width="20%">Ед. цена</th>
-                    <th width="20%">Сума</th>
+                    <th width="7%"></th>
+                    <th width="48%">Артикул</th>
+                    <th width="15%">Брой</th>
+                    <th width="15%">Цена</th>
+                    <th width="15%">Сума</th>
                 </tr>
             </thead>
             <tbody>
                 ${bill.products.map((product) => {
                     return html`
                     <tr>
-                        <td width="40%">${product.product.name}</td>
-                        <td width="20%">${product.qty}</td>
-                        <td width="20%">${product.product.sellPrice.toFixed(2)}</td>
-                        <td width="20%">${(product.product.sellPrice * product.qty).toFixed(2)}</td>
+                        <td @click=${() => rmvOneFromBill(product.product._id)} width="7%" class="remove bi bi-x-circle text-danger cursor-pointer"></td>
+                        <td width="48%">${product.product.name}</td>
+                        <td width="15%">${product.qty}</td>
+                        <td width="15%">${product.product.sellPrice.toFixed(2)}</td>
+                        <td width="15%">${(product.product.sellPrice * product.qty).toFixed(2)}</td>
                     </tr>`
                 })}
             </tbody>
             <tfoot class="text-uppercase">
                 <tr>
-                    <th width="60%" colspan="2"></th>
+                    <th width="60%" colspan="3"></th>
                     <th width="20%">Сметка</th>
                     <th width="20%">${bill.total.toFixed(2)}</th>
                 </tr>
@@ -297,7 +357,7 @@ export async function tableControlsPage(ctx) {
                 </div>
                 <div class="controls d-flex flex-column justify-content-evenly">
                     <button>Брак</button>
-                    <button>Извади</button>
+                    <button @click=${() => billData.total !== 0 ? page(`${ctx.path}/bill/${selectedBillId}`) : ''}>Извади</button>
                     <button>Приключи с принт</button>
                     <button>Приключи</button>
                     <button @click=${() => page('/waiter')}>Назад</button>
@@ -313,4 +373,164 @@ export async function tableControlsPage(ctx) {
     loadProductsFromCategory(categories[0]._id);
     initializeBills();
     render(controlsTemplate(), container);
+}
+
+export async function payPartOfBillPage(ctx) {
+    const selectedTable = ctx.params.tableId;
+    let bill = (await getBillById(ctx.params.billId)).data;
+    let productsToPay = {
+        number: bill.number, // bill number
+        table: bill.table, // table id
+        products: [],
+        total: 0,
+    };
+
+    function addToPay(index, product) {
+        // Transfer 1 qty of this product
+        
+        // index in bill.products array
+
+        product.qty--; // this is referencing directly the object in bill
+        bill.total -= product.product.sellPrice;
+
+        if (product.qty === 0)
+            bill.products.splice(index, 1); // remove from array if qty = 0
+
+        let foundProduct = false;
+        for (let pr of productsToPay.products) {
+            if (pr.product._id === product.product._id) {
+                pr.qty++;
+                foundProduct = true;
+                break;
+            }
+        }
+
+        // if product not found, create it
+        if (foundProduct === false) {
+            productsToPay.products.push({
+                product: product.product,
+                qty: 1
+            });
+        }
+        productsToPay.total += product.product.sellPrice;
+
+        // Rerender both bill and toPay
+        render(productsInBillTemplate(bill), document.getElementById('productsInBill'));
+        render(productsToPayTemplate(productsToPay), document.getElementById('productsToPay'));
+        render(html`${bill.total.toFixed(2)}`, document.querySelector('#totalOnTable .price'))
+        render(html`${productsToPay.total.toFixed(2)}`, document.querySelector('#totalToPay .price'))
+    }
+
+    function returnToBill(index, product) {
+        // Transfer 1 qty of this product BACK to bill
+
+        product.qty--;
+        productsToPay.total = productsToPay.total - product.product.sellPrice;
+
+        if (product.qty === 0)
+            productsToPay.products.splice(index, 1);
+
+        let foundProduct = false;
+        for (let pr of bill.products) {
+            if (pr.product._id === product.product._id) {
+                pr.qty++;
+                foundProduct = true;
+                break;
+            }
+        }
+
+        if (foundProduct === false) {
+            bill.products.push({
+                product: product.product,
+                qty: 1
+            });
+        }
+        bill.total += product.product.sellPrice;
+
+        // Rerender both bill and toPay
+        render(productsInBillTemplate(bill), document.getElementById('productsInBill'));
+        render(productsToPayTemplate(productsToPay), document.getElementById('productsToPay'));
+        render(html`${bill.total.toFixed(2)}`, document.querySelector('#totalOnTable .price'))
+        render(html`${productsToPay.total.toFixed(2)}`, document.querySelector('#totalToPay .price'))
+    }
+
+
+    const productsInBillTemplate = (bill) => html`
+        <table class="text-center">
+            <thead>
+                <tr>
+                    <th width="50%">Артикул</th>
+                    <th width="15%">Брой</th>
+                    <th width="15%">Сума</th>
+                    <th width="20%"></th>
+                </tr>
+            </thead>
+            <tbody>
+                ${bill.products.map((product, index) => {
+                    return html`
+                    <tr>
+                        <td width="50%">${product.product.name}</td>
+                        <td width="15%">${product.qty}</td>
+                        <td width="15%">${(product.product.sellPrice * product.qty).toFixed(2)}</td>
+                        <td @click=${() => addToPay(index, product)} width="20%" class="text-uppercase remove">Извади</td>
+                    </tr>`
+                })}
+            </tbody>
+        </table>
+    `;
+
+    const productsToPayTemplate = (bill) => html`
+        <table class="text-center">
+            <thead>
+                <tr>
+                    <th width="50%">Артикул</th>
+                    <th width="15%">Брой</th>
+                    <th width="15%">Сума</th>
+                    <th width="20%"></th>
+                </tr>
+            </thead>
+            <tbody>
+                ${bill.products.map((product, index) => {
+                    return html`
+                    <tr>
+                        <td width="50%">${product.product.name}</td>
+                        <td width="15%">${product.qty}</td>
+                        <td width="15%">${(product.product.sellPrice * product.qty).toFixed(2)}</td>
+                        <td @click=${() => returnToBill(index, product)} width="20%" class="text-uppercase back">Върни</td>
+                    </tr>`
+                })}
+            </tbody>
+        </table>
+    `;
+
+    const template = () => html`
+        <div id="payPartOfBill">
+            <div id="productsInBill" class="productsTables"></div>
+            <div id="controlsAndTotals" class="d-flex gap-3 flex-column justify-content-between">
+                <div class="totals d-flex flex-column justify-content-between text-center">
+                    <div id="totalOnTable" class="totalBlock">
+                        <span>Оставаща сума на масата</span>
+                        <div class="price"></div>
+                    </div>
+                    <div id="totalToPay" class="totalBlock">
+                        <span>Извадена сума от масата</span>
+                        <div class="price"></div>
+                    </div>
+                </div>
+                <div class="controls d-flex flex-column justify-content-between">
+                    <div class="d-flex gap-3 flex-column justify-content-evenly">
+                        <button>Извади с принт</button>
+                        <button @click=${() => productsToPay.total !== 0 ? console.log('ok') : console.log('no products')}>Извади</button>
+                    </div>
+                    <button @click=${() => page(`/waiter/table/${selectedTable}`)}>Отказ</button>
+                </div>
+            </div>
+            <div id="productsToPay" class="productsTables"></div>
+        </div>
+    `;
+
+    render(template(), container);
+    render(productsInBillTemplate(bill), document.getElementById('productsInBill'));
+    render(html`${(bill.total).toFixed(2)}`, document.querySelector('#totalOnTable .price'))
+    render(html`${(productsToPay.total).toFixed(2)}`, document.querySelector('#totalToPay .price'))
 }

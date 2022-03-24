@@ -62,8 +62,17 @@ export async function addProductToBill(_id, selectedX, selectedBillId) {
     });
 }
 
-export async function getProductsInBill(_id) {
-    return await axios.post('/getProductsInBill', {
+export async function removeOneFromBill(_id, billId) {
+    return await axios.post('/removeOneFromBill', {
+        _id, // product id
+        billId
+    }).catch((err) => {
+        return err.response;
+    });
+}
+
+export async function getBillById(_id) {
+    return await axios.post('/getBillById', {
         _id, // bill _id
     }).catch((err) => {
         return err.response;
@@ -143,6 +152,16 @@ export async function getProductById(_id) {
 
 export async function getAllTables() {
     const res = await axios.get('/getAllTables');
+    return res.data;
+}
+
+export async function getProductsWithoutIngredientsFromCategory(_id) {
+    const res = await axios.post('/getProductsWithoutIngredientsFromCategory', { _id });
+    return res.data;
+}
+
+export async function getAllProductsWithoutIngredients() {
+    const res = await axios.get('/getAllProductsWithoutIngredients');
     return res.data;
 }
 

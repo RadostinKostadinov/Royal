@@ -1,9 +1,9 @@
 import page from 'page';
-import { container, auth } from "../app";
+import { container } from "../app";
 import { html, render } from 'lit/html.js';
 import $ from "jquery";
 import Sortable from 'sortablejs';
-import { sortCategories, getProductById, getCategoryById, getAllUsers, editCategory, deleteCategory, deleteUser, createUser, editUser, createCategory, changeQtyProduct, createProduct, deleteProduct, editProduct, getAllCategories, getAllProducts, sortProducts, logout, getAllIngredients, createIngredient, deleteIngredient, getIngredientById, editIngredient } from '../api';
+import { sortCategories, getProductById, getCategoryById, getAllUsers, editCategory, deleteCategory, deleteUser, createUser, editUser, createCategory, changeQtyProduct, createProduct, deleteProduct, editProduct, getAllCategories, getAllProducts, sortProducts, logout, getAllIngredients, createIngredient, deleteIngredient, getIngredientById, editIngredient, getAllProductsWithoutIngredients, getProductsWithoutIngredientsFromCategory } from '../api';
 
 const backBtn = html`<button @click=${()=> page('/admin')} class="btn btn-secondary fs-3 mt-2 ms-2">Назад</button>`;
 let contentType; //  used in loadProducts to determine if we are loading/deleting a product or ingredient
@@ -1172,12 +1172,16 @@ export async function sortCategoriesPage() {
 
 export async function inventoryPage() {
     const categories = await getAllCategories();
-    const products = await getAllProducts();
+    const products = await getAllProductsWithoutIngredients();
+    const ingredients = await getAllIngredients();
+    const productsAndIngredients = ingredients.concat(products);
+
     let totals = {
         buyPrice: 0,
         sellPrice: 0,
         difference: 0
     };
+
     const productRows = (products) => html`
         ${products.map((product) => {
             totals.buyPrice += product.qty * product.buyPrice;
@@ -1208,18 +1212,17 @@ export async function inventoryPage() {
             sellPrice: 0,
             difference: 0
         }
+
         const categoryId = e.target.value;
 
         let productsToShow = [];
+
         if (categoryId === 'all') // show all products
-            productsToShow = products;
-        else {
-            // Find all products that are from the selected category
-            for (let product of products) {
-                if (product.category === categoryId)
-                    productsToShow.push(product);
-            }
-        }
+            productsToShow = productsAndIngredients;
+        else if (categoryId === 'ingredients') // show only ingredients
+            productsToShow = ingredients;
+        else 
+            productsToShow = await getProductsWithoutIngredientsFromCategory(categoryId);
 
         if (productsToShow.length === 0)
             return alert('Няма продукти в избраната категория!')
@@ -1234,16 +1237,12 @@ export async function inventoryPage() {
             <label for="selected" class="form-label fs-4">Преглед по категория</label>
             <select @change=${showProductsFromCategory} required type="text" class="form-control fs-4" name="_id" id="selected">
                 <option selected value="all">Всички</option>
-                ${categories.map((category) => {
-                    if (category.hasOwnProperty('parent')) // if it has a parent, it means its a subcategory (child)
-                        return html`<option value=${category._id}>    ${category.name}</option>`
-
-                    return html`<option value=${category._id}>${category.name}</option>`
-                })}
+                <option value="ingredients">Съставки</option>
+                ${categories.map((category) => html`<option value=${category._id}>${category.name}</option>`)}
             </select>
         </div>
     
-        <table class="table table-striped table-hover text-center">
+        <table class="table table-striped table-light table-hover text-center">
             <thead>
                 <tr>
                     <th scope="col">Артикул</th>
@@ -1254,12 +1253,12 @@ export async function inventoryPage() {
                 </tr>
             </thead>
             <tbody>
-                
             </tbody>
         </table>
     `;
 
     render(inventoryTemplate(), container);
+    
     // Render all products
     render(productRows(products), document.querySelector('tbody'));
 }

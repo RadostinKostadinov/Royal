@@ -21,7 +21,7 @@ export const ingredientSchema = new Schema({
         match: [/^\d{1,}(\.\d{1,2})?$/, 'Цената трябва да е: пример 5.0, 3, 1.20!'],
         required: true
     },
-    order: { type: Number, default: 1 }, // The order that it appears in the menu!
+    position: { type: Number, default: 1 }, // The position that it appears in the menu!
 });
 
 const Ingredient = mongoose.model('Ingredient', ingredientSchema);

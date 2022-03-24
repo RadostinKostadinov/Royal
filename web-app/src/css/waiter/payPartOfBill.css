@@ -1,0 +1,108 @@
+#payPartOfBill {
+	display: grid;
+	grid-template-columns: 605fr 150fr 605fr;
+	gap: 0px 0px;
+	width: 100%;
+	height: 100%;
+}
+
+#payPartOfBill #controlsAndTotals {
+	background-color: var(--border-table);
+	padding-bottom: 1rem;
+}
+
+#payPartOfBill #controlsAndTotals .controls {
+	height: 50%;
+	padding: 0rem 1rem;
+}
+
+#payPartOfBill #controlsAndTotals .controls button {
+	color: var(--color-sidemenu);
+	background-color: var(--bg-btn);
+	border: 1px solid transparent;
+	border-radius: 20px;
+	font-weight: 600;
+	font-size: 1.1rem;
+	padding: 0.5rem;
+	text-transform: uppercase;
+}
+
+#payPartOfBill .totalBlock {
+	padding: 3% 9% 0% 9%;
+	background-color: var(--bg-totals);
+}
+
+#payPartOfBill .totalBlock .price {
+	font-size: 2rem;
+	font-weight: 600;
+	line-height: 2.5rem;
+}
+
+#payPartOfBill #totalOnTable .price {
+	color: var(--orange);
+}
+
+#payPartOfBill #totalToPay .price {
+	color: var(--green);
+}
+
+#payPartOfBill #controlsAndTotals .totals {
+	height: 50%;
+}
+
+#payPartOfBill #productsInBill .remove {
+	color: var(--orange);
+}
+
+#payPartOfBill .productsTables {
+	overflow: hidden;
+}
+
+#payPartOfBill .productsTables table {
+	width: 100%;
+	display: flex;
+	flex-direction: column;
+	height: 100%;
+	border: 2px solid var(--border-table);
+	border-collapse: collapse;
+	background-color: var(--border-table);
+}
+
+#payPartOfBill .productsTables table thead {
+	display: table;
+	table-layout: fixed;
+	/* width: calc(100% - var(--scroll-width)); */
+	width: 100%;
+}
+
+#payPartOfBill .productsTables table tbody {
+	display: block;
+	height: 100%;
+	/* overflow-y: scroll; */
+	overflow-y: auto;
+	background-color: var(--bg-dark);
+}
+
+#payPartOfBill .productsTables table tbody tr {
+	border-top: 2px solid var(--border-table);
+	border-collapse: collapse;
+}
+
+#payPartOfBill .productsTables table tbody tr:last-of-type {
+	border-bottom: 2px solid var(--border-table);
+}
+
+#payPartOfBill .productsTables table tbody tr {
+	display: table;
+	table-layout: fixed;
+	width: 100%;
+}
+
+#payPartOfBill .productsTables table th,
+#payPartOfBill .productsTables table td {
+	font-weight: 600;
+}
+
+#payPartOfBill .productsTables table tbody tr td {
+	padding: 0.5rem 0px;
+}
