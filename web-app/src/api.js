@@ -8,6 +8,14 @@ axios.defaults.baseURL = 'http://localhost:80';
 if (user)
     axios.defaults.headers.common['authorization'] = user.token;
 
+export async function sellProducts(billToPay) {
+    return await axios.post('/sellProducts', {
+        billToPay
+    }).catch((err) => {
+        return err.response;
+    });
+}
+
 export async function editIngredient(_id, name, qty, buyPrice, sellPrice) {
     return await axios.post('/editIngredient', {
         _id,
@@ -20,9 +28,10 @@ export async function editIngredient(_id, name, qty, buyPrice, sellPrice) {
     });
 }
 
-export async function createIngredient(name, qty, buyPrice, sellPrice) {
+export async function createIngredient(name, unit, qty, buyPrice, sellPrice) {
     return await axios.post('/createIngredient', {
         name,
+        unit,
         qty,
         buyPrice,
         sellPrice

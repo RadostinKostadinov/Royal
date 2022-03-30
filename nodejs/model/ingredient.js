@@ -7,6 +7,11 @@ export const ingredientSchema = new Schema({
         type: String,
         required: true
     },
+    unit: { // как ще го вкарва анатоли (в кг, в Л или бройки) - от това зависи дали ще ги умножава като ги вкарва автоматично
+        type: String,
+        required: true,
+        enum: ['кг', 'л', 'бр']
+    },
     qty: {
         type: Number,
         required: true

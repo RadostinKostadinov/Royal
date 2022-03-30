@@ -8,6 +8,10 @@ const productSchema = new Schema({
         ref: 'Category',
         required: true
     }, // Reference to the product's category
+    addonForCategory: {
+        type: Schema.Types.ObjectId,
+        ref: 'Category'
+    }, // If product is addon, show it only when waiter opens this category of products
     name: {
         type: String,
         required: true

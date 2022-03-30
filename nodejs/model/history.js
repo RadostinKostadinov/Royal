@@ -5,7 +5,7 @@ const { Schema } = mongoose;
 const possibleActions = [
     'removed', // Product Removed From Bill (премахнат 1 брой продукт от сметка, НЕ Е БРАКУВАН (премахнат от червеният Х до всеки продукт в контролното табло на масата))
     'added', // Product Added To Bill (добавени X броя продукт към сметка)
-    'payed', // Payed From Bill (платени Х броя продукт от сметка)
+    'paid', // Paid From Bill (платени Х броя продукт от сметка)
     'restocked', // Restocked in inventory (зареждане на стока от Анатоли)
 ];
 
@@ -39,29 +39,51 @@ const productHistorySchema = new Schema({
         type: Number,
         immutable: true
     },
-    product: {
-        name: {  // Статично име на продукта (дори да се изтрие от БД няма проблем)
-            type: String,
-            immutable: true,
-            required: true
-        },
-        qty: { // Колко бройки сме добавили/бракували/...
-            type: Number,
-            immutable: true,
-            required: true
-        },
-        price: { // Каква е била цената на този продукт при бракуване/зареждане.. (с времето може да се промени)
-            type: Number,
-            immutable: true,
-            required: true
-        },
-        productRef: { // референция за всеки случай (ако искаме да филтрираме на някой етап)
-            type: Schema.Types.ObjectId,
-            ref: 'Product',
-            immutable: true,
-            required: true
-        }
+    total: { // тотал на сметката (ако е плащане)
+        type: Number,
+        immutable: true
     },
+    products: [
+        {
+            name: {  // Статично име на продукта (дори да се изтрие от БД няма проблем)
+                type: String,
+                immutable: true,
+                required: true
+            },
+            qty: { // Колко бройки сме добавили/бракували/...
+                type: Number,
+                immutable: true,
+                required: true
+            },
+            price: { // Каква е била цената на този продукт при бракуване/зареждане.. (с времето може да се промени)
+                type: Number,
+                immutable: true,
+                required: true
+            },
+            productRef: { // референция за всеки случай (ако искаме да филтрираме на някой етап)
+                type: Schema.Types.ObjectId,
+                ref: 'Product',
+                immutable: true,
+                required: true
+            },
+            ingredients: [
+                {
+                    name: {  // Статично име на съставката (дори да се изтрие от БД няма проблем)
+                        type: String,
+                        immutable: true,
+                        required: true
+                    },
+                    qty: { type: Number, min: 1, immutable: true }, // how much of this ingredient does it take (for ex. if 1 coffee takes 20ml milk, then qty = 20)
+                    price: { // Каква е била цената на тази съставка при бракуване/зареждане.. (с времето може да се промени)
+                        type: Number,
+                        immutable: true,
+                        required: true
+                    },
+                    ingredientRef: { type: Schema.Types.ObjectId, ref: 'Ingredient', immutable: true },
+                }
+            ],
+        }
+    ],
     when: { // дата на събитие
         type: Date,
         default: Date.now,

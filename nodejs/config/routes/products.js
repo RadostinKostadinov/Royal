@@ -1,5 +1,6 @@
 import { Product } from "../../model/product.js";
 import { Category } from "../../model/category.js";
+import { Bill } from "../../model/bill.js"
 
 export function productsRoutes(app, auth) {
     app.post('/changeQtyProduct', auth, async (req, res) => {

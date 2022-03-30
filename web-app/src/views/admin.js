@@ -242,11 +242,12 @@ export async function createProductPage() {
         // Get data from form
         const formData = new FormData(e.target);
         const name = formData.get('name');
+        const unit = formData.get('unit');
         const qty = +formData.get('qty');
         const buyPrice = +formData.get('buyPrice');
         const sellPrice = +formData.get('sellPrice');
 
-        const res = await createIngredient(name, qty, buyPrice, sellPrice);
+        const res = await createIngredient(name, unit, qty, buyPrice, sellPrice);
 
         if (res.status === 201) {// Successfully created ingredient
             alert(res.data);
@@ -498,16 +499,15 @@ export async function editProductPage() {
         const formData = new FormData(e.target);
         const _id = formData.get('_id');
         const name = formData.get('name');
+        let qty = formData.get('qty');
         const buyPrice = +formData.get('buyPrice');
         const sellPrice = +formData.get('sellPrice');
-        let selectedIngredients, qty;
+        let selectedIngredients;
 
         let res;
         if (contentType === 'ingredient') {
-            qty = formData.get('qty');
             qty = +qty;
             res = await editIngredient(_id, name, qty, buyPrice, sellPrice)
-            
         } else {
             const categoryId = formData.get('pr-categoryId');
             const forBartender = formData.get('forBartender') || false;
@@ -536,7 +536,6 @@ export async function editProductPage() {
                     return alert('Избери поне една съставка!');
             }
 
-            // return console.log({ _id, name, qty, selectedIngredients, buyPrice, sellPrice, categoryId, forBartender});
             res = await editProduct(_id, name, qty, selectedIngredients, buyPrice, sellPrice, categoryId, forBartender);
         }
 
@@ -1176,6 +1175,8 @@ export async function inventoryPage() {
     const ingredients = await getAllIngredients();
     const productsAndIngredients = ingredients.concat(products);
 
+    console.log(productsAndIngredients.length)
+
     let totals = {
         buyPrice: 0,
         sellPrice: 0,
@@ -1260,7 +1261,7 @@ export async function inventoryPage() {
     render(inventoryTemplate(), container);
     
     // Render all products
-    render(productRows(products), document.querySelector('tbody'));
+    render(productRows(productsAndIngredients), document.querySelector('tbody'));
 }
 
 export function showAdminDashboard() {

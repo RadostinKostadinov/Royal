@@ -8,10 +8,10 @@ export function ingredientsRoutes(app, auth) {
                 return res.status(401).send('Нямате достъп!');
 
             // Get user input
-            const { name, qty, buyPrice, sellPrice } = req.body;
+            const { name, unit, qty, buyPrice, sellPrice } = req.body;
 
             // Validate user input
-            if (!(name && qty && buyPrice && sellPrice))
+            if (!(name && unit && qty && buyPrice && sellPrice))
                 return res.status(400).send('Всички полета са задължителни!');
 
             // Check if prices are okay
@@ -26,6 +26,7 @@ export function ingredientsRoutes(app, auth) {
             // Create user in database
             await Ingredient.create({
                 name,
+                unit,
                 qty,
                 buyPrice,
                 sellPrice
@@ -72,10 +73,10 @@ export function ingredientsRoutes(app, auth) {
 
 
             // Get user input
-            const { _id, name, qty, buyPrice, sellPrice } = req.body;
+            const { _id, name, unit, qty, buyPrice, sellPrice } = req.body;
 
             // Validate user input
-            if (!(_id && name && qty && buyPrice && sellPrice))
+            if (!(_id && name && unit && qty && buyPrice && sellPrice))
                 return res.status(400).send('Всички полета са задължителни!');
 
             // Check if prices are okay
@@ -95,6 +96,7 @@ export function ingredientsRoutes(app, auth) {
 
             // Update product values
             ingredient.name = name;
+            ingredient.unit = unit;
             ingredient.qty = qty;
             ingredient.buyPrice = buyPrice;
             ingredient.sellPrice = sellPrice;

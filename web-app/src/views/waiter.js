@@ -8,7 +8,7 @@ import { container } from "../app";
 import { html, render } from 'lit/html.js';
 import $ from "jquery";
 import 'bootstrap-icons/font/bootstrap-icons.css';
-import { addProductToBill, generateBills, getAllCategories, getAllTables, getCategoryById, logout, getBillById, removeOneFromBill } from '../api';
+import { addProductToBill, generateBills, getAllCategories, getAllTables, getCategoryById, logout, getBillById, removeOneFromBill, sellProducts } from '../api';
 const backBtn = html`<button @click=${()=> page('/waiter')} class="btn btn-secondary fs-3 mt-2 ms-2">Назад</button>`;
 
 // Dashboard contains all the code for rendering the tables view (grid with tables)
@@ -357,14 +357,13 @@ export async function tableControlsPage(ctx) {
                 </div>
                 <div class="controls d-flex flex-column justify-content-evenly">
                     <button>Брак</button>
-                    <button @click=${() => billData.total !== 0 ? page(`${ctx.path}/bill/${selectedBillId}`) : ''}>Извади</button>
+                    <button @click=${() => page(`${ctx.path}/bill/${selectedBillId}`)}>Извади</button>
                     <button>Приключи с принт</button>
                     <button>Приключи</button>
                     <button @click=${() => page('/waiter')}>Назад</button>
                 </div>
             </div>
             <div class="addedProducts">
-                
             </div>
         </div>
     `;
@@ -379,6 +378,7 @@ export async function payPartOfBillPage(ctx) {
     const selectedTable = ctx.params.tableId;
     let bill = (await getBillById(ctx.params.billId)).data;
     let productsToPay = {
+        _id: bill._id, // bill id
         number: bill.number, // bill number
         table: bill.table, // table id
         products: [],
@@ -454,7 +454,6 @@ export async function payPartOfBillPage(ctx) {
         render(html`${productsToPay.total.toFixed(2)}`, document.querySelector('#totalToPay .price'))
     }
 
-
     const productsInBillTemplate = (bill) => html`
         <table class="text-center">
             <thead>
@@ -472,7 +471,7 @@ export async function payPartOfBillPage(ctx) {
                         <td width="50%">${product.product.name}</td>
                         <td width="15%">${product.qty}</td>
                         <td width="15%">${(product.product.sellPrice * product.qty).toFixed(2)}</td>
-                        <td @click=${() => addToPay(index, product)} width="20%" class="text-uppercase remove">Извади</td>
+                        <td @click=${() => addToPay(index, product)} width="20%" class="text-uppercase remove cursor-pointer">Извади</td>
                     </tr>`
                 })}
             </tbody>
@@ -503,6 +502,19 @@ export async function payPartOfBillPage(ctx) {
         </table>
     `;
 
+    async function sellPrdcts() {
+        if (productsToPay.length === 0) return;
+
+        const res = await sellProducts(productsToPay);
+
+        if (res.status === 200) {
+            page(`/waiter/table/${selectedTable}`);
+        } else {
+            console.error(res);
+            alert('Възникна грешка!');
+        }
+    }
+
     const template = () => html`
         <div id="payPartOfBill">
             <div id="productsInBill" class="productsTables"></div>
@@ -520,7 +532,7 @@ export async function payPartOfBillPage(ctx) {
                 <div class="controls d-flex flex-column justify-content-between">
                     <div class="d-flex gap-3 flex-column justify-content-evenly">
                         <button>Извади с принт</button>
-                        <button @click=${() => productsToPay.total !== 0 ? console.log('ok') : console.log('no products')}>Извади</button>
+                        <button @click=${sellPrdcts}>Извади</button>
                     </div>
                     <button @click=${() => page(`/waiter/table/${selectedTable}`)}>Отказ</button>
                 </div>

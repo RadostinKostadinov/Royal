@@ -1,10 +1,96 @@
 import { Bill } from "../../model/bill.js";
 import { ProductHistory } from "../../model/history.js";
+import { Ingredient } from "../../model/ingredient.js";
 import { Product } from "../../model/product.js";
 import { Table } from "../../model/table.js";
 
 
 export function billsRoutes(app, auth) {
+    app.post('/sellProducts', auth, async (req, res) => {
+        try {
+            const { billToPay } = req.body;
+
+            if (billToPay.products.length === 0)
+                return res.status(404).send('Няма продукти в сметката');
+
+            let historyProducts = [];
+            let historyTotal = 0;
+
+            /* 
+                1. Remove from original bill
+                1.1 Products
+                1.1 Remove sum from bill total
+                2. Remove products from inventory
+                2.1 Check if from ingredients
+                3. Add to history
+            */
+
+            const originalBill = await Bill.findById(billToPay._id);
+            for (let product of billToPay.products) { // for every product to pay
+                for (let [index, prd] of Object.entries(originalBill.products)) { // check against every product in original bill
+                    if (product.product._id.toString() === prd.product.toString()) {
+                        // remove qty from original bill
+                        originalBill.total -= product.product.sellPrice * product.qty;
+
+                        prd.qty -= product.qty;
+                        if (prd.qty === 0)
+                            originalBill.products.splice(index, 1);
+
+                        // remove product qty from inventory
+                        // first check if from ingredients
+                        let ingredientsArray = [];
+                        const prodRef = await Product.findById(product.product._id);
+                        if (prodRef.ingredients.length === 0) {
+                            prodRef.qty -= product.qty;
+                        } else {
+                            for (let ingredient of prodRef.ingredients) {
+                                const ingredientRef = await Ingredient.findById(ingredient.ingredient);
+                                ingredientRef.qty -= ingredient.qty;
+                                ingredientRef.save();
+                                ingredientsArray.push({
+                                    name: ingredientRef.name,
+                                    qty: ingredient.qty,
+                                    price: ingredientRef.sellPrice,
+                                    ingredientRef: ingredientRef._id
+                                });
+                            }
+                        }
+
+                        prodRef.save();
+
+                        historyProducts.push({
+                            name: product.product.name,
+                            qty: product.qty,
+                            price: product.product.sellPrice,
+                            productRef: product.product._id,
+                            ingredients: ingredientsArray
+                        });
+                        historyTotal += product.product.sellPrice * product.qty;
+                        break; // start searching for next product
+                    }
+                }
+            }
+            originalBill.save();
+            res.send('Продуктите са платени');
+
+            // Add action to history
+            ProductHistory.create({
+                user: {
+                    name: req.user.name,
+                    userRef: req.user.uid
+                },
+                action: 'paid',
+                table: originalBill.table,
+                billNumber: originalBill.number,
+                total: historyTotal,
+                products: historyProducts
+            });
+        } catch (error) {
+            console.error(error);
+            res.status(500).send('Възникна грешка!');
+        }
+    });
+
     app.post('/removeOneFromBill', auth, async (req, res) => {
         try {
             const { _id, billId } = req.body;
@@ -35,12 +121,12 @@ export function billsRoutes(app, auth) {
                         action: 'removed',
                         table: bill.table,
                         billNumber: bill.number,
-                        product: {
+                        products: [{
                             name: product.product.name, // Статично име на продукта (дори да се изтрие от БД няма проблем)
                             qty: 1, // Колко бройки сме добавили към масата
                             price: product.product.sellPrice, // Каква е текущата цена на този продукт (с времето може да се промени)
                             productRef: product._id // Референция към продукта
-                        }
+                        }]
                     });
                 }
             }
@@ -113,12 +199,12 @@ export function billsRoutes(app, auth) {
                 action: 'added',
                 table: bill.table,
                 billNumber: bill.number,
-                product: {
+                products: [{
                     name: product.name, // Статично име на продукта (дори да се изтрие от БД няма проблем)
                     qty: selectedX, // Колко бройки сме добавили към масата
                     price: product.sellPrice, // Каква е текущата цена на този продукт (с времето може да се промени)
                     productRef: product._id // Референция към продукта
-                }
+                }]
             });
         } catch (err) {
             console.error(err);

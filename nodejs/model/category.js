@@ -4,7 +4,7 @@ const { Schema } = mongoose;
 
 const categorySchema = new Schema({
     name: String,
-    isHidden: { type: Boolean, default: false },
+    hidden: { type: Boolean, default: false },
     position: { type: Number, default: 1 }, // The position that it appears in the menu!
     products: [{ type: Schema.Types.ObjectId, ref: 'Product' }], // References to the products inside this category
 });

@@ -284,7 +284,7 @@ function routesConfig(app) {
     async function createDefaultCategories() {
         const categories = [
             {
-                name: 'Безалкохолни',
+                name: 'Кафе',
                 order: 1,
             },
             {
@@ -292,7 +292,7 @@ function routesConfig(app) {
                 order: 2,
             },
             {
-                name: 'Кафе',
+                name: 'Безалкохолни',
                 order: 3,
             },
             {
@@ -300,37 +300,30 @@ function routesConfig(app) {
                 order: 4,
             },
             {
-                name: 'Български алкохол',
+                name: 'Бира',
                 order: 5,
             },
             {
-                name: 'Водка внос',
+                name: 'Български алкохол',
                 order: 6,
             },
             {
-                name: 'Уиски внос',
+                name: 'Алкохол внос',
                 order: 7,
             },
             {
-                name: 'Алкохол внош',
+                name: 'Ядки',
                 order: 8,
             },
             {
-                name: 'Бира',
+                name: 'Други',
                 order: 9,
             },
             {
-                name: 'Ядки',
+                name: 'Добавки',
                 order: 10,
-            },
-            {
-                name: 'Торти',
-                order: 11,
-            },
-            {
-                name: 'Други',
-                order: 12,
-            },
+                hidden: true
+            }
         ]
 
         await Category.deleteMany();
@@ -342,17 +335,320 @@ function routesConfig(app) {
     async function createDefaultIngredients() {
         const ingredients = [
             {
-                name: 'Мляко',
-                qty: 1500,
-                buyPrice: 7,
+                name: 'Грейпфрут',
+                unit: 'кг',
+                qty: 1000,
+                buyPrice: 2,
+                sellPrice: 4.5
+            },
+            {
+                name: 'Лимон',
+                unit: 'кг',
+                qty: 1000,
+                buyPrice: 2,
+                sellPrice: 5.5
+            },
+            {
+                name: 'Портокал',
+                unit: 'кг',
+                qty: 1000,
+                buyPrice: 2,
+                sellPrice: 4.5
+            },
+            {
+                name: 'Алое',
+                unit: 'л',
+                qty: 100,
+                buyPrice: 3,
+                sellPrice: 6
+            },
+            {
+                name: 'Сметана спрей',
+                unit: 'бр',
+                qty: 100,
+                buyPrice: 2.2,
+                sellPrice: 5.6
+            },
+            {
+                name: 'Мляко кутия',
+                unit: 'л',
+                qty: 1000,
+                buyPrice: 2,
                 sellPrice: 9
             },
             {
-                name: 'Кафе',
+                name: 'Сухо мляко',
+                unit: 'кг',
                 qty: 1000,
-                buyPrice: 5,
-                sellPrice: 6
-            }
+                buyPrice: 23.50,
+                sellPrice: 40
+            },
+            {
+                name: 'Сок Гранини',
+                unit: 'л',
+                qty: 1000,
+                buyPrice: 2.8,
+                sellPrice: 7.5
+            },
+            {
+                name: 'Водка',
+                unit: 'л',
+                qty: 1000,
+                buyPrice: 10,
+                sellPrice: 30
+            },
+            {
+                name: 'Водка внос',
+                unit: 'л',
+                qty: 1000,
+                buyPrice: 20,
+                sellPrice: 60
+            },
+            {
+                name: 'Джин',
+                unit: 'л',
+                qty: 1000,
+                buyPrice: 10,
+                sellPrice: 30
+            },
+            {
+                name: 'Джин внос',
+                unit: 'л',
+                qty: 1000,
+                buyPrice: 20,
+                sellPrice: 60
+            },
+            {
+                name: 'Уиски',
+                unit: 'л',
+                qty: 1000,
+                buyPrice: 10,
+                sellPrice: 30
+            },
+            {
+                name: 'Уиски внос',
+                unit: 'л',
+                qty: 1000,
+                buyPrice: 29,
+                sellPrice: 80
+            },
+            {
+                name: 'Джак Даниелс',
+                unit: 'л',
+                qty: 1000,
+                buyPrice: 40,
+                sellPrice: 100
+            },
+            {
+                name: 'Бушмилс черен',
+                unit: 'л',
+                qty: 1000,
+                buyPrice: 50,
+                sellPrice: 120
+            },
+            {
+                name: 'Черно Джони',
+                unit: 'л',
+                qty: 1000,
+                buyPrice: 50,
+                sellPrice: 120
+            },
+            {
+                name: 'Мартини',
+                unit: 'л',
+                qty: 1000,
+                buyPrice: 22,
+                sellPrice: 50
+            },
+            {
+                name: 'Бакарди',
+                unit: 'л',
+                qty: 1000,
+                buyPrice: 30,
+                sellPrice: 70
+            },
+            {
+                name: 'Кампари',
+                unit: 'л',
+                qty: 1000,
+                buyPrice: 30,
+                sellPrice: 70
+            },
+            {
+                name: 'Бейлис',
+                unit: 'л',
+                qty: 1000,
+                buyPrice: 30,
+                sellPrice: 80
+            },
+            {
+                name: 'Текила',
+                unit: 'л',
+                qty: 1000,
+                buyPrice: 12,
+                sellPrice: 30
+            },
+            {
+                name: 'Узо',
+                unit: 'л',
+                qty: 1000,
+                buyPrice: 25,
+                sellPrice: 60
+            },
+            {
+                name: 'Пастис',
+                unit: 'л',
+                qty: 1000,
+                buyPrice: 29,
+                sellPrice: 60
+            },
+            {
+                name: 'Пакетче шейк',
+                unit: 'бр',
+                qty: 1000,
+                buyPrice: 0.87,
+                sellPrice: 1.45
+            },
+            {
+                name: 'Сироп лимонада',
+                unit: 'л',
+                qty: 1000,
+                buyPrice: 16,
+                sellPrice: 30
+            },
+            {
+                name: 'Газирана вода',
+                unit: 'л',
+                qty: 1500,
+                buyPrice: 1,
+                sellPrice: 2.4
+            },
+            {
+                name: 'Сироп роза/лавандула',
+                unit: 'л',
+                qty: 1000,
+                buyPrice: 10,
+                sellPrice: 40
+            },
+            {
+                name: 'Кафе Караро',
+                unit: 'кг',
+                qty: 1000,
+                buyPrice: 22.70,
+                sellPrice: 215
+            },
+            {
+                name: 'Сироп бисквитки',
+                unit: 'л',
+                qty: 1000,
+                buyPrice: 15,
+                sellPrice: 20
+            },
+            {
+                name: 'Чокофредо',
+                unit: 'кг',
+                qty: 1000,
+                buyPrice: 0,
+                sellPrice: 25
+            },
+            {
+                name: 'Нескафе',
+                unit: 'кг',
+                qty: 1000,
+                buyPrice: 32,
+                sellPrice: 500
+            },
+            {
+                name: 'Мента',
+                unit: 'л',
+                qty: 1000,
+                buyPrice: 10,
+                sellPrice: 30
+            },
+            {
+                name: 'Мастика',
+                unit: 'л',
+                qty: 1000,
+                buyPrice: 10,
+                sellPrice: 30
+            },
+            {
+                name: 'Коняк',
+                unit: 'л',
+                qty: 1000,
+                buyPrice: 10,
+                sellPrice: 30
+            },
+            {
+                name: 'Ром',
+                unit: 'л',
+                qty: 1000,
+                buyPrice: 10,
+                sellPrice: 30
+            },
+            {
+                name: 'Коняк Плиска',
+                unit: 'л',
+                qty: 1000,
+                buyPrice: 20,
+                sellPrice: 40
+            },
+            {
+                name: 'Вино',
+                unit: 'л',
+                qty: 1000,
+                buyPrice: 3,
+                sellPrice: 10
+            },
+            {
+                name: 'Шоколад',
+                unit: 'кг',
+                qty: 1000,
+                buyPrice: 18,
+                sellPrice: 36
+            },
+            {
+                name: '3в1',
+                unit: 'кг',
+                qty: 1000,
+                buyPrice: 18,
+                sellPrice: 75
+            },
+            {
+                name: 'Капсула Лаваца',
+                unit: 'бр',
+                qty: 1000,
+                buyPrice: 0.5,
+                sellPrice: 2
+            },
+            {
+                name: 'Кафе Или',
+                unit: 'кг',
+                qty: 1000,
+                buyPrice: 64,
+                sellPrice: 240
+            },
+            {
+                name: 'Капсула Ришар',
+                unit: 'бр',
+                qty: 1000,
+                buyPrice: 1.2,
+                sellPrice: 2.5
+            },
+            {
+                name: 'Безкофейново Или',
+                unit: 'кг',
+                qty: 1000,
+                buyPrice: 64,
+                sellPrice: 240
+            },
+            {
+                name: 'Какао',
+                unit: 'кг',
+                qty: 1000,
+                buyPrice: 4,
+                sellPrice: 20
+            },
         ];
 
         await Ingredient.deleteMany();
@@ -367,52 +663,1064 @@ function routesConfig(app) {
                 categoryName: 'Безалкохолни',
                 products: [
                     {
+                        name: "Безалкохолна напитка",
+                        qty: 50,
+                        buyPrice: 0,
+                        sellPrice: 2
+                    },
+                    {
                         name: "Сок Капи",
                         qty: 50,
-                        buyPrice: 1,
-                        sellPrice: 1.5
+                        buyPrice: 0,
+                        sellPrice: 2
                     },
                     {
                         name: "Минерална вода",
-                        qty: 100,
-                        buyPrice: 0.6,
-                        sellPrice: 1
+                        qty: 50,
+                        buyPrice: 0,
+                        sellPrice: 1.5
+                    },
+                    {
+                        name: "Газирана вода",
+                        qty: 50,
+                        buyPrice: 0,
+                        sellPrice: 1.5
+                    },
+                    {
+                        name: "Сок Гранини",
+                        buyPrice: 0,
+                        sellPrice: 1.5,
+                        ingredients: [
+                            {
+                                ingredient: "Сок Гранини",
+                                qty: 200
+                            }
+                        ]
                     },
                     {
                         name: "Сок Деллос",
-                        qty: 155,
-                        buyPrice: 1.4,
-                        sellPrice: 2
-                    }
+                        qty: 50,
+                        buyPrice: 0,
+                        sellPrice: 2.5
+                    },
+                    {
+                        name: "Сок Моркови",
+                        qty: 50,
+                        buyPrice: 0,
+                        sellPrice: 2.5
+                    },
+                    {
+                        name: "Студен чай 0.5L",
+                        qty: 50,
+                        buyPrice: 0,
+                        sellPrice: 3
+                    },
+                    {
+                        name: "Сода кен",
+                        qty: 50,
+                        buyPrice: 0,
+                        sellPrice: 2.5
+                    },
+                    {
+                        name: "Редбул",
+                        qty: 50,
+                        buyPrice: 0,
+                        sellPrice: 4.5
+                    },
                 ]
             },
             {
                 categoryName: 'Кафе',
                 products: [
                     {
-                        name: "Дълго кафе",
-                        buyPrice: 1,
+                        name: "Кафе",
+                        buyPrice: 0,
                         sellPrice: 1.5,
                         ingredients: [
                             {
-                                ingredient: "Кафе",
+                                ingredient: "Кафе Караро",
+                                qty: 7
+                            }
+                        ]
+                    },
+                    {
+                        name: "Дълго кафе",
+                        buyPrice: 0,
+                        sellPrice: 1.5,
+                        ingredients: [
+                            {
+                                ingredient: "Кафе Караро",
+                                qty: 7
+                            }
+                        ]
+                    },
+                    {
+                        name: "Късо кафе",
+                        buyPrice: 0,
+                        sellPrice: 1.5,
+                        ingredients: [
+                            {
+                                ingredient: "Кафе Караро",
+                                qty: 7
+                            }
+                        ]
+                    },
+                    {
+                        name: "Кафе Лаваца",
+                        buyPrice: 0,
+                        sellPrice: 2,
+                        ingredients: [
+                            {
+                                ingredient: "Капсула Лаваца",
+                                qty: 1
+                            }
+                        ]
+                    },
+                    {
+                        name: "Дълга Лаваца",
+                        buyPrice: 0,
+                        sellPrice: 2,
+                        ingredients: [
+                            {
+                                ingredient: "Капсула Лаваца",
+                                qty: 1
+                            }
+                        ]
+                    },
+                    {
+                        name: "Кафе Или",
+                        buyPrice: 0,
+                        sellPrice: 1.7,
+                        ingredients: [
+                            {
+                                ingredient: "Кафе Или",
+                                qty: 7
+                            }
+                        ]
+                    },
+                    {
+                        name: "Дълго Или",
+                        buyPrice: 0,
+                        sellPrice: 1.7,
+                        ingredients: [
+                            {
+                                ingredient: "Кафе Или",
+                                qty: 7
+                            }
+                        ]
+                    },
+                    {
+                        name: "Кафе Ришар",
+                        buyPrice: 0,
+                        sellPrice: 2.5,
+                        ingredients: [
+                            {
+                                ingredient: "Капсула Ришар",
+                                qty: 1
+                            }
+                        ]
+                    },
+                    {
+                        name: "Дълго Ришар",
+                        buyPrice: 0,
+                        sellPrice: 2.5,
+                        ingredients: [
+                            {
+                                ingredient: "Капсула Ришар",
+                                qty: 1
+                            }
+                        ]
+                    },
+                    {
+                        name: "Кафе без кофейн",
+                        buyPrice: 0,
+                        sellPrice: 1.7,
+                        ingredients: [
+                            {
+                                ingredient: "Безкофейново Или",
+                                qty: 7
+                            }
+                        ]
+                    },
+                    {
+                        name: "Нескафе",
+                        buyPrice: 0,
+                        sellPrice: 1.5,
+                        ingredients: [
+                            {
+                                ingredient: "Нескафе",
+                                qty: 2
+                            }
+                        ]
+                    },
+                ]
+            },
+            {
+                categoryName: 'Топли напитки',
+                products: [
+                    {
+                        name: "Чай",
+                        qty: 50,
+                        buyPrice: 0,
+                        sellPrice: 1.5
+                    },
+                    {
+                        name: "Чай каничка",
+                        qty: 50,
+                        buyPrice: 0,
+                        sellPrice: 1.8
+                    },
+                    {
+                        name: "Капучино",
+                        buyPrice: 0,
+                        sellPrice: 2.2,
+                        ingredients: [
+                            {
+                                ingredient: "Нескафе",
+                                qty: 3
+                            },
+                            {
+                                ingredient: "Сухо мляко",
                                 qty: 30
                             }
                         ]
                     },
                     {
-                        name: "Кафе с мляко",
-                        buyPrice: 1,
+                        name: "Мляко с нес",
+                        buyPrice: 0,
+                        sellPrice: 2.2,
+                        ingredients: [
+                            {
+                                ingredient: "Нескафе",
+                                qty: 2
+                            },
+                            {
+                                ingredient: "Сухо мляко",
+                                qty: 30
+                            }
+                        ]
+                    },
+                    {
+                        name: "Мокачино",
+                        buyPrice: 0,
+                        sellPrice: 2.8,
+                        ingredients: [
+                            {
+                                ingredient: "Нескафе",
+                                qty: 3
+                            },
+                            {
+                                ingredient: "Сухо мляко",
+                                qty: 30
+                            },
+                            {
+                                ingredient: "Шоколад",
+                                qty: 16
+                            }
+                        ]
+                    },
+                    {
+                        name: "Виенско кафе",
+                        buyPrice: 0,
+                        sellPrice: 2.2,
+                        ingredients: [
+                            {
+                                ingredient: "Кафе Караро",
+                                qty: 7
+                            },
+                            {
+                                ingredient: "Сметана спрей",
+                                qty: 1
+                            }
+                        ]
+                    },
+                    {
+                        name: "Горещ шоколад",
+                        buyPrice: 0,
+                        sellPrice: 2.2,
+                        ingredients: [
+                            {
+                                ingredient: "Сухо мляко",
+                                qty: 15
+                            },
+                            {
+                                ingredient: "Шоколад",
+                                qty: 33
+                            }
+                        ]
+                    },
+                    {
+                        name: "Мляко",
+                        buyPrice: 0,
+                        sellPrice: 1.8,
+                        ingredients: [
+                            {
+                                ingredient: "Сухо мляко",
+                                qty: 35
+                            }
+                        ]
+                    },
+                    {
+                        name: "Мляко с какао",
+                        buyPrice: 0,
+                        sellPrice: 2.2,
+                        ingredients: [
+                            {
+                                ingredient: "Сухо мляко",
+                                qty: 25
+                            },
+                            {
+                                ingredient: "Шоколад",
+                                qty: 23
+                            },
+                        ]
+                    },
+                    {
+                        name: "Лате",
+                        buyPrice: 0,
+                        sellPrice: 3.3,
+                        ingredients: [
+                            {
+                                ingredient: "Кафе Караро",
+                                qty: 7
+                            },
+                            {
+                                ingredient: "Сухо мляко",
+                                qty: 35
+                            },
+                        ]
+                    },
+                    {
+                        name: "3в1",
+                        buyPrice: 0,
                         sellPrice: 1.5,
                         ingredients: [
                             {
-                                ingredient: "Кафе",
-                                qty: 20
+                                ingredient: "3в1",
+                                qty: 19
+                            },
+                        ]
+                    },
+                    {
+                        name: "Студено мляко с какао",
+                        buyPrice: 0,
+                        sellPrice: 2.2,
+                        ingredients: [
+                            {
+                                ingredient: "Какао",
+                                qty: 25
                             },
                             {
-                                ingredient: "Мляко",
-                                qty: 15
+                                ingredient: "Мляко кутия",
+                                qty: 220
+                            },
+                        ]
+                    },
+                    {
+                        name: "3в1 пакетче",
+                        qty: 50,
+                        buyPrice: 0,
+                        sellPrice: 1.5,
+                    },
+                    {
+                        name: "Мляко с нес ръчно",
+                        buyPrice: 0,
+                        sellPrice: 2.2,
+                        ingredients: [
+                            {
+                                ingredient: "Нескафе",
+                                qty: 2
+                            },
+                            {
+                                ingredient: "Мляко кутия",
+                                qty: 220
+                            },
+                        ]
+                    },
+                    {
+                        name: "Лате ръчно",
+                        buyPrice: 0,
+                        sellPrice: 3.3,
+                        ingredients: [
+                            {
+                                ingredient: "Кафе Караро",
+                                qty: 7
+                            },
+                            {
+                                ingredient: "Мляко кутия",
+                                qty: 200
+                            },
+                        ]
+                    },
+                    {
+                        name: "Мляко с какао ръчно",
+                        buyPrice: 0,
+                        sellPrice: 2.2,
+                        ingredients: [
+                            {
+                                ingredient: "Какао",
+                                qty: 25
+                            },
+                            {
+                                ingredient: "Мляко кутия",
+                                qty: 220
+                            },
+                        ]
+                    },
+                    {
+                        name: "Горещ шоколад италиански",
+                        qty: 50,
+                        buyPrice: 0,
+                        sellPrice: 3.9,
+                    },
+                ]
+            },
+            {
+                categoryName: 'Български алкохол',
+                products: [
+                    {
+                        name: "Водка",
+                        buyPrice: 0,
+                        sellPrice: 1.5,
+                        ingredients: [
+                            {
+                                ingredient: "Водка",
+                                qty: 50
+                            },
+                        ]
+                    },
+                    {
+                        name: "Уиски",
+                        buyPrice: 0,
+                        sellPrice: 1.5,
+                        ingredients: [
+                            {
+                                ingredient: "Уиски",
+                                qty: 50
+                            },
+                        ]
+                    },
+                    {
+                        name: "Мента",
+                        buyPrice: 0,
+                        sellPrice: 1.5,
+                        ingredients: [
+                            {
+                                ingredient: "Мента",
+                                qty: 50
+                            },
+                        ]
+                    },
+                    {
+                        name: "Мастика",
+                        buyPrice: 0,
+                        sellPrice: 1.5,
+                        ingredients: [
+                            {
+                                ingredient: "Мастика",
+                                qty: 50
+                            },
+                        ]
+                    },
+                    {
+                        name: "Джин",
+                        buyPrice: 0,
+                        sellPrice: 1.5,
+                        ingredients: [
+                            {
+                                ingredient: "Джин",
+                                qty: 50
+                            },
+                        ]
+                    },
+                    {
+                        name: "Коняк",
+                        buyPrice: 0,
+                        sellPrice: 1.5,
+                        ingredients: [
+                            {
+                                ingredient: "Коняк",
+                                qty: 50
+                            },
+                        ]
+                    },
+                    {
+                        name: "Ром",
+                        buyPrice: 0,
+                        sellPrice: 1.5,
+                        ingredients: [
+                            {
+                                ingredient: "Ром",
+                                qty: 50
+                            },
+                        ]
+                    },
+                    {
+                        name: "Коняк Плиска",
+                        buyPrice: 0,
+                        sellPrice: 2,
+                        ingredients: [
+                            {
+                                ingredient: "Коняк Плиска",
+                                qty: 50
+                            },
+                        ]
+                    },
+                    {
+                        name: "Чаша Вино",
+                        buyPrice: 0,
+                        sellPrice: 2,
+                        ingredients: [
+                            {
+                                ingredient: "Вино",
+                                qty: 200
+                            },
+                        ]
+                    },
+                    {
+                        name: "Мента кен",
+                        qty: 50,
+                        buyPrice: 0,
+                        sellPrice: 3.5,
+                    },
+                ]
+            },
+            {
+                categoryName: 'Летни напитки',
+                products: [
+                    {
+                        name: "Шейк",
+                        buyPrice: 0,
+                        sellPrice: 3,
+                        ingredients: [
+                            {
+                                ingredient: "Мляко кутия",
+                                qty: 150
+                            },
+                            {
+                                ingredient: "Пакетче шейк",
+                                qty: 1
+                            },
+                        ]
+                    },
+                    {
+                        name: "Лимонада",
+                        buyPrice: 0,
+                        sellPrice: 3.6,
+                        ingredients: [
+                            {
+                                ingredient: "Сироп лимонада",
+                                qty: 60
+                            },
+                            {
+                                ingredient: "Газирана вода",
+                                qty: 400
+                            },
+                        ]
+                    },
+                    {
+                        name: "Лимонада с билкови сиропи",
+                        buyPrice: 0,
+                        sellPrice: 4.8,
+                        ingredients: [
+                            {
+                                ingredient: "Сироп роза/лавандула",
+                                qty: 50
+                            },
+                            {
+                                ingredient: "Газирана вода",
+                                qty: 400
+                            },
+                        ]
+                    },
+                    {
+                        name: "Брауни",
+                        buyPrice: 0,
+                        sellPrice: 3.2,
+                        ingredients: [
+                            {
+                                ingredient: "Мляко кутия",
+                                qty: 120
+                            },
+                            {
+                                ingredient: "Кафе Караро",
+                                qty: 7
+                            },
+                            {
+                                ingredient: "Сироп бисквитки",
+                                qty: 30
+                            },
+                        ]
+                    },
+                    {
+                        name: "Цитронада",
+                        buyPrice: 0,
+                        sellPrice: 3.8,
+                        ingredients: [
+                            {
+                                ingredient: "Лимон",
+                                qty: 500
+                            },
+                            {
+                                ingredient: "Газирана вода",
+                                qty: 300
+                            },
+                        ]
+                    },
+                    {
+                        name: "Оранжада",
+                        buyPrice: 0,
+                        sellPrice: 3.8,
+                        ingredients: [
+                            {
+                                ingredient: "Портокал",
+                                qty: 500
+                            },
+                            {
+                                ingredient: "Газирана вода",
+                                qty: 300
+                            },
+                        ]
+                    },
+                    {
+                        name: "Чокофредо",
+                        buyPrice: 0,
+                        sellPrice: 2.8,
+                        ingredients: [
+                            {
+                                ingredient: "Мляко кутия",
+                                qty: 150
+                            },
+                            {
+                                ingredient: "Чокофредо",
+                                qty: 60
+                            },
+                        ]
+                    },
+                    {
+                        name: "Бяло фрапе",
+                        buyPrice: 0,
+                        sellPrice: 2.5,
+                        ingredients: [
+                            {
+                                ingredient: "Мляко кутия",
+                                qty: 120
+                            },
+                            {
+                                ingredient: "Нескафе",
+                                qty: 2
+                            },
+                        ]
+                    },
+                    {
+                        name: "Черно фрапе",
+                        buyPrice: 0,
+                        sellPrice: 2,
+                        ingredients: [
+                            {
+                                ingredient: "Нескафе",
+                                qty: 2
+                            },
+                        ]
+                    },
+                    {
+                        name: "Фреш лимон",
+                        buyPrice: 0,
+                        sellPrice: 5.5,
+                        ingredients: [
+                            {
+                                ingredient: "Лимон",
+                                qty: 1000
+                            },
+                        ]
+                    },
+                    {
+                        name: "Фреш портокал",
+                        buyPrice: 0,
+                        sellPrice: 4.5,
+                        ingredients: [
+                            {
+                                ingredient: "Портокал",
+                                qty: 1000
+                            },
+                        ]
+                    },
+                    {
+                        name: "Фреш грейпфрут",
+                        buyPrice: 0,
+                        sellPrice: 4.5,
+                        ingredients: [
+                            {
+                                ingredient: "Грейпфрут",
+                                qty: 1000
+                            },
+                        ]
+                    },
+                ]
+            },
+            {
+                categoryName: 'Алкохол внос',
+                products: [
+                    {
+                        name: "Водка внос",
+                        buyPrice: 0,
+                        sellPrice: 3,
+                        ingredients: [
+                            {
+                                ingredient: "Водка внос",
+                                qty: 50
+                            },
+                        ]
+                    },
+                    {
+                        name: "Джин внос",
+                        buyPrice: 0,
+                        sellPrice: 3,
+                        ingredients: [
+                            {
+                                ingredient: "Джин внос",
+                                qty: 50
+                            },
+                        ]
+                    },
+                    {
+                        name: "Уиски внос",
+                        buyPrice: 0,
+                        sellPrice: 4,
+                        ingredients: [
+                            {
+                                ingredient: "Уиски внос",
+                                qty: 50
+                            },
+                        ]
+                    },
+                    {
+                        name: "Джак Даниелс",
+                        buyPrice: 0,
+                        sellPrice: 5,
+                        ingredients: [
+                            {
+                                ingredient: "Джак Даниелс",
+                                qty: 50
+                            },
+                        ]
+                    },
+                    {
+                        name: "Бушмилс черен",
+                        buyPrice: 0,
+                        sellPrice: 6,
+                        ingredients: [
+                            {
+                                ingredient: "Бушмилс черен",
+                                qty: 50
+                            },
+                        ]
+                    },
+                    {
+                        name: "Черно Джони",
+                        buyPrice: 0,
+                        sellPrice: 6,
+                        ingredients: [
+                            {
+                                ingredient: "Черно Джони",
+                                qty: 50
+                            },
+                        ]
+                    },
+                    {
+                        name: "Мартини",
+                        buyPrice: 0,
+                        sellPrice: 2.5,
+                        ingredients: [
+                            {
+                                ingredient: "Мартини",
+                                qty: 50
+                            },
+                        ]
+                    },
+                    {
+                        name: "Бакарди",
+                        buyPrice: 0,
+                        sellPrice: 3.5,
+                        ingredients: [
+                            {
+                                ingredient: "Бакарди",
+                                qty: 50
+                            },
+                        ]
+                    },
+                    {
+                        name: "Кампари",
+                        buyPrice: 0,
+                        sellPrice: 3.5,
+                        ingredients: [
+                            {
+                                ingredient: "Кампари",
+                                qty: 50
+                            },
+                        ]
+                    },
+                    {
+                        name: "Бейлис",
+                        buyPrice: 0,
+                        sellPrice: 4,
+                        ingredients: [
+                            {
+                                ingredient: "Бейлис",
+                                qty: 50
+                            },
+                        ]
+                    },
+                    {
+                        name: "Текила",
+                        buyPrice: 0,
+                        sellPrice: 1.5,
+                        ingredients: [
+                            {
+                                ingredient: "Текила",
+                                qty: 50
+                            },
+                        ]
+                    },
+                    {
+                        name: "Узо",
+                        buyPrice: 0,
+                        sellPrice: 3,
+                        ingredients: [
+                            {
+                                ingredient: "Узо",
+                                qty: 50
+                            },
+                        ]
+                    },
+                    {
+                        name: "Пастис",
+                        buyPrice: 0,
+                        sellPrice: 3,
+                        ingredients: [
+                            {
+                                ingredient: "Пастис",
+                                qty: 50
+                            },
+                        ]
+                    },
+                ]
+            },
+            {
+                categoryName: 'Ядки',
+                products: [
+                    {
+                        name: "Фъстък",
+                        qty: 50,
+                        buyPrice: 0,
+                        sellPrice: 1.5,
+                    },
+                    {
+                        name: "Бадем",
+                        qty: 50,
+                        buyPrice: 0,
+                        sellPrice: 5,
+                    },
+                    {
+                        name: "Лешник",
+                        qty: 50,
+                        buyPrice: 0,
+                        sellPrice: 5,
+                    },
+                    {
+                        name: "Шам фъстък",
+                        qty: 50,
+                        buyPrice: 0,
+                        sellPrice: 5,
+                    },
+                    {
+                        name: "Кашу",
+                        qty: 50,
+                        buyPrice: 0,
+                        sellPrice: 5,
+                    },
+                ]
+            },
+            {
+                categoryName: 'Бира',
+                products: [
+                    {
+                        name: "Каменица",
+                        qty: 50,
+                        buyPrice: 0,
+                        sellPrice: 2.3,
+                    },
+                    {
+                        name: "Бургаско",
+                        qty: 50,
+                        buyPrice: 0,
+                        sellPrice: 2.3,
+                    },
+                    {
+                        name: "Стела Артоа",
+                        qty: 50,
+                        buyPrice: 0,
+                        sellPrice: 2.8,
+                    },
+                    {
+                        name: "Бекс",
+                        qty: 50,
+                        buyPrice: 0,
+                        sellPrice: 2.6,
+                    },
+                    {
+                        name: "Старопрамен",
+                        qty: 50,
+                        buyPrice: 0,
+                        sellPrice: 2.6,
+                    },
+                    {
+                        name: "Корона",
+                        qty: 50,
+                        buyPrice: 0,
+                        sellPrice: 4,
+                    },
+                    {
+                        name: "Безалкохолна Бекс",
+                        qty: 50,
+                        buyPrice: 0,
+                        sellPrice: 3,
+                    },
+                    {
+                        name: "Стела Артоа 330ml",
+                        qty: 50,
+                        buyPrice: 0,
+                        sellPrice: 3.3,
+                    },
+                    {
+                        name: "Бира кен",
+                        qty: 50,
+                        buyPrice: 0,
+                        sellPrice: 2.3,
+                    },
+                    {
+                        name: "Сайдер",
+                        qty: 50,
+                        buyPrice: 0,
+                        sellPrice: 3,
+                    },
+                ]
+            },
+            {
+                categoryName: 'Други',
+                products: [
+                    {
+                        name: "Наргиле",
+                        qty: 50,
+                        buyPrice: 0,
+                        sellPrice: 20,
+                    },
+                    {
+                        name: "Шот",
+                        buyPrice: 0,
+                        sellPrice: 20,
+                        ingredients: [
+                            {
+                                ingredient: "Водка",
+                                qty: 10
+                            },
+                            {
+                                ingredient: "Сок Гранини",
+                                qty: 20
                             }
+                        ]
+                    },
+                ]
+            },
+            {
+                categoryName: 'Добавки',
+                products: [
+                    {
+                        name: "Каничка мляко",
+                        addonForCategory: "Кафе",
+                        buyPrice: 0,
+                        sellPrice: 0.5,
+                        ingredients: [
+                            {
+                                ingredient: "Сухо мляко",
+                                qty: 15
+                            },
+                        ]
+                    },
+                    {
+                        name: "Каничка студено мляко",
+                        addonForCategory: "Кафе",
+                        buyPrice: 0,
+                        sellPrice: 0.5,
+                        ingredients: [
+                            {
+                                ingredient: "Мляко кутия",
+                                qty: 100
+                            },
+                        ]
+                    },
+                    {
+                        name: "Мед",
+                        addonForCategory: "Кафе",
+                        qty: 50,
+                        buyPrice: 0,
+                        sellPrice: 0.5
+                    },
+                    {
+                        name: "Мед лъжичка",
+                        addonForCategory: "Кафе",
+                        qty: 50,
+                        buyPrice: 0,
+                        sellPrice: 0.7
+                    },
+                    {
+                        name: "Кондензирано мляко",
+                        addonForCategory: "Кафе",
+                        qty: 50,
+                        buyPrice: 0,
+                        sellPrice: 0.2
+                    },
+                    {
+                        name: "Суха сметана",
+                        addonForCategory: "Кафе",
+                        qty: 50,
+                        buyPrice: 0,
+                        sellPrice: 0.2
+                    },
+                    {
+                        name: "Сметана спрей",
+                        addonForCategory: "Кафе",
+                        buyPrice: 0,
+                        sellPrice: 0.8,
+                        ingredients: [
+                            {
+                                ingredient: "Сметана спрей",
+                                qty: 1
+                            },
+                        ]
+                    },
+                    {
+                        name: "Алое",
+                        addonForCategory: "Летни напитки",
+                        buyPrice: 0,
+                        sellPrice: 0.8,
+                        ingredients: [
+                            {
+                                ingredient: "Алое",
+                                qty: 200
+                            },
+                        ]
+                    },
+                    {
+                        name: "Резен лимон",
+                        addonForCategory: "Безалкохолни напитки",
+                        buyPrice: 0,
+                        sellPrice: 0.2,
+                        ingredients: [
+                            {
+                                ingredient: "Лимон",
+                                qty: 5
+                            },
                         ]
                     },
                 ]
@@ -434,6 +1742,11 @@ function routesConfig(app) {
                     }
                 }
 
+                if (product.hasOwnProperty('addonForCategory')) {
+                    const c = Category.find({ name: product.addonForCategory })
+                    product.addonForCategory = c._id;
+                }
+
                 const pr = await Product.create(product);
 
                 cat.products.push(pr._id); // add reference to product._id in category
@@ -443,15 +1756,6 @@ function routesConfig(app) {
 
         console.log('Created default products');
     }
-
-    async function createDefaults() {
-        await createDefaultUsers();
-        await createDefaultTables();
-        await createDefaultCategories();
-        await createDefaultIngredients();
-        await createDefaultProducts();
-    }
-    // createDefaults();
 
     async function deleteAllBills() {
         await Bill.deleteMany();
@@ -467,6 +1771,19 @@ function routesConfig(app) {
         await ProductHistory.deleteMany();
         console.log('\u001b[1;31mHistory deleted')
     }
+
+    async function createDefaults() {
+        await createDefaultUsers();
+        await createDefaultTables();
+        await createDefaultCategories();
+        await createDefaultIngredients();
+        await createDefaultProducts();
+        await deleteAllBills();
+        await deleteHistory();
+    }
+    // createDefaults();
+
+
     // deleteAllBills(); deleteHistory();
 }
 
