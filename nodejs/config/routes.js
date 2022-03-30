@@ -15,6 +15,8 @@ import { Ingredient } from '../model/ingredient.js';
 import { verifyToken as auth } from '../middleware/auth.js';
 import bcrypt from 'bcryptjs';
 import { ProductHistory } from '../model/history.js';
+import { Addon } from '../model/addons.js';
+import { addonsRoutes } from './routes/addons.js';
 
 function routesConfig(app) {
     // Load all routes
@@ -24,6 +26,7 @@ function routesConfig(app) {
     ingredientsRoutes(app, auth)
     billsRoutes(app, auth);
     tablesRoutes(app, auth);
+    addonsRoutes(app, auth);
 
 
 
@@ -1631,99 +1634,6 @@ function routesConfig(app) {
                         ]
                     },
                 ]
-            },
-            {
-                categoryName: 'Добавки',
-                products: [
-                    {
-                        name: "Каничка мляко",
-                        addonForCategory: "Кафе",
-                        buyPrice: 0,
-                        sellPrice: 0.5,
-                        ingredients: [
-                            {
-                                ingredient: "Сухо мляко",
-                                qty: 15
-                            },
-                        ]
-                    },
-                    {
-                        name: "Каничка студено мляко",
-                        addonForCategory: "Кафе",
-                        buyPrice: 0,
-                        sellPrice: 0.5,
-                        ingredients: [
-                            {
-                                ingredient: "Мляко кутия",
-                                qty: 100
-                            },
-                        ]
-                    },
-                    {
-                        name: "Мед",
-                        addonForCategory: "Кафе",
-                        qty: 50,
-                        buyPrice: 0,
-                        sellPrice: 0.5
-                    },
-                    {
-                        name: "Мед лъжичка",
-                        addonForCategory: "Кафе",
-                        qty: 50,
-                        buyPrice: 0,
-                        sellPrice: 0.7
-                    },
-                    {
-                        name: "Кондензирано мляко",
-                        addonForCategory: "Кафе",
-                        qty: 50,
-                        buyPrice: 0,
-                        sellPrice: 0.2
-                    },
-                    {
-                        name: "Суха сметана",
-                        addonForCategory: "Кафе",
-                        qty: 50,
-                        buyPrice: 0,
-                        sellPrice: 0.2
-                    },
-                    {
-                        name: "Сметана спрей",
-                        addonForCategory: "Кафе",
-                        buyPrice: 0,
-                        sellPrice: 0.8,
-                        ingredients: [
-                            {
-                                ingredient: "Сметана спрей",
-                                qty: 1
-                            },
-                        ]
-                    },
-                    {
-                        name: "Алое",
-                        addonForCategory: "Летни напитки",
-                        buyPrice: 0,
-                        sellPrice: 0.8,
-                        ingredients: [
-                            {
-                                ingredient: "Алое",
-                                qty: 200
-                            },
-                        ]
-                    },
-                    {
-                        name: "Резен лимон",
-                        addonForCategory: "Безалкохолни напитки",
-                        buyPrice: 0,
-                        sellPrice: 0.2,
-                        ingredients: [
-                            {
-                                ingredient: "Лимон",
-                                qty: 5
-                            },
-                        ]
-                    },
-                ]
             }
         ];
 
@@ -1742,11 +1652,6 @@ function routesConfig(app) {
                     }
                 }
 
-                if (product.hasOwnProperty('addonForCategory')) {
-                    const c = Category.find({ name: product.addonForCategory })
-                    product.addonForCategory = c._id;
-                }
-
                 const pr = await Product.create(product);
 
                 cat.products.push(pr._id); // add reference to product._id in category
@@ -1755,6 +1660,116 @@ function routesConfig(app) {
         }
 
         console.log('Created default products');
+    }
+
+    async function createDefaultAddons() {
+        const addons = [
+            {
+                categories: ["Кафе"],
+                name: "К. мляко",
+                buyPrice: 0,
+                sellPrice: 0.5,
+                ingredients: [
+                    {
+                        ingredient: "Сухо мляко",
+                        qty: 15
+                    },
+                ]
+            },
+            {
+                categories: ["Кафе"],
+                name: "К. студ. мляко",
+                buyPrice: 0,
+                sellPrice: 0.5,
+                ingredients: [
+                    {
+                        ingredient: "Мляко кутия",
+                        qty: 100
+                    },
+                ]
+            },
+            {
+                categories: ["Кафе"],
+                name: "Мед",
+                qty: 50,
+                buyPrice: 0,
+                sellPrice: 0.5
+            },
+            {
+                categories: ["Кафе"],
+                name: "Лъж. мед",
+                qty: 50,
+                buyPrice: 0,
+                sellPrice: 0.7
+            },
+            {
+                categories: ["Кафе"],
+                name: "Конд. мляко",
+                qty: 50,
+                buyPrice: 0,
+                sellPrice: 0.2
+            },
+            {
+                categories: ["Кафе"],
+                name: "Суха сметана",
+                qty: 50,
+                buyPrice: 0,
+                sellPrice: 0.2
+            },
+            {
+                categories: ["Кафе"],
+                name: "Сметана спрей",
+                buyPrice: 0,
+                sellPrice: 0.8,
+                ingredients: [
+                    {
+                        ingredient: "Сметана спрей",
+                        qty: 1
+                    },
+                ]
+            },
+            {
+                categories: ["Летни напитки"],
+                name: "Алое",
+                buyPrice: 0,
+                sellPrice: 0.8,
+                ingredients: [
+                    {
+                        ingredient: "Алое",
+                        qty: 200
+                    },
+                ]
+            },
+            {
+                categories: ["Безалкохолни"],
+                name: "Резен лимон",
+                buyPrice: 0,
+                sellPrice: 0.2,
+                ingredients: [
+                    {
+                        ingredient: "Лимон",
+                        qty: 5
+                    },
+                ]
+            },
+        ];
+
+        for (let addon of addons) {
+            if (addon.hasOwnProperty('ingredients')) {
+                for (let ingredient of addon.ingredients) { // if any ingredients
+                    const ing = await Ingredient.findOne({ name: ingredient.ingredient }); // find ingredient id by name
+                    ingredient.ingredient = ing._id;
+                }
+            }
+
+            for (let categoryName of addon.categories) {
+                const c = await Category.findOne({ name: categoryName });
+                addon.categories[addon.categories.indexOf(categoryName)] = c._id;
+            }
+            Addon.create(addon);
+        }
+
+        console.log('Created default addons');
     }
 
     async function deleteAllBills() {
@@ -1778,12 +1793,11 @@ function routesConfig(app) {
         await createDefaultCategories();
         await createDefaultIngredients();
         await createDefaultProducts();
+        await createDefaultAddons();
         await deleteAllBills();
         await deleteHistory();
     }
     // createDefaults();
-
-
     // deleteAllBills(); deleteHistory();
 }
 

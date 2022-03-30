@@ -8,6 +8,28 @@ axios.defaults.baseURL = 'http://localhost:80';
 if (user)
     axios.defaults.headers.common['authorization'] = user.token;
 
+export async function getAddonsForCategory(_id) {
+    return await axios.post('/getAddonsForCategory', {
+        _id
+    }).catch((err) => {
+        return err.response;
+    });
+}
+
+export async function getAllAddons() {
+    const res = await axios.get('/getAllAddons');
+    return res.data;
+}
+
+export async function getLastPaidBillByTableId(_id, billId) {
+    return await axios.post('/getLastPaidBillByTableId', {
+        _id,
+        billId
+    }).catch((err) => {
+        return err.response;
+    });
+}
+
 export async function sellProducts(billToPay) {
     return await axios.post('/sellProducts', {
         billToPay
@@ -16,10 +38,21 @@ export async function sellProducts(billToPay) {
     });
 }
 
-export async function editIngredient(_id, name, qty, buyPrice, sellPrice) {
+export async function changeQtyIngredient(_id, qty, action) {
+    return await axios.post('/changeQtyIngredient', {
+        _id,
+        qty,
+        action
+    }).catch((err) => {
+        return err.response;
+    });
+}
+
+export async function editIngredient(_id, name, unit, qty, buyPrice, sellPrice) {
     return await axios.post('/editIngredient', {
         _id,
         name,
+        unit,
         qty,
         buyPrice,
         sellPrice
@@ -61,11 +94,12 @@ export async function getAllIngredients() {
     return res.data;
 }
 
-export async function addProductToBill(_id, selectedX, selectedBillId) {
+export async function addProductToBill(_id, selectedX, selectedBillId, selectedAddon) {
     return await axios.post('/addProductToBill', {
         _id, // product _id
         selectedX, // 1,2,3,4,5 (how many qty of this product to add)
-        selectedBillId // bill _id
+        selectedBillId, // bill _id
+        selectedAddon // addon _id
     }).catch((err) => {
         return err.response;
     });

@@ -3,12 +3,12 @@ import { container } from "../app";
 import { html, render } from 'lit/html.js';
 import $ from "jquery";
 import Sortable from 'sortablejs';
-import { sortCategories, getProductById, getCategoryById, getAllUsers, editCategory, deleteCategory, deleteUser, createUser, editUser, createCategory, changeQtyProduct, createProduct, deleteProduct, editProduct, getAllCategories, getAllProducts, sortProducts, logout, getAllIngredients, createIngredient, deleteIngredient, getIngredientById, editIngredient, getAllProductsWithoutIngredients, getProductsWithoutIngredientsFromCategory } from '../api';
+import { sortCategories, getProductById, getCategoryById, getAllUsers, editCategory, deleteCategory, deleteUser, createUser, editUser, createCategory, changeQtyProduct, createProduct, deleteProduct, editProduct, getAllCategories, getAllProducts, sortProducts, logout, getAllIngredients, createIngredient, deleteIngredient, getIngredientById, editIngredient, getAllProductsWithoutIngredients, getProductsWithoutIngredientsFromCategory, changeQtyIngredient } from '../api';
 
 const backBtn = html`<button @click=${()=> page('/admin')} class="btn btn-secondary fs-3 mt-2 ms-2">Назад</button>`;
 let contentType; //  used in loadProducts to determine if we are loading/deleting a product or ingredient
 
-async function loadProducts(e) {
+async function loadProducts(e, showProductsFromIngredients) {
     // Get selected category
     const categoryId = e.target.value;
 
@@ -25,10 +25,22 @@ async function loadProducts(e) {
     } else {
         // Get category and render products as options
         const res = await getCategoryById(categoryId);
+
         
         if (res.status === 200) {
             contentType = 'product';
-            contentToRender = res.data.products;
+            let productsWithoutIngredients = [];
+
+            if (showProductsFromIngredients === false) {
+                for (let [index, product] of Object.entries(res.data.products)) {
+                    if (product.hasOwnProperty('qty'))
+                        productsWithoutIngredients.push(product);
+                }
+    
+                contentToRender = productsWithoutIngredients;
+            }
+            else 
+                contentToRender = res.data.products;
         }
         if (res.status === 400)
             return alert(res.data);
@@ -64,6 +76,7 @@ export async function removeQtyProductPage() {
         e.preventDefault();
         // Get data from form
         const formData = new FormData(e.target);
+        const selectedCategory = formData.get('categoryId');
         const _id = formData.get('_id');
         const qty = +formData.get('qty');
         const action = 'remove'; // remove from current qty
@@ -73,7 +86,11 @@ export async function removeQtyProductPage() {
         if (qty === null)
             return alert('Въведи количество!');
 
-        const res = await changeQtyProduct(_id, qty, action);
+        let res;
+        if (selectedCategory === 'ingredients')
+            res = await changeQtyIngredient(_id, qty, action);
+        else
+            res = await changeQtyProduct(_id, qty, action);
 
         if (res.status === 200) {// Successfully removed qty from product
             alert(res.data);
@@ -89,8 +106,9 @@ export async function removeQtyProductPage() {
         <form @submit=${remQty} class="d-flex text-center fs-3 flex-column m-auto mt-5 gap-5 p-3">
             <div class="mb-3">
                 <label for="categoryId" class="form-label">1. Избери категория</label>
-                <select @change=${loadProducts} required type="text" class="form-control fs-4" name="categoryId" id="categoryId">
+                <select @change=${(e) => loadProducts(e, false)} required type="text" class="form-control fs-4" name="categoryId" id="categoryId">
                     <option selected disabled>Избери</option>
+                    <option value="ingredients">Съставки</option>
                     ${categories.map((category) => html`<option value=${category._id}>${category.name}</option>`)}
                 </select>
             </div>
@@ -113,10 +131,12 @@ export async function removeQtyProductPage() {
 
 export async function addQtyProductPage() {
     const categories = await getAllCategories();
+
     async function addQty(e) {
         e.preventDefault();
         // Get data from form
         const formData = new FormData(e.target);
+        const selectedCategory = formData.get('categoryId');
         const _id = formData.get('_id');
         const qty = +formData.get('qty');
         const action = 'add'; // add to current qty
@@ -126,7 +146,11 @@ export async function addQtyProductPage() {
         if (qty === null)
             return alert('Въведи количество!');
 
-        const res = await changeQtyProduct(_id, qty, action);
+        let res;
+        if (selectedCategory === 'ingredients')
+            res = await changeQtyIngredient(_id, qty, action);
+        else
+            res = await changeQtyProduct(_id, qty, action);
 
         if (res.status === 200) {// Successfully added qty to product
             alert(res.data);
@@ -142,8 +166,9 @@ export async function addQtyProductPage() {
         <form @submit=${addQty} class="d-flex text-center fs-3 flex-column m-auto mt-5 gap-5 p-3">
             <div class="mb-3">
                 <label for="categoryId" class="form-label">1. Избери категория</label>
-                <select @change=${loadProducts} required type="text" class="form-control fs-4" name="categoryId" id="categoryId">
+                <select @change=${(e) => loadProducts(e, false)} required type="text" class="form-control fs-4" name="categoryId" id="categoryId">
                     <option selected disabled>Избери</option>
+                    <option value="ingredients">Съставки</option>
                     ${categories.map((category) => html`<option value=${category._id}>${category.name}</option>`)}
                 </select>
             </div>
@@ -243,6 +268,8 @@ export async function createProductPage() {
         const formData = new FormData(e.target);
         const name = formData.get('name');
         const unit = formData.get('unit');
+        if (unit === undefined || unit === 'Избери')
+            return alert('Избери мерна единица!');
         const qty = +formData.get('qty');
         const buyPrice = +formData.get('buyPrice');
         const sellPrice = +formData.get('sellPrice');
@@ -413,6 +440,15 @@ export async function createProductPage() {
             <input required type="text" class="form-control fs-4" name="name" id="name" placeholder="пример: Бира">
         </div>
         <div class="mb-3">
+            <label for="unit" class="form-label">Мерна единица</label>
+            <select required class="form-control fs-4" name="unit" id="unit">
+                <option selected disabled>Избери</option>
+                <option value="кг">килограм</option>
+                <option value="л">литър</option>
+                <option value="бр">брой</option>
+            </select>
+        </div>
+        <div class="mb-3">
             <label for="qty" class="form-label">Количество</label>
             <input required type="number" min="1" class="form-control fs-4" name="qty" id="qty" placeholder="пример: 50">
         </div>
@@ -499,6 +535,7 @@ export async function editProductPage() {
         const formData = new FormData(e.target);
         const _id = formData.get('_id');
         const name = formData.get('name');
+        const unit = formData.get('unit');
         let qty = formData.get('qty');
         const buyPrice = +formData.get('buyPrice');
         const sellPrice = +formData.get('sellPrice');
@@ -507,7 +544,9 @@ export async function editProductPage() {
         let res;
         if (contentType === 'ingredient') {
             qty = +qty;
-            res = await editIngredient(_id, name, qty, buyPrice, sellPrice)
+            if (unit === undefined || unit === 'Избери')
+                return alert('Избери мерна единица!')
+            res = await editIngredient(_id, name, unit, qty, buyPrice, sellPrice)
         } else {
             const categoryId = formData.get('pr-categoryId');
             const forBartender = formData.get('forBartender') || false;
@@ -561,8 +600,43 @@ export async function editProductPage() {
         if (contentType === 'ingredient') {
             const res = await getIngredientById(_id);
             const ingredient = res.data;
+
+            let unithtml;
+            if (ingredient.unit === 'кг')
+                unithtml = html`
+                <div class="mb-3">
+                    <label for="unit" class="form-label">Мерна единица</label>
+                    <select required class="form-control fs-4" name="unit" id="unit">
+                        <option disabled>Избери</option>
+                        <option selected value="кг">килограм</option>
+                        <option value="л">литър</option>
+                        <option value="бр">брой</option>
+                    </select>
+                </div>`
+            if (ingredient.unit === 'л')
+                unithtml = html`
+                <div class="mb-3">
+                    <label for="unit" class="form-label">Мерна единица</label>
+                    <select required class="form-control fs-4" name="unit" id="unit">
+                        <option disabled>Избери</option>
+                        <option value="кг">килограм</option>
+                        <option selected value="л">литър</option>
+                        <option value="бр">брой</option>
+                    </select>
+                </div>`
+            if (ingredient.unit === 'бр')
+                unithtml = html`
+                <div class="mb-3">
+                    <label for="unit" class="form-label">Мерна единица</label>
+                    <select required class="form-control fs-4" name="unit" id="unit">
+                        <option disabled>Избери</option>
+                        <option value="кг">килограм</option>
+                        <option value="л">литър</option>
+                        <option selected value="бр">брой</option>
+                    </select>
+                </div>`
             
-            render(ingredientFields(ingredient), document.getElementById('product-info'))
+            render(ingredientFields(ingredient, unithtml), document.getElementById('product-info'))
             
         }
         else {
@@ -690,11 +764,13 @@ export async function editProductPage() {
         <input type="submit" class="btn btn-primary fs-3 w-100" value="Промени"/>
     `;
 
-    const ingredientFields = (ingredient) => html`
+    const ingredientFields = (ingredient, unithtml) => html`
         <div class="mb-3">
             <label for="pr-name" class="form-label">Име</label>
             <input required type="text" class="form-control fs-4" name="name" id="pr-name" value=${ingredient.name} placeholder="пример: Бира">
         </div>
+
+        ${unithtml}
 
         <div class="mb-3">
             <label for="pr-qty" class="form-label">Количество</label>
@@ -1175,8 +1251,6 @@ export async function inventoryPage() {
     const ingredients = await getAllIngredients();
     const productsAndIngredients = ingredients.concat(products);
 
-    console.log(productsAndIngredients.length)
-
     let totals = {
         buyPrice: 0,
         sellPrice: 0,
@@ -1191,6 +1265,7 @@ export async function inventoryPage() {
 
             return html`
                 <tr class="${product.qty < 20 ? 'table-danger' : ''}">
+                    <td scope="row">${product.unit ? 'Съставка' : 'Продукт'}</td>
                     <td scope="row">${product.name}</td>
                     <td>${product.qty}</td>
                     <td>${product.buyPrice}</td>
@@ -1246,6 +1321,7 @@ export async function inventoryPage() {
         <table class="table table-striped table-light table-hover text-center">
             <thead>
                 <tr>
+                    <th scope="col">Тип</th>
                     <th scope="col">Артикул</th>
                     <th scope="col">Количество</th>
                     <th scope="col">Доставна цена</th>

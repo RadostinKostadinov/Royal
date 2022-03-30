@@ -1,6 +1,45 @@
 import { Ingredient } from "../../model/ingredient.js";
 
 export function ingredientsRoutes(app, auth) {
+    app.post('/changeQtyIngredient', auth, async (req, res) => {
+        try {
+            // Check if user is admin
+            if (req.user.role !== 'admin')
+                return res.status(401).send('Нямате достъп!')
+
+            // Get user input
+            let { _id, qty, action } = req.body;
+
+            // Validate user input
+            if (!(_id && qty && action))
+                return res.status(400).send('Всички полета са задължителни!');
+
+            // Check if qty is integer
+            if (qty % 1 !== 0)
+                return res.status(400).send('Бройката трябва да е цяло число (примерно 10, 500)!');
+
+            if (action !== 'add' && action !== 'remove')
+                return res.status(400).send('Невалидно действие!');
+
+            // Get references to ingredient
+            const ingredient = await Ingredient.findById(_id);
+
+            // Change qty
+            if (action === 'add')
+                ingredient.qty += qty;
+            else if (action === 'remove')
+                ingredient.qty -= qty;
+
+            ingredient.save(); // Save changes
+
+            // Done
+            res.send('Успешно променихте бройките!');
+        } catch (error) {
+            console.error(error);
+            res.status(500).send('Възникна грешка!');
+        }
+    });
+
     app.post('/createIngredient', auth, async (req, res) => {
         try {
             // Check if user is admin

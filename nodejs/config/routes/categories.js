@@ -2,7 +2,6 @@ import { Category } from "../../model/category.js";
 import { Product } from "../../model/product.js";
 
 export function categoriesRoutes(app, auth) {
-
     app.get('/getAllCategories', auth, async (req, res) => {
         try {
             const categories = await Category.find().sort({ position: 1 });

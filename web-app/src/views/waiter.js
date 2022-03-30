@@ -8,16 +8,17 @@ import { container } from "../app";
 import { html, render } from 'lit/html.js';
 import $ from "jquery";
 import 'bootstrap-icons/font/bootstrap-icons.css';
-import { addProductToBill, generateBills, getAllCategories, getAllTables, getCategoryById, logout, getBillById, removeOneFromBill, sellProducts } from '../api';
+import { getAddonsForCategory, getLastPaidBillByTableId, addProductToBill, generateBills, getAllCategories, getAllTables, getCategoryById, logout, getBillById, removeOneFromBill, sellProducts } from '../api';
 const backBtn = html`<button @click=${()=> page('/waiter')} class="btn btn-secondary fs-3 mt-2 ms-2">Назад</button>`;
 
 // Dashboard contains all the code for rendering the tables view (grid with tables)
 export async function waiterDashboardPage() {
     // Get all tables from db
     const { middleTables, insideTables, outsideTables } = await getAllTables();
+    const date = new Date();
 
     function getDay() {
-        const day = new Date().getDay();
+        const day = date.getDay();
         if (day === 0)
             return 'Неделя';
         if (day === 1)
@@ -35,8 +36,6 @@ export async function waiterDashboardPage() {
     }
 
     function getDate() {
-        const date = new Date();
-
         let day = date.getDate();
         if (day < 10)
             day = '0' + day;
@@ -49,13 +48,11 @@ export async function waiterDashboardPage() {
     }
 
     function getTime() {
-        const date = new Date();
-
-        let hours = new Date().getHours();
+        let hours = date.getHours();
         if (hours < 10)
             hours = '0'+hours;
 
-        let minutes = new Date().getMinutes();
+        let minutes = date.getMinutes();
         if (minutes < 10)
             minutes = '0' + minutes;
 
@@ -87,7 +84,7 @@ export async function waiterDashboardPage() {
             
             <div class="d-flex flex-column w-100">
                 <div id="topMenu">
-                    
+                    <button>Плащания</button>
                 </div>
     
                 ${grid}
@@ -148,15 +145,17 @@ export async function tableControlsPage(ctx) {
 
     let billData,
         selectedBillId, // by default the first one is selected, so its never undefined
-        selectedX = 1; // can be 2,3... (number) or undefined (no X selected)
+        selectedX = 1, // can be 2,3... (number) or undefined (no X selected)
+        selectedAddon;
     
     async function addToBill(e) {
         const _id = $(e.target).attr('_id');
 
-        const res = await addProductToBill(_id, selectedX, selectedBillId);
+        const res = await addProductToBill(_id, selectedX, selectedBillId, selectedAddon);
 
         if (res.status === 200) {
             const bill = res.data; // get bill and render all products inside it
+            billData = bill;
 
             renderProductsInBill(bill);
         } else {
@@ -196,10 +195,38 @@ export async function tableControlsPage(ctx) {
             const category = res.data;
             
             render(productsTemplate(category.products), document.querySelector('#tableControls .products'))
+        
+            // Check if category has addons for products
+            const addonsRes = await getAddonsForCategory(_id);
+
+            if (addonsRes.status === 200) {
+                const addons = addonsRes.data;
+                render(addonsTemplate(addons), document.querySelector('#tableControls .addons'))
+            } else {
+                console.error(addonsRes);
+                return alert('Възникна грешка!');
+            }
         } else {
             alert('Възникна грешка!')
             console.error(res);
         }
+    }
+
+    const addonsTemplate = (addons) => html`
+        ${addons.map((addon) => html`<button @click=${selectAddon} _id=${addon._id}>${addon.name}</button>`)}
+    `;
+
+    function selectAddon(e) {
+        const btn = $(e.target);
+        const lastBtn = $('#tableControls .addons button.active');
+        
+        lastBtn.removeClass('active');
+
+        if (btn.text() !== lastBtn.text()) {
+            btn.addClass('active');
+            selectedAddon = btn.attr('_id');
+        }
+        else selectedAddon = undefined;
     }
 
     async function changeSelectedBill(e) {
@@ -213,6 +240,7 @@ export async function tableControlsPage(ctx) {
         selectedBillEl.addClass('active');
 
         renderProductsInBill();
+        getLastPaidOnBill();
     }
 
     function changeSelectedX(e) {
@@ -251,6 +279,7 @@ export async function tableControlsPage(ctx) {
             await renderProductsInBill();// load its products
             
             render(billsTemplate(bills), document.querySelector('#tableControls .bills'));
+            getLastPaidOnBill();
         } else {
             console.error(res);
             alert('Възникна грешка!');
@@ -291,6 +320,35 @@ export async function tableControlsPage(ctx) {
         }
     }
 
+    async function getLastPaidOnBill() {
+        const res = await getLastPaidBillByTableId(selectedTable, selectedBillId);
+        
+        if (res.data) {
+            render('Последна', document.querySelector('table tfoot .lastPaidText'))
+            render(res.data.total.toFixed(2), document.querySelector('table tfoot .lastPaidPrice'))
+        } else {
+            render('', document.querySelector('table tfoot .lastPaidText'))
+            render('', document.querySelector('table tfoot .lastPaidPrice'))
+
+        }
+
+    }
+
+    async function payWholeBill() {
+        console.log(billData.products);
+        if (billData.products.length === 0) return;
+
+        const res = await sellProducts(billData);
+
+        if (res.status === 200) {
+            page(`/waiter`);
+        } else {
+            console.error(res);
+            alert('Възникна грешка!');
+        }
+        
+    } 
+
     const productsInBill = (bill) => html`
         <table class="text-center">
             <thead>
@@ -316,9 +374,12 @@ export async function tableControlsPage(ctx) {
             </tbody>
             <tfoot class="text-uppercase">
                 <tr>
-                    <th width="60%" colspan="3"></th>
-                    <th width="20%">Сметка</th>
-                    <th width="20%">${bill.total.toFixed(2)}</th>
+                    <!-- <th width="60%" colspan="3"></th> -->
+                    <th width="25%" class="lastPaidText"></th>
+                    <th width="15%" class="lastPaidPrice"></th>
+                    <th width="30%"></th>
+                    <th width="15%">Сметка</th>
+                    <th width="15%">${bill.total.toFixed(2)}</th>
                 </tr>
             </tfoot>
         </table>
@@ -336,11 +397,10 @@ export async function tableControlsPage(ctx) {
     const controlsTemplate = () => html`
         <div id="tableControls">
             <div class="categories">
-                ${categories.map((category) => html`<button @click=${loadProductsFromCategory} class=${category.order === 1 ? 'active' : ''} _id=${category._id}>${category.name}</button>`)}
+                ${categories.map((category, i) => html`<button @click=${loadProductsFromCategory} class=${i === 0 ? 'active' : ''} _id=${category._id}>${category.name}</button>`)}
             </div>
             <div class="productsAndXButtons d-flex flex-column justify-content-between">
-                <div class="products">
-                </div>
+                <div class="products"></div>
                 <div class="xButtons d-flex justify-content-center gap-4">
                     <button @click=${changeSelectedX}>2</button>
                     <button @click=${changeSelectedX}>3</button>
@@ -351,20 +411,16 @@ export async function tableControlsPage(ctx) {
             </div>
             <div class="bills"></div>
             <div class="controlsAndAddons d-flex flex-column justify-content-between">
-                <div class="addons">
-                    Addons will be shown here.
-                    (example: milk for coffee, honey etc)
-                </div>
+                <div class="addons d-flex flex-column justify-content-evenly"></div>
                 <div class="controls d-flex flex-column justify-content-evenly">
                     <button>Брак</button>
                     <button @click=${() => page(`${ctx.path}/bill/${selectedBillId}`)}>Извади</button>
                     <button>Приключи с принт</button>
-                    <button>Приключи</button>
+                    <button @click=${payWholeBill}>Приключи</button>
                     <button @click=${() => page('/waiter')}>Назад</button>
                 </div>
             </div>
-            <div class="addedProducts">
-            </div>
+            <div class="addedProducts"></div>
         </div>
     `;
 
@@ -546,3 +602,9 @@ export async function payPartOfBillPage(ctx) {
     render(html`${(bill.total).toFixed(2)}`, document.querySelector('#totalOnTable .price'))
     render(html`${(productsToPay.total).toFixed(2)}`, document.querySelector('#totalToPay .price'))
 }
+
+// TODO
+/* 
+Бутона ПЛАЩАНИЯ в topMenu - да излиза екран с всички плащания подредени по час, за всяка маса и сметка
+Бутона ПРИКЛЮЧИ - в момента съм го направил да приключва ПОДМАСА, а не цялата МАСА!
+*/

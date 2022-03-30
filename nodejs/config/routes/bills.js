@@ -4,8 +4,34 @@ import { Ingredient } from "../../model/ingredient.js";
 import { Product } from "../../model/product.js";
 import { Table } from "../../model/table.js";
 
-
 export function billsRoutes(app, auth) {
+    app.post('/getLastPaidBillByTableId', auth, async (req, res) => {
+        try {
+            const { _id, billId } = req.body;
+
+            // Get bill
+            const bill = await Bill.findById(billId);
+
+            // Find in history by id
+
+            const allPaid = await ProductHistory.find({
+                action: 'paid',
+                billNumber: bill.number,
+                table: _id
+            });
+
+            let lastPaid;
+
+            if (allPaid.length)
+                lastPaid = allPaid[allPaid.length - 1];
+
+            res.json(lastPaid);
+        } catch (error) {
+            console.error(error);
+            res.status(500).send('Възникна грешка!');
+        }
+    });
+
     app.post('/sellProducts', auth, async (req, res) => {
         try {
             const { billToPay } = req.body;
@@ -30,7 +56,7 @@ export function billsRoutes(app, auth) {
                 for (let [index, prd] of Object.entries(originalBill.products)) { // check against every product in original bill
                     if (product.product._id.toString() === prd.product.toString()) {
                         // remove qty from original bill
-                        originalBill.total -= product.product.sellPrice * product.qty;
+                        originalBill.total = +originalBill.total.toFixed(2) - product.product.sellPrice * product.qty;
 
                         prd.qty -= product.qty;
                         if (prd.qty === 0)
@@ -70,6 +96,7 @@ export function billsRoutes(app, auth) {
                     }
                 }
             }
+
             originalBill.save();
             res.send('Продуктите са платени');
 
@@ -140,11 +167,13 @@ export function billsRoutes(app, auth) {
 
     app.post('/addProductToBill', auth, async (req, res) => {
         try {
-            const { _id, selectedX, selectedBillId } = req.body;
+            const { _id, selectedX, selectedBillId, selectedAddon } = req.body;
 
             // _id == product id
             // selectedX == qty
             // selectedBillId == bill _id
+            // selectedAddon == addon _id
+            // TODO da izmlislq kak 6te stane rabotata s tiq addons
 
             // Validate data
             if (!(_id && selectedX && selectedBillId))
@@ -170,7 +199,6 @@ export function billsRoutes(app, auth) {
             let productIndex;
 
             for (let i = 0; i < bill.products.length; i++) {
-                // console.log(bill.products[i].product.toString(), _id);
                 if (bill.products[i].product.toString() === _id) { // if product _id matches
                     productIndex = i; // return index of product in bill.products array and break out of for loop
                     break;
