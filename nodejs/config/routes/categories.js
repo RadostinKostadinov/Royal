@@ -2,9 +2,15 @@ import { Category } from "../../model/category.js";
 import { Product } from "../../model/product.js";
 
 export function categoriesRoutes(app, auth) {
-    app.get('/getAllCategories', auth, async (req, res) => {
+    app.post('/getAllCategories', auth, async (req, res) => {
         try {
-            const categories = await Category.find().sort({ position: 1 });
+            const { showHidden } = req.body;
+            let categories;
+            if (showHidden === false)
+                categories = await Category.find({ hidden: false }).sort({ position: 1 });
+            else
+                categories = await Category.find().sort({ position: 1 });
+
             res.json(categories);
         } catch (error) {
             console.error(error);

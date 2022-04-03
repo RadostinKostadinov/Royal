@@ -3,12 +3,16 @@ import { container } from "../app";
 import { html, render } from 'lit/html.js';
 import $ from "jquery";
 import Sortable from 'sortablejs';
-import { sortCategories, getProductById, getCategoryById, getAllUsers, editCategory, deleteCategory, deleteUser, createUser, editUser, createCategory, changeQtyProduct, createProduct, deleteProduct, editProduct, getAllCategories, getAllProducts, sortProducts, logout, getAllIngredients, createIngredient, deleteIngredient, getIngredientById, editIngredient, getAllProductsWithoutIngredients, getProductsWithoutIngredientsFromCategory, changeQtyIngredient } from '../api';
+import '../css/admin/admin.css';
+import { markHistoryAsScrapped, sortCategories, getProductById, getCategoryById, getAllUsers, editCategory, deleteCategory, deleteUser, createUser, editUser, createCategory, changeQtyProduct, createProduct, deleteProduct, editProduct, getAllCategories, getAllProducts, sortProducts, logout, getAllIngredients, createIngredient, deleteIngredient, getIngredientById, editIngredient, getAllProductsWithoutIngredients, getProductsWithoutIngredientsFromCategory, changeQtyIngredient, getAllScrapped } from '../api';
 
 const backBtn = html`<button @click=${()=> page('/admin')} class="btn btn-secondary fs-3 mt-2 ms-2">Назад</button>`;
 let contentType; //  used in loadProducts to determine if we are loading/deleting a product or ingredient
+let selectedFromSearch;
 
 async function loadProducts(e, showProductsFromIngredients) {
+    selectedFromSearch = undefined;
+    
     // Get selected category
     const categoryId = e.target.value;
 
@@ -55,7 +59,7 @@ async function loadProducts(e, showProductsFromIngredients) {
 
     let renderArray = [];
     for (let content of contentToRender)
-        renderArray.push(html`<option value=${content._id}>${content.name}</option>`)
+        renderArray.push(html`<option unit=${content.unit ? content.unit : 'бр'} value=${content._id}>${content.name} ${content.unit ? `(${content.unit})` : ''}</option>`)
 
     render(renderArray, document.getElementById('_id'));
 
@@ -70,21 +74,76 @@ async function loadProducts(e, showProductsFromIngredients) {
     return contentType;
 }
 
+function writeInQty(e) {
+    e.preventDefault();
+    const what = e.target.innerText.toLowerCase();
+    const input = $('#qty');
+
+    if (what === 'x')
+        return input.val(input.val().slice(0, -1));
+
+    if (what === '.')
+        return $(e.target).addClass('active');
+
+    if (!$('.qty-numpad .dot').hasClass('active'))
+        return input.val(`${input.val()}${what}`);
+
+    input.val(`${input.val()}.${what}`);
+    $('.qty-numpad .dot').removeClass('active');
+}
+
+function selectFromSearch(e) {
+    const selected = e.target.value;
+
+    if (!selected) return;
+
+    const _id = $(`datalist option[value="${selected}"]`).attr('_id');
+    const type = $(`datalist option[value="${selected}"]`).attr('type');
+    const unit = $(`datalist option[value="${selected}"]`).attr('unit');
+    if (!_id)
+        return $('#quantityDiv').addClass('d-none');
+
+    selectedFromSearch = {
+        _id,
+        type,
+        unit
+    };
+
+    $('#quantityDiv').removeClass('d-none');
+}
+
 export async function removeQtyProductPage() {
-    const categories = await getAllCategories();
+    const categories = await getAllCategories(true);
+    const allProducts = await getAllProductsWithoutIngredients();
+    const allIngredients = await getAllIngredients();
+    
     async function remQty(e) {
         e.preventDefault();
-        // Get data from form
         const formData = new FormData(e.target);
-        const selectedCategory = formData.get('categoryId');
-        const _id = formData.get('_id');
-        const qty = +formData.get('qty');
-        const action = 'remove'; // remove from current qty
+        const action = 'remove'; // add to current qty
+        let qty = +formData.get('qty');
+        let unit,
+            selectedCategory,
+            _id;
 
+        // Check if selected using select or search
+        if (selectedFromSearch) {
+            _id = selectedFromSearch._id;
+            unit = selectedFromSearch.unit;
+            selectedCategory = selectedFromSearch.type;
+        } else {
+            _id = formData.get('_id');
+            unit = $('#product option:selected').attr('unit');
+            selectedCategory = formData.get('categoryId');
+        }
+        
         if (_id === null)
             return alert('Избери продукт!');
         if (qty === null)
             return alert('Въведи количество!');
+
+        if (unit === 'кг' || unit === 'л')
+            qty *= 1000;
 
         let res;
         if (selectedCategory === 'ingredients')
@@ -92,7 +151,7 @@ export async function removeQtyProductPage() {
         else
             res = await changeQtyProduct(_id, qty, action);
 
-        if (res.status === 200) {// Successfully removed qty from product
+        if (res.status === 200) {// Successfully added qty to product
             alert(res.data);
             page('/');
         } else {
@@ -104,23 +163,53 @@ export async function removeQtyProductPage() {
     const removeQtyTemplate = () => html`
         ${backBtn}
         <form @submit=${remQty} class="d-flex text-center fs-3 flex-column m-auto mt-5 gap-5 p-3">
+            <div class="mb-3 d-lg-none">
+                <label for="productSearch" class="form-label">Търси</label>
+                <input @change=${selectFromSearch} class="form-control" type="text" list="allproducts" name="productSearch" id="productSearch">
+                <datalist id="allproducts">
+                    ${allIngredients.map(el => {
+                        return html`<option type="ingredients" unit=${el.unit} _id=${el._id} value=${el.name + ` (${el.unit})`} />`
+                    })}
+                    ${allProducts.map(el => {
+                        return html`<option type="product" _id=${el._id} value=${el.name}/>`
+                    })}
+                </datalist>
+            </div>
+
             <div class="mb-3">
-                <label for="categoryId" class="form-label">1. Избери категория</label>
+                <label for="categoryId" class="form-label d-lg-none">или избери категория</label>
+                <label for="categoryId" class="form-label d-none d-lg-block">Избери категория</label>
                 <select @change=${(e) => loadProducts(e, false)} required type="text" class="form-control fs-4" name="categoryId" id="categoryId">
                     <option selected disabled>Избери</option>
                     <option value="ingredients">Съставки</option>
                     ${categories.map((category) => html`<option value=${category._id}>${category.name}</option>`)}
                 </select>
             </div>
+
             <div class="mb-3 d-none" id="product">
-                <label for="_id" class="form-label">2. Избери продукт</label>
+                <label for="_id" class="form-label">Избери продукт</label>
                 <select @change=${() => $('#quantityDiv').removeClass('d-none')} required type="text" class="form-control fs-4" name="_id" id="_id">
                     <option selected disabled>Избери</option>
                 </select>
             </div>
+            
             <div class="mb-3 d-none" id="quantityDiv">
-                <label for="qty" class="form-label">3. Бракувай количество</label>
-                <input required type="number" min="1" class="form-control fs-4" name="qty" id="qty" placeholder="пример: 50">
+                <label for="qty" class="form-label">Добави количество</label>
+                <input required type="number" step="0.05" class="form-control fs-4" name="qty" id="qty" placeholder="пример: 50">
+                <div class="qty-numpad mt-3  d-none d-lg-grid">
+                    <button @click=${writeInQty} class="btn btn-primary">1</button>
+                    <button @click=${writeInQty} class="btn btn-primary">2</button>
+                    <button @click=${writeInQty} class="btn btn-primary">3</button>
+                    <button @click=${writeInQty} class="btn btn-primary">4</button>
+                    <button @click=${writeInQty} class="btn btn-primary">5</button>
+                    <button @click=${writeInQty} class="btn btn-primary">6</button>
+                    <button @click=${writeInQty} class="btn btn-primary">7</button>
+                    <button @click=${writeInQty} class="btn btn-primary">8</button>
+                    <button @click=${writeInQty} class="btn btn-primary">9</button>
+                    <button @click=${writeInQty} class="btn btn-danger">X</button>
+                    <button @click=${writeInQty} class="btn btn-primary">0</button>
+                    <button @click=${writeInQty} class="btn btn-primary dot">.</button>
+                </div>
             </div>
             <input class="btn btn-danger fs-3" type="submit" value="Бракувай" />
         </form>
@@ -130,21 +219,37 @@ export async function removeQtyProductPage() {
 }
 
 export async function addQtyProductPage() {
-    const categories = await getAllCategories();
-
+    const categories = await getAllCategories(true);
+    const allProducts = await getAllProductsWithoutIngredients();
+    const allIngredients = await getAllIngredients();
+    
     async function addQty(e) {
         e.preventDefault();
-        // Get data from form
         const formData = new FormData(e.target);
-        const selectedCategory = formData.get('categoryId');
-        const _id = formData.get('_id');
-        const qty = +formData.get('qty');
         const action = 'add'; // add to current qty
+        let qty = +formData.get('qty');
+        let unit,
+            selectedCategory,
+            _id;
 
+        // Check if selected using select or search
+        if (selectedFromSearch) {
+            _id = selectedFromSearch._id;
+            unit = selectedFromSearch.unit;
+            selectedCategory = selectedFromSearch.type;
+        } else {
+            _id = formData.get('_id');
+            unit = $('#product option:selected').attr('unit');
+            selectedCategory = formData.get('categoryId');
+        }
+        
         if (_id === null)
             return alert('Избери продукт!');
         if (qty === null)
             return alert('Въведи количество!');
+
+        if (unit === 'кг' || unit === 'л')
+            qty *= 1000;
 
         let res;
         if (selectedCategory === 'ingredients')
@@ -164,23 +269,53 @@ export async function addQtyProductPage() {
     const addQtyTemplate = () => html`
         ${backBtn}
         <form @submit=${addQty} class="d-flex text-center fs-3 flex-column m-auto mt-5 gap-5 p-3">
+            <div class="mb-3 d-lg-none">
+                <label for="productSearch" class="form-label">Търси</label>
+                <input @change=${selectFromSearch} class="form-control" type="text" list="allproducts" name="productSearch" id="productSearch">
+                <datalist id="allproducts">
+                    ${allIngredients.map(el => {
+                        return html`<option type="ingredients" unit=${el.unit} _id=${el._id} value=${el.name + ` (${el.unit})`} />`
+                    })}
+                    ${allProducts.map(el => {
+                        return html`<option type="product" _id=${el._id} value=${el.name}/>`
+                    })}
+                </datalist>
+            </div>
+
             <div class="mb-3">
-                <label for="categoryId" class="form-label">1. Избери категория</label>
+                <label for="categoryId" class="form-label d-lg-none">или избери категория</label>
+                <label for="categoryId" class="form-label d-none d-lg-block">Избери категория</label>
                 <select @change=${(e) => loadProducts(e, false)} required type="text" class="form-control fs-4" name="categoryId" id="categoryId">
                     <option selected disabled>Избери</option>
                     <option value="ingredients">Съставки</option>
                     ${categories.map((category) => html`<option value=${category._id}>${category.name}</option>`)}
                 </select>
             </div>
+
             <div class="mb-3 d-none" id="product">
-                <label for="_id" class="form-label">2. Избери продукт</label>
+                <label for="_id" class="form-label">Избери продукт</label>
                 <select @change=${() => $('#quantityDiv').removeClass('d-none')} required type="text" class="form-control fs-4" name="_id" id="_id">
                     <option selected disabled>Избери</option>
                 </select>
             </div>
+            
             <div class="mb-3 d-none" id="quantityDiv">
-                <label for="qty" class="form-label">3. Добави количество</label>
-                <input required type="number" min="1" class="form-control fs-4" name="qty" id="qty" placeholder="пример: 50">
+                <label for="qty" class="form-label">Добави количество</label>
+                <input required type="number" step="0.05" class="form-control fs-4" name="qty" id="qty" placeholder="пример: 50">
+                <div class="qty-numpad mt-3  d-none d-lg-grid">
+                    <button @click=${writeInQty} class="btn btn-primary">1</button>
+                    <button @click=${writeInQty} class="btn btn-primary">2</button>
+                    <button @click=${writeInQty} class="btn btn-primary">3</button>
+                    <button @click=${writeInQty} class="btn btn-primary">4</button>
+                    <button @click=${writeInQty} class="btn btn-primary">5</button>
+                    <button @click=${writeInQty} class="btn btn-primary">6</button>
+                    <button @click=${writeInQty} class="btn btn-primary">7</button>
+                    <button @click=${writeInQty} class="btn btn-primary">8</button>
+                    <button @click=${writeInQty} class="btn btn-primary">9</button>
+                    <button @click=${writeInQty} class="btn btn-danger">X</button>
+                    <button @click=${writeInQty} class="btn btn-primary">0</button>
+                    <button @click=${writeInQty} class="btn btn-primary dot">.</button>
+                </div>
             </div>
             <input class="btn btn-primary fs-3" type="submit" value="Зареди" />
         </form>
@@ -1340,9 +1475,89 @@ export async function inventoryPage() {
     render(productRows(productsAndIngredients), document.querySelector('tbody'));
 }
 
+export async function scrappedPage() {
+    let allScrapped = await getAllScrapped();
+
+    async function markAsScrapedHstr(e) {
+        const _id = e.target.getAttribute('_id'); // history id
+
+        const res = await markHistoryAsScrapped(_id);
+
+        if (res.status === 200) {
+            // Rerender histories
+            allScrapped = res.data;
+            console.log(allScrapped);
+            render(historiesRows(allScrapped), document.querySelector('tbody'));
+        } else {
+            alert('Възникна грешка!');
+            console.error(res);
+        }
+    }
+
+    const historiesRows = (histories) => html`
+        ${histories.map((history) => {
+            let allProducts = [];
+            let total = 0;
+            const date = new Date(history.when);
+            const dateString = `${date.getDate() > 9 ? date.getDate() : '0' + date.getDate()}.${(date.getMonth() + 1) > 9 ? date.getMonth() + 1 : '0' + (date.getMonth() + 1)}.${date.getFullYear()}`;
+            const timeString = `${date.getHours() > 9 ? date.getHours() : '0' + date.getHours()}:${date.getMinutes() > 9 ? date.getMinutes() : '0' + date.getMinutes()}`;
+
+            for (let product of history.products) {
+                total += product.qty * product.price;
+                allProducts.push(html`<div>${product.name} x ${product.qty} бр.</div>`)
+            }
+
+            return html`
+            <tr>
+                <td>${dateString}</td>
+                <td>${timeString}</td>
+                <td>${history.table.name}</td>
+                <td>${history.billNumber}</td>
+                <td class="text-capitalize">${history.user.name}</td>
+                <td>${allProducts}</td>
+                <td>${total.toFixed(2)}</td>
+                <td><button @click=${markAsScrapedHstr} class="btn btn-danger" _id=${history._id}>Бракувай</button></td>
+            </tr>`
+        })}
+    `;
+    
+    const scrappedTemplate = () => html`
+        ${backBtn}
+    
+        <table class="mt-3 table table-striped table-light table-hover text-center">
+            <thead>
+                <tr>
+                    <th scope="col">Дата</th>
+                    <th scope="col">Час</th>
+                    <th scope="col">Маса</th>
+                    <th scope="col">Сметка</th>
+                    <th scope="col">Служител</th>
+                    <th scope="col">Артикули</th>
+                    <th scope="col">Сума</th>
+                    <th scope="col"></th>
+                </tr>
+            </thead>
+            <tbody>
+            </tbody>
+        </table>
+    `;
+
+    render(scrappedTemplate(), container);
+    
+    // Render all scrapped products
+    render(historiesRows(allScrapped), document.querySelector('tbody'));
+}
+
 export function showAdminDashboard() {
     const dashboard = () => html`
         <div class="p-3">
+            <div class="text-center mt-4">
+                <h1>Специални</h1>
+                <div class="d-inline-flex flex-row flex-wrap gap-3 justify-content-center">
+                    <button @click=${() => page('/admin/inventory/scrapped') } class="btn btn-danger fs-4">Бракувана стока</button>
+                    <button @click=${() => page('/admin/inventory') } class="btn btn-secondary fs-4">Склад</button>
+                </div>
+            </div>
             <div class="text-center mt-4">
                 <h1>Стока</h1>
                 <div class="d-inline-flex flex-row flex-wrap gap-3 justify-content-center">
@@ -1353,7 +1568,6 @@ export function showAdminDashboard() {
                         <button @click=${() => page('/admin/product/delete') } class="btn btn-danger fs-4">Изтрий</button>
                         <button @click=${() => page('/admin/product/edit') } class="btn btn-secondary fs-4">Редактирай</button>
                         <button @click=${() => page('/admin/product/reorder') } class="btn btn-secondary fs-4">Подреди</button>
-                        <button @click=${() => page('/admin/inventory') } class="btn btn-secondary fs-4">Склад</button>
                     </div>
                 </div>
             </div>

@@ -1,0 +1,9 @@
+.qty-numpad {
+	display: grid;
+	grid-template-columns: repeat(3, 1fr);
+	gap: 1rem;
+}
+
+.qty-numpad button {
+	font-size: 2rem;
+}

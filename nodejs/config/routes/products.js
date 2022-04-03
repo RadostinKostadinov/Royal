@@ -1,8 +1,31 @@
 import { Product } from "../../model/product.js";
 import { Category } from "../../model/category.js";
-import { Bill } from "../../model/bill.js"
+import { ProductHistory } from "../../model/history.js";
 
 export function productsRoutes(app, auth) {
+    app.post('/getAddonsForCategory', auth, async (req, res) => {
+        try {
+            const { _id } = req.body;
+
+            const addons = await Product.find({ addonForCategories: _id }).sort({ position: 1 });
+            res.json(addons);
+        } catch (error) {
+            console.error(error);
+            res.status(500).send('Възникна грешка!');
+        }
+    });
+
+    app.get('/getAllAddons', auth, async (req, res) => {
+        try {
+            //$ne === not equal to empty array
+            const addons = await Product.find({ addonForCategories: { $ne: [] } }).sort({ position: 1 });
+            res.json(addons);
+        } catch (error) {
+            console.error(error);
+            res.status(500).send('Възникна грешка!');
+        }
+    });
+
     app.post('/changeQtyProduct', auth, async (req, res) => {
         try {
             // Check if user is admin

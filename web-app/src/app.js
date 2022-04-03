@@ -3,8 +3,8 @@ import $ from 'jquery';
 import './css/global.css'
 import { html, render } from 'lit/html.js';
 import { getAllUsers, login, user } from './api';
-import { showAdminDashboard, createCategoryPage, deleteCategoryPage, editCategoryPage, sortCategoriesPage, createEmployeePage, deleteEmployeePage, editEmployeePage, addQtyProductPage, createProductPage, deleteProductPage, editProductPage, removeQtyProductPage, inventoryPage, sortProductsPage } from './views/admin';
-import { payPartOfBillPage, tableControlsPage, waiterDashboardPage } from './views/waiter.js';
+import { showAdminDashboard, createCategoryPage, deleteCategoryPage, editCategoryPage, sortCategoriesPage, createEmployeePage, deleteEmployeePage, editEmployeePage, addQtyProductPage, createProductPage, deleteProductPage, editProductPage, removeQtyProductPage, inventoryPage, sortProductsPage, scrappedPage } from './views/admin';
+import { payPartOfBillPage, scrapProductsPage, showPaidBillsPage, tableControlsPage, waiterDashboardPage } from './views/waiter.js';
 
 export const container = document.querySelector('body'); // where to render everything
 
@@ -12,12 +12,15 @@ page('/', checkIfUserLoggedIn);
 
 // Waiter pages
 page('/waiter', auth, waiterDashboardPage);
+page('/waiter/showPaidBills', auth, showPaidBillsPage);
 page('/waiter/table/:tableId', auth, tableControlsPage);
-page('/waiter/table/:tableId/bill/:billId', auth, payPartOfBillPage);
+page('/waiter/table/:tableId/bill/:billId/pay', auth, payPartOfBillPage);
+page('/waiter/table/:tableId/bill/:billId/scrap', auth, scrapProductsPage);
 
 // Admin pages
 page('/admin', auth, showAdminDashboard);
 page('/admin/inventory', auth, inventoryPage);
+page('/admin/inventory/scrapped', auth, scrappedPage);
 page('/admin/product/removeQty', auth, removeQtyProductPage);
 page('/admin/product/addQty', auth, addQtyProductPage);
 page('/admin/product/create', auth, createProductPage);
@@ -50,15 +53,15 @@ async function checkIfUserLoggedIn() {
         let users = await getAllUsers();
         // Show login
         const usersTemplate = () => html`
-                <div style="height: 100vh"
-                    class="d-flex flex-row flex-wrap gap-4 align-items-center align-content-center justify-content-evenly">
-                    ${users.map((user) => html`<button @click=${setSelectedUser} class="text-capitalize btn p-4 btn-primary fs-1"
-                        userId=${user._id}>${user.name}</button>`)}
-                </div>
-            `;
+            <div style="height: 100vh"
+                class="d-flex flex-row flex-wrap gap-4 align-items-center align-content-center justify-content-evenly">
+                ${users.map((user) => html`<button @click=${setSelectedUser} class="text-capitalize btn p-4 btn-primary fs-1"
+                    userId=${user._id}>${user.name}</button>`)}
+            </div>
+        `;
 
         const numpadTemplate = () => html`
-        <button @click=${() => render(usersTemplate(), container)} style="font-size: 3rem"
+        <button @click=${()=> render(usersTemplate(), container)} style="font-size: 3rem"
             class="btn btn-secondary mt-2 ms-2">Назад</button>
         
         <div id="numpad-wrapper">
@@ -134,3 +137,25 @@ async function auth(ctx, next) {
     }
     next(); // else continue work
 }
+
+// If theres no activity for 5 minutes, show screensaver
+const screensaverTime = 5 * 60 * 1000; // 5 minutes
+var activityTimeout = setTimeout(inActive, screensaverTime);
+
+function resetActive() {
+    // Hide screensaver
+    $('#screensaver').hide();
+
+    clearTimeout(activityTimeout);
+    activityTimeout = setTimeout(inActive, screensaverTime);
+}
+
+// No activity do something.
+function inActive() {
+    // Show screensaver
+    $('#screensaver').show();
+}
+
+// Check for mousemove, could add other events here such as checking for key presses ect.
+$(document).bind('mousemove', function () { resetActive() });
+$(document).bind('click', function () { resetActive() });

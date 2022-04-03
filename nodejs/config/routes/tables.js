@@ -1,22 +1,24 @@
+import { Bill } from "../../model/bill.js";
 import { Table } from "../../model/table.js";
 
 export function tablesRoutes(app, auth) {
     app.get('/getAllTables', auth, async (req, res) => {
         try {
-            function findTablesTotals(tables) {
-                tables.map(table => {
-                    if (table.bills.length)
-                        table.total = table.bills.reduce((a, b) => a + (b.total || 0), 0)
-                });
+            async function findTablesTotals(tables) {
+                for (let table of tables) {
+                    const bills = await Bill.find({ table: table._id });
+                    if (bills.length)
+                        table.total = bills.reduce((a, b) => a + (b.total || 0), 0);
+                }
             }
-            const middleTables = await Table.find({ location: 'middle' }).populate('bills');
-            const insideTables = await Table.find({ location: 'inside' }).populate('bills');
-            const outsideTables = await Table.find({ location: 'outside' }).populate('bills');
+            const middleTables = await Table.find({ location: 'middle' });
+            const insideTables = await Table.find({ location: 'inside' });
+            const outsideTables = await Table.find({ location: 'outside' });
 
             // Find all tables total by finding the sum of all the bills total's inside of it
-            findTablesTotals(middleTables);
-            findTablesTotals(insideTables);
-            findTablesTotals(outsideTables);
+            await findTablesTotals(middleTables);
+            await findTablesTotals(insideTables);
+            await findTablesTotals(outsideTables);
 
             res.json({ middleTables, insideTables, outsideTables });
         } catch (err) {

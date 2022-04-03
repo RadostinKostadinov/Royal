@@ -8,8 +8,7 @@ import { container } from "../app";
 import { html, render } from 'lit/html.js';
 import $ from "jquery";
 import 'bootstrap-icons/font/bootstrap-icons.css';
-import { getAddonsForCategory, getLastPaidBillByTableId, addProductToBill, generateBills, getAllCategories, getAllTables, getCategoryById, logout, getBillById, removeOneFromBill, sellProducts } from '../api';
-const backBtn = html`<button @click=${()=> page('/waiter')} class="btn btn-secondary fs-3 mt-2 ms-2">Назад</button>`;
+import { getAllPaidBills, getAddonsForCategory, getLastPaidBillByTableId, addProductToBill, generateBills, getAllCategories, getAllTables, getCategoryById, logout, getBillById, removeOneFromBill, sellProducts, scrapProducts } from '../api';
 
 // Dashboard contains all the code for rendering the tables view (grid with tables)
 export async function waiterDashboardPage() {
@@ -84,7 +83,7 @@ export async function waiterDashboardPage() {
             
             <div class="d-flex flex-column w-100">
                 <div id="topMenu">
-                    <button>Плащания</button>
+                    <button @click=${() => page('/waiter/showPaidBills')}>Плащания</button>
                 </div>
     
                 ${grid}
@@ -141,7 +140,7 @@ export async function tableControlsPage(ctx) {
 
     if (selectedTable === null) return page('/');
 
-    const categories = await getAllCategories(); // Get all categories to display
+    const categories = await getAllCategories(false); // Get all categories to display
 
     let billData,
         selectedBillId, // by default the first one is selected, so its never undefined
@@ -213,21 +212,8 @@ export async function tableControlsPage(ctx) {
     }
 
     const addonsTemplate = (addons) => html`
-        ${addons.map((addon) => html`<button @click=${selectAddon} _id=${addon._id}>${addon.name}</button>`)}
+        ${addons.map((addon) => html`<button @click=${addToBill} _id=${addon._id}>${addon.name}</button>`)}
     `;
-
-    function selectAddon(e) {
-        const btn = $(e.target);
-        const lastBtn = $('#tableControls .addons button.active');
-        
-        lastBtn.removeClass('active');
-
-        if (btn.text() !== lastBtn.text()) {
-            btn.addClass('active');
-            selectedAddon = btn.attr('_id');
-        }
-        else selectedAddon = undefined;
-    }
 
     async function changeSelectedBill(e) {
         const selectedBillEl = $(e.target);
@@ -275,7 +261,7 @@ export async function tableControlsPage(ctx) {
         if (res.status === 201 || res.status === 200) {
             // 201 == created, 200 == already created (no problem)
             const bills = res.data;
-            selectedBillId = bills[0]; // set first bill as selected automatically
+            selectedBillId = bills[0]._id; // set first bill as selected automatically
             await renderProductsInBill();// load its products
             
             render(billsTemplate(bills), document.querySelector('#tableControls .bills'));
@@ -335,7 +321,6 @@ export async function tableControlsPage(ctx) {
     }
 
     async function payWholeBill() {
-        console.log(billData.products);
         if (billData.products.length === 0) return;
 
         const res = await sellProducts(billData);
@@ -391,7 +376,7 @@ export async function tableControlsPage(ctx) {
 
     // i==0 (if first bill, mark it as "active")
     const billsTemplate = (bills) => html`
-        ${bills.map((_id, i) => html`<button @click=${changeSelectedBill} class=${i === 0 ? 'active' : ''} _id=${_id}>${i+1}</button>`) }
+        ${bills.map((bill, i) => html`<button @click=${changeSelectedBill} class=${i === 0 ? 'active' : ''} _id=${bill._id}>${i+1}</button>`) }
     `;
 
     const controlsTemplate = () => html`
@@ -413,11 +398,11 @@ export async function tableControlsPage(ctx) {
             <div class="controlsAndAddons d-flex flex-column justify-content-between">
                 <div class="addons d-flex flex-column justify-content-evenly"></div>
                 <div class="controls d-flex flex-column justify-content-evenly">
-                    <button>Брак</button>
-                    <button @click=${() => page(`${ctx.path}/bill/${selectedBillId}`)}>Извади</button>
+                    <button @click=${() => page(`${ctx.path}/bill/${selectedBillId}/pay`)}>Извади</button>
                     <button>Приключи с принт</button>
                     <button @click=${payWholeBill}>Приключи</button>
-                    <button @click=${() => page('/waiter')}>Назад</button>
+                    <button @click=${() => page(`${ctx.path}/bill/${selectedBillId}/scrap`)}>Брак</button>
+                    <button @click=${() => page('/')}>Назад</button>
                 </div>
             </div>
             <div class="addedProducts"></div>
@@ -603,8 +588,235 @@ export async function payPartOfBillPage(ctx) {
     render(html`${(productsToPay.total).toFixed(2)}`, document.querySelector('#totalToPay .price'))
 }
 
+export async function scrapProductsPage(ctx) {
+    const selectedTable = ctx.params.tableId;
+    let bill = (await getBillById(ctx.params.billId)).data;
+    
+    let productsToPay = {
+        _id: bill._id, // bill id
+        number: bill.number, // bill number
+        table: bill.table, // table id
+        products: [],
+        total: 0,
+    };
+
+    function addToScrap(index, product) {
+        // Transfer 1 qty of this product
+        
+        // index in bill.products array
+
+        product.qty--; // this is referencing directly the object in bill
+        bill.total -= product.product.sellPrice;
+
+        if (product.qty === 0)
+            bill.products.splice(index, 1); // remove from array if qty = 0
+
+        let foundProduct = false;
+        for (let pr of productsToPay.products) {
+            if (pr.product._id === product.product._id) {
+                pr.qty++;
+                foundProduct = true;
+                break;
+            }
+        }
+
+        // if product not found, create it
+        if (foundProduct === false) {
+            productsToPay.products.push({
+                product: product.product,
+                qty: 1
+            });
+        }
+        productsToPay.total += product.product.sellPrice;
+
+        // Rerender both bill and toPay
+        render(productsInBillTemplate(bill), document.getElementById('productsInBill'));
+        render(productsToPayTemplate(productsToPay), document.getElementById('productsToPay'));
+        render(html`${bill.total.toFixed(2)}`, document.querySelector('#totalOnTable .price'))
+        render(html`${productsToPay.total.toFixed(2)}`, document.querySelector('#totalToPay .price'))
+    }
+
+    function returnToBill(index, product) {
+        // Transfer 1 qty of this product BACK to bill
+
+        product.qty--;
+        productsToPay.total = productsToPay.total - product.product.sellPrice;
+
+        if (product.qty === 0)
+            productsToPay.products.splice(index, 1);
+
+        let foundProduct = false;
+        for (let pr of bill.products) {
+            if (pr.product._id === product.product._id) {
+                pr.qty++;
+                foundProduct = true;
+                break;
+            }
+        }
+
+        if (foundProduct === false) {
+            bill.products.push({
+                product: product.product,
+                qty: 1
+            });
+        }
+        bill.total += product.product.sellPrice;
+
+        // Rerender both bill and toPay
+        render(productsInBillTemplate(bill), document.getElementById('productsInBill'));
+        render(productsToPayTemplate(productsToPay), document.getElementById('productsToPay'));
+        render(html`${bill.total.toFixed(2)}`, document.querySelector('#totalOnTable .price'))
+        render(html`${productsToPay.total.toFixed(2)}`, document.querySelector('#totalToPay .price'))
+    }
+
+    const productsInBillTemplate = (bill) => html`
+        <table class="text-center">
+            <thead>
+                <tr>
+                    <th width="50%">Артикул</th>
+                    <th width="15%">Брой</th>
+                    <th width="15%">Сума</th>
+                    <th width="20%"></th>
+                </tr>
+            </thead>
+            <tbody>
+                ${bill.products.map((product, index) => {
+                    return html`
+                    <tr>
+                        <td width="50%">${product.product.name}</td>
+                        <td width="15%">${product.qty}</td>
+                        <td width="15%">${(product.product.sellPrice * product.qty).toFixed(2)}</td>
+                        <td @click=${() => addToScrap(index, product)} width="20%" class="text-uppercase remove cursor-pointer">Бракувай</td>
+                    </tr>`
+                })}
+            </tbody>
+        </table>
+    `;
+
+    const productsToPayTemplate = (bill) => html`
+        <table class="text-center">
+            <thead>
+                <tr>
+                    <th width="50%">Артикул</th>
+                    <th width="15%">Брой</th>
+                    <th width="15%">Сума</th>
+                    <th width="20%"></th>
+                </tr>
+            </thead>
+            <tbody>
+                ${bill.products.map((product, index) => {
+                    return html`
+                    <tr>
+                        <td width="50%">${product.product.name}</td>
+                        <td width="15%">${product.qty}</td>
+                        <td width="15%">${(product.product.sellPrice * product.qty).toFixed(2)}</td>
+                        <td @click=${() => returnToBill(index, product)} width="20%" class="text-uppercase back">Върни</td>
+                    </tr>`
+                })}
+            </tbody>
+        </table>
+    `;
+
+    async function scrapPrdcts() {
+        if (productsToPay.length === 0) return;
+
+        const res = await scrapProducts(productsToPay);
+
+        if (res.status === 200) {
+            page(`/waiter/table/${selectedTable}`);
+        } else {
+            console.error(res);
+            alert('Възникна грешка!');
+        }
+    }
+
+    const template = () => html`
+        <div id="payPartOfBill">
+            <div id="productsInBill" class="productsTables"></div>
+            <div id="controlsAndTotals" class="d-flex gap-3 flex-column justify-content-between">
+                <div class="totals d-flex flex-column justify-content-between text-center">
+                    <div id="totalOnTable" class="totalBlock">
+                        <span>Оставаща сума на масата</span>
+                        <div class="price"></div>
+                    </div>
+                    <div id="totalToPay" class="totalBlock">
+                        <span>Сума за брак</span>
+                        <div class="price"></div>
+                    </div>
+                </div>
+                <div class="controls d-flex flex-column justify-content-between">
+                    <div class="d-flex gap-3 flex-column justify-content-evenly">
+                        <button @click=${scrapPrdcts}>Брак</button>
+                    </div>
+                    <button @click=${() => page(`/waiter/table/${selectedTable}`)}>Отказ</button>
+                </div>
+            </div>
+            <div id="productsToPay" class="productsTables"></div>
+        </div>
+    `;
+
+    render(template(), container);
+    render(productsInBillTemplate(bill), document.getElementById('productsInBill'));
+    render(html`${(bill.total).toFixed(2)}`, document.querySelector('#totalOnTable .price'))
+    render(html`${(productsToPay.total).toFixed(2)}`, document.querySelector('#totalToPay .price'))
+}
+
+export async function showPaidBillsPage(ctx) {
+    const allPaidBills = await getAllPaidBills();
+
+    const historiesRows = (histories) => html`
+        ${histories.map((history) => {
+            let allProducts = [];
+            let total = 0;
+            const date = new Date(history.when);
+            const dateString = `${date.getDate() > 9 ? date.getDate() : '0' + date.getDate()}.${(date.getMonth() + 1) > 9 ? date.getMonth() + 1 : '0' + (date.getMonth() + 1)}.${date.getFullYear()}`;
+            const timeString = `${date.getHours() > 9 ? date.getHours() : '0' + date.getHours()}:${date.getMinutes() > 9 ? date.getMinutes() : '0' + date.getMinutes()}`;
+
+            for (let product of history.products) {
+                total += product.qty * product.price;
+                allProducts.push(html`<div>${product.name} x ${product.qty} бр.</div>`)
+            }
+
+            return html`
+            <tr>
+                <td>${dateString}</td>
+                <td>${timeString}</td>
+                <td>${history.table.name}</td>
+                <td>${history.billNumber}</td>
+                <td class="text-capitalize">${history.user.name}</td>
+                <td>${allProducts}</td>
+                <td>${total.toFixed(2)}</td>
+            </tr>`
+        })}
+    `;
+    
+    const scrappedTemplate = () => html`
+        <button @click=${() => page('/')}>Назад</button>
+
+        <table class="mt-3 table table-striped table-light table-hover text-center">
+            <thead>
+                <tr>
+                    <th scope="col">Дата</th>
+                    <th scope="col">Час</th>
+                    <th scope="col">Маса</th>
+                    <th scope="col">Сметка</th>
+                    <th scope="col">Служител</th>
+                    <th scope="col">Артикули</th>
+                    <th scope="col">Сума</th>
+                </tr>
+            </thead>
+            <tbody>
+            </tbody>
+        </table>
+    `;
+
+    render(scrappedTemplate(), container);
+    
+    // Render all scrapped products
+    render(historiesRows(allPaidBills), document.querySelector('tbody'));
+}
+
 // TODO
 /* 
 Бутона ПЛАЩАНИЯ в topMenu - да излиза екран с всички плащания подредени по час, за всяка маса и сметка
-Бутона ПРИКЛЮЧИ - в момента съм го направил да приключва ПОДМАСА, а не цялата МАСА!
 */

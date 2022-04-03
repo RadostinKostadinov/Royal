@@ -32,6 +32,77 @@ export function billsRoutes(app, auth) {
         }
     });
 
+    app.post('/scrapProducts', auth, async (req, res) => {
+        try {
+            const { billToScrap } = req.body;
+
+            if (billToScrap.products.length === 0)
+                return res.status(404).send('Няма продукти в сметката');
+
+            let historyProducts = [];
+            let historyTotal = 0;
+
+            const originalBill = await Bill.findById(billToScrap._id);
+            for (let product of billToScrap.products) { // for every product to pay
+                for (let [index, prd] of Object.entries(originalBill.products)) { // check against every product in original bill
+                    if (product.product._id.toString() === prd.product.toString()) {
+                        // remove qty from original bill
+                        originalBill.total = +originalBill.total.toFixed(2) - product.product.sellPrice * product.qty;
+
+                        prd.qty -= product.qty;
+                        if (prd.qty === 0)
+                            originalBill.products.splice(index, 1);
+
+                        // first check if from ingredients
+                        let ingredientsArray = [];
+                        const prodRef = await Product.findById(product.product._id);
+                        if (prodRef.ingredients.length !== 0) {
+                            for (let ingredient of prodRef.ingredients) {
+                                const ingredientRef = await Ingredient.findById(ingredient.ingredient);
+                                ingredientsArray.push({
+                                    name: ingredientRef.name,
+                                    qty: ingredient.qty,
+                                    price: ingredientRef.sellPrice,
+                                    ingredientRef: ingredientRef._id
+                                });
+                            }
+                        }
+
+                        historyProducts.push({
+                            name: product.product.name,
+                            qty: product.qty,
+                            price: product.product.sellPrice,
+                            productRef: product.product._id,
+                            ingredients: ingredientsArray
+                        });
+                        historyTotal += product.product.sellPrice * product.qty;
+                        break; // start searching for next product
+                    }
+                }
+            }
+
+            originalBill.save();
+            res.send('Продуктите са бракувани');
+
+            // Add action to history
+            ProductHistory.create({
+                user: {
+                    name: req.user.name,
+                    userRef: req.user.uid
+                },
+                action: 'scrapped',
+                table: originalBill.table,
+                billNumber: originalBill.number,
+                total: historyTotal,
+                products: historyProducts,
+                reviewed: false
+            });
+        } catch (error) {
+            console.error(error);
+            res.status(500).send('Възникна грешка!');
+        }
+    });
+
     app.post('/sellProducts', auth, async (req, res) => {
         try {
             const { billToPay } = req.body;
@@ -41,15 +112,6 @@ export function billsRoutes(app, auth) {
 
             let historyProducts = [];
             let historyTotal = 0;
-
-            /* 
-                1. Remove from original bill
-                1.1 Products
-                1.1 Remove sum from bill total
-                2. Remove products from inventory
-                2.1 Check if from ingredients
-                3. Add to history
-            */
 
             const originalBill = await Bill.findById(billToPay._id);
             for (let product of billToPay.products) { // for every product to pay
@@ -167,13 +229,11 @@ export function billsRoutes(app, auth) {
 
     app.post('/addProductToBill', auth, async (req, res) => {
         try {
-            const { _id, selectedX, selectedBillId, selectedAddon } = req.body;
+            const { _id, selectedX, selectedBillId } = req.body;
 
             // _id == product id
             // selectedX == qty
             // selectedBillId == bill _id
-            // selectedAddon == addon _id
-            // TODO da izmlislq kak 6te stane rabotata s tiq addons
 
             // Validate data
             if (!(_id && selectedX && selectedBillId))
@@ -274,24 +334,20 @@ export function billsRoutes(app, auth) {
             if (!table)
                 return res.status(400).send('Масата не съществува!');
 
-            // Check if bills were ALREADY initialized
-            if (table.bills.length > 0)
-                return res.json(table.bills); // return bills IDS only
+            // Check if this table already has bills initialized
+            let bills = await Bill.find({ table: table._id }, '_id').sort({ number: 1 });
+            if (bills.length > 0)
+                return res.json(bills); // return bills IDS only
 
             // Create bills in database
             let emptyArray = [];
             for (let i = 1; i < numberOfBills + 1; i++)
                 emptyArray.push({ number: i, table: table._id }); // generate empty bills with the table ID inside
 
-            const bills = await Bill.create(emptyArray);
-
-            // Add reference of bills to table's "bills" array
-            for (let bill of bills)
-                table.bills.push(bill._id);
-            table.save(); // Save (because we are editing)
+            bills = await Bill.create(emptyArray);
 
             // Done
-            res.status(201).json(table.bills);
+            res.status(201).json(bills);
         } catch (err) {
             console.error(err);
             res.status(500).send('Възникна грешка!');

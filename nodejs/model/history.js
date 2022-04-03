@@ -7,6 +7,7 @@ const possibleActions = [
     'added', // Product Added To Bill (добавени X броя продукт към сметка)
     'paid', // Paid From Bill (платени Х броя продукт от сметка)
     'restocked', // Restocked in inventory (зареждане на стока от Анатоли)
+    'scrapped', // Бракувани
 ];
 
 const productHistorySchema = new Schema({
@@ -19,8 +20,7 @@ const productHistorySchema = new Schema({
         userRef: { // референция за всеки случай (ако искаме да филтрираме на някой етап)
             type: Schema.Types.ObjectId,
             ref: 'User',
-            immutable: true,
-            required: true
+            immutable: true
         },
     },
     action: { // действие (пр. брак на продукт, зареждане в склад, плащане ..)
@@ -31,7 +31,7 @@ const productHistorySchema = new Schema({
     },
     table: { // референция към масата
         type: Schema.Types.ObjectId,
-        ref: 'User',
+        ref: 'Table',
         immutable: true,
         required: true
     },
@@ -84,6 +84,10 @@ const productHistorySchema = new Schema({
             ],
         }
     ],
+    reviewed: Boolean, // дали анатоли го е видял 
+    reviewedDate: {
+        type: Date,
+    },
     when: { // дата на събитие
         type: Date,
         default: Date.now,

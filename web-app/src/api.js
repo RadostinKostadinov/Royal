@@ -8,6 +8,28 @@ axios.defaults.baseURL = 'http://localhost:80';
 if (user)
     axios.defaults.headers.common['authorization'] = user.token;
 
+var elem = document.documentElement;
+
+function openFullscreen() {
+    if (elem.requestFullscreen) {
+        elem.requestFullscreen();
+    } else if (elem.webkitRequestFullscreen) { /* Safari */
+        elem.webkitRequestFullscreen();
+    } else if (elem.msRequestFullscreen) { /* IE11 */
+        elem.msRequestFullscreen();
+    }
+}
+
+function closeFullscreen() {
+    if (document.exitFullscreen) {
+        document.exitFullscreen();
+    } else if (document.webkitExitFullscreen) { /* Safari */
+        document.webkitExitFullscreen();
+    } else if (document.msExitFullscreen) { /* IE11 */
+        document.msExitFullscreen();
+    }
+}
+
 export async function getAddonsForCategory(_id) {
     return await axios.post('/getAddonsForCategory', {
         _id
@@ -21,10 +43,40 @@ export async function getAllAddons() {
     return res.data;
 }
 
+export async function scrapProduct(productId, qty, historyId, productIndex) {
+
+}
+
+export async function getAllPaidBills() {
+    const res = await axios.get('/getAllPaidBills');
+    return res.data;
+}
+
+export async function getAllScrapped() {
+    const res = await axios.get('/getAllScrapped');
+    return res.data;
+}
+
 export async function getLastPaidBillByTableId(_id, billId) {
     return await axios.post('/getLastPaidBillByTableId', {
         _id,
         billId
+    }).catch((err) => {
+        return err.response;
+    });
+}
+
+export async function markHistoryAsScrapped(_id) {
+    return await axios.post('/markHistoryAsScrapped', {
+        _id
+    }).catch((err) => {
+        return err.response;
+    });
+}
+
+export async function scrapProducts(billToScrap) {
+    return await axios.post('/scrapProducts', {
+        billToScrap
     }).catch((err) => {
         return err.response;
     });
@@ -213,8 +265,8 @@ export async function getAllProducts() {
     return res.data;
 }
 
-export async function getAllCategories() {
-    const res = await axios.get('/getAllCategories');
+export async function getAllCategories(showHidden) {
+    const res = await axios.post('/getAllCategories', { showHidden });
     return res.data;
 }
 
@@ -242,6 +294,11 @@ export async function login(id, pin) {
 
             // Set the token in headers
             axios.defaults.headers.common['authorization'] = user.token;
+
+            // Activate full screen
+            // TODO ACTIVATE ME WHEN READY TO DEPLOY
+            openFullscreen();
+
             return 'success';
         })
         .catch((err) => {
@@ -321,5 +378,8 @@ export async function generateBills(_id, numberOfBills) {
 export function logout() {
     user = undefined;
     sessionStorage.clear();
+    // Exit fullscreen
+    // TODO ACTIVATE ME WHEN READY TO DEPLOY
+    // closeFullscreen();
     page('/');
 }

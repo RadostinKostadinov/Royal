@@ -15,8 +15,7 @@ import { Ingredient } from '../model/ingredient.js';
 import { verifyToken as auth } from '../middleware/auth.js';
 import bcrypt from 'bcryptjs';
 import { ProductHistory } from '../model/history.js';
-import { Addon } from '../model/addons.js';
-import { addonsRoutes } from './routes/addons.js';
+import { historiesRoutes } from './routes/histories.js';
 
 function routesConfig(app) {
     // Load all routes
@@ -26,7 +25,7 @@ function routesConfig(app) {
     ingredientsRoutes(app, auth)
     billsRoutes(app, auth);
     tablesRoutes(app, auth);
-    addonsRoutes(app, auth);
+    historiesRoutes(app, auth);
 
 
 
@@ -662,6 +661,99 @@ function routesConfig(app) {
 
     async function createDefaultProducts() {
         const categories = [
+            {
+                categoryName: 'Добавки',
+                products: [
+                    {
+                        addonForCategories: ["Кафе"],
+                        name: "К. мляко",
+                        buyPrice: 0,
+                        sellPrice: 0.5,
+                        ingredients: [
+                            {
+                                ingredient: "Сухо мляко",
+                                qty: 15
+                            },
+                        ]
+                    },
+                    {
+                        addonForCategories: ["Кафе"],
+                        name: "К. студ. мляко",
+                        buyPrice: 0,
+                        sellPrice: 0.5,
+                        ingredients: [
+                            {
+                                ingredient: "Мляко кутия",
+                                qty: 100
+                            },
+                        ]
+                    },
+                    {
+                        addonForCategories: ["Кафе"],
+                        name: "Мед",
+                        qty: 50,
+                        buyPrice: 0,
+                        sellPrice: 0.5
+                    },
+                    {
+                        addonForCategories: ["Кафе"],
+                        name: "Лъж. мед",
+                        qty: 50,
+                        buyPrice: 0,
+                        sellPrice: 0.7
+                    },
+                    {
+                        addonForCategories: ["Кафе"],
+                        name: "Конд. мляко",
+                        qty: 50,
+                        buyPrice: 0,
+                        sellPrice: 0.2
+                    },
+                    {
+                        addonForCategories: ["Кафе"],
+                        name: "Суха сметана",
+                        qty: 50,
+                        buyPrice: 0,
+                        sellPrice: 0.2
+                    },
+                    {
+                        addonForCategories: ["Кафе"],
+                        name: "Сметана спрей",
+                        buyPrice: 0,
+                        sellPrice: 0.8,
+                        ingredients: [
+                            {
+                                ingredient: "Сметана спрей",
+                                qty: 1
+                            },
+                        ]
+                    },
+                    {
+                        addonForCategories: ["Летни напитки"],
+                        name: "Алое",
+                        buyPrice: 0,
+                        sellPrice: 0.8,
+                        ingredients: [
+                            {
+                                ingredient: "Алое",
+                                qty: 200
+                            },
+                        ]
+                    },
+                    {
+                        addonForCategories: ["Безалкохолни"],
+                        name: "Резен лимон",
+                        buyPrice: 0,
+                        sellPrice: 0.2,
+                        ingredients: [
+                            {
+                                ingredient: "Лимон",
+                                qty: 5
+                            },
+                        ]
+                    },
+                ]
+            },
             {
                 categoryName: 'Безалкохолни',
                 products: [
@@ -1652,6 +1744,13 @@ function routesConfig(app) {
                     }
                 }
 
+                if (product.hasOwnProperty('addonForCategories')) {
+                    for (let categoryName of product.addonForCategories) {
+                        const c = await Category.findOne({ name: categoryName });
+                        product.addonForCategories[product.addonForCategories.indexOf(categoryName)] = c._id;
+                    }
+                }
+
                 const pr = await Product.create(product);
 
                 cat.products.push(pr._id); // add reference to product._id in category
@@ -1660,116 +1759,6 @@ function routesConfig(app) {
         }
 
         console.log('Created default products');
-    }
-
-    async function createDefaultAddons() {
-        const addons = [
-            {
-                categories: ["Кафе"],
-                name: "К. мляко",
-                buyPrice: 0,
-                sellPrice: 0.5,
-                ingredients: [
-                    {
-                        ingredient: "Сухо мляко",
-                        qty: 15
-                    },
-                ]
-            },
-            {
-                categories: ["Кафе"],
-                name: "К. студ. мляко",
-                buyPrice: 0,
-                sellPrice: 0.5,
-                ingredients: [
-                    {
-                        ingredient: "Мляко кутия",
-                        qty: 100
-                    },
-                ]
-            },
-            {
-                categories: ["Кафе"],
-                name: "Мед",
-                qty: 50,
-                buyPrice: 0,
-                sellPrice: 0.5
-            },
-            {
-                categories: ["Кафе"],
-                name: "Лъж. мед",
-                qty: 50,
-                buyPrice: 0,
-                sellPrice: 0.7
-            },
-            {
-                categories: ["Кафе"],
-                name: "Конд. мляко",
-                qty: 50,
-                buyPrice: 0,
-                sellPrice: 0.2
-            },
-            {
-                categories: ["Кафе"],
-                name: "Суха сметана",
-                qty: 50,
-                buyPrice: 0,
-                sellPrice: 0.2
-            },
-            {
-                categories: ["Кафе"],
-                name: "Сметана спрей",
-                buyPrice: 0,
-                sellPrice: 0.8,
-                ingredients: [
-                    {
-                        ingredient: "Сметана спрей",
-                        qty: 1
-                    },
-                ]
-            },
-            {
-                categories: ["Летни напитки"],
-                name: "Алое",
-                buyPrice: 0,
-                sellPrice: 0.8,
-                ingredients: [
-                    {
-                        ingredient: "Алое",
-                        qty: 200
-                    },
-                ]
-            },
-            {
-                categories: ["Безалкохолни"],
-                name: "Резен лимон",
-                buyPrice: 0,
-                sellPrice: 0.2,
-                ingredients: [
-                    {
-                        ingredient: "Лимон",
-                        qty: 5
-                    },
-                ]
-            },
-        ];
-
-        for (let addon of addons) {
-            if (addon.hasOwnProperty('ingredients')) {
-                for (let ingredient of addon.ingredients) { // if any ingredients
-                    const ing = await Ingredient.findOne({ name: ingredient.ingredient }); // find ingredient id by name
-                    ingredient.ingredient = ing._id;
-                }
-            }
-
-            for (let categoryName of addon.categories) {
-                const c = await Category.findOne({ name: categoryName });
-                addon.categories[addon.categories.indexOf(categoryName)] = c._id;
-            }
-            Addon.create(addon);
-        }
-
-        console.log('Created default addons');
     }
 
     async function deleteAllBills() {
@@ -1793,7 +1782,6 @@ function routesConfig(app) {
         await createDefaultCategories();
         await createDefaultIngredients();
         await createDefaultProducts();
-        await createDefaultAddons();
         await deleteAllBills();
         await deleteHistory();
     }
