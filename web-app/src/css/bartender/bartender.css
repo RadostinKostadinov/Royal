@@ -1,0 +1,134 @@
+#bartenderDashboard {
+	display: grid;
+	grid-template-columns: 800fr 160fr 400fr;
+	gap: 0px 0px;
+	grid-auto-flow: row;
+	width: 100%;
+	height: 100%;
+}
+
+#bartenderDashboard #menu {
+	background-color: var(--dark-grey);
+}
+
+#bartenderDashboard #menu button {
+	color: var(--color-sidemenu);
+	background-color: var(--bg-btn);
+	border: 1px solid transparent;
+	border-radius: 20px;
+	font-weight: 600;
+	font-size: 1.1rem;
+	padding: 0.5rem;
+	text-transform: uppercase;
+}
+
+#bartenderDashboard #allOrders td:first-of-type,
+#bartenderDashboard #orders .order table td:first-of-type {
+	width: 38%;
+}
+
+#bartenderDashboard #allOrders td:nth-of-type(2),
+#bartenderDashboard #orders .order table td:nth-of-type(2) {
+	width: 14%;
+}
+
+#bartenderDashboard #allOrders td:nth-of-type(3),
+#bartenderDashboard #allOrders td:nth-of-type(4),
+#bartenderDashboard #orders .order table td:nth-of-type(3),
+#bartenderDashboard #orders .order table td:nth-of-type(4) {
+	width: 24%;
+}
+
+#bartenderDashboard #allOrders tbody td:not(:first-of-type),
+#bartenderDashboard #orders .order table tbody td:not(:first-of-type) {
+	text-align: center;
+}
+
+#bartenderDashboard #allOrders tbody tr,
+#bartenderDashboard #orders .order table tbody tr {
+	border-bottom: 0.5rem solid var(--bg-dark);
+}
+
+#bartenderDashboard #allOrders tbody tr:first-of-type,
+#bartenderDashboard #orders .order table tbody tr:first-of-type {
+	border-top: 0.5rem solid var(--bg-dark);
+}
+
+#bartenderDashboard #allOrders tbody tr,
+#bartenderDashboard #allOrders tbody td,
+#bartenderDashboard #orders .order table tbody tr,
+#bartenderDashboard #orders .order table tbody td {
+	background-color: rgba(0, 103, 210, 0.5);
+}
+
+#bartenderDashboard #allOrders tbody td,
+#bartenderDashboard #orders .order table tbody td,
+#bartenderDashboard #orders .order table thead {
+	font-size: 1.1rem;
+	font-weight: 600;
+}
+
+#bartenderDashboard #allOrders tbody td:first-of-type,
+#bartenderDashboard #orders .order table tbody td:first-of-type {
+	padding-left: 0.3rem;
+}
+
+#bartenderDashboard button.removeOne {
+	background-color: rgba(0, 200, 146, 0.9);
+	color: white;
+	padding: 0.5rem 0.5rem;
+	font-weight: 600;
+	border: none;
+}
+
+#bartenderDashboard button.removeAll {
+	color: var(--color-sidemenu);
+	background-color: #9d5066;
+	padding: 0.5rem 0.5rem;
+	font-weight: 600;
+	border: none;
+}
+
+#bartenderDashboard #orders {
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	align-items: start;
+	/* display: flex;
+	flex-wrap: wrap;
+	align-items: flex-start;
+	width: 100%; */
+
+	overflow: auto;
+	--orders-gap: 0.5rem;
+	gap: var(--orders-gap);
+	padding: var(--orders-gap);
+}
+
+#bartenderDashboard #orders .order {
+	/* flex-grow: 1; */
+	/* flex: calc(50% - var(--orders-gap) * 2); */
+
+	border: 2px solid rgba(0, 200, 146, 0.6);
+	border-radius: 10px;
+}
+
+#bartenderDashboard #orders .order table thead {
+	background-color: rgba(0, 200, 146, 0.6);
+}
+
+#bartenderDashboard #orders .order table thead td:last-of-type {
+	text-align: right;
+	padding-right: 0.5rem;
+}
+
+#bartenderDashboard #orders .order table thead td:first-of-type {
+	padding-left: 0.5rem;
+}
+
+#bartenderDashboard #orders button.finish {
+	background-color: transparent;
+	border: none;
+	color: var(--lime);
+	font-weight: 600;
+	font-size: 1.2rem;
+}

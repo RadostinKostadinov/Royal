@@ -26,6 +26,19 @@ function routesConfig(app) {
     billsRoutes(app, auth);
     tablesRoutes(app, auth);
     historiesRoutes(app, auth);
+    // Set default 404 for all routes
+    app.get('*', (req, res) => {
+        res.status(404).send('404 Not Found');
+    });
+    app.post('*', (req, res) => {
+        res.status(404).send('404 Not Found');
+    });
+    app.put('*', (req, res) => {
+        res.status(404).send('404 Not Found');
+    });
+    app.delete('*', (req, res) => {
+        res.status(404).send('404 Not Found');
+    });
 
 
 

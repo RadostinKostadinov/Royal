@@ -5,10 +5,13 @@ import { html, render } from 'lit/html.js';
 import { getAllUsers, login, user } from './api';
 import { showAdminDashboard, createCategoryPage, deleteCategoryPage, editCategoryPage, sortCategoriesPage, createEmployeePage, deleteEmployeePage, editEmployeePage, addQtyProductPage, createProductPage, deleteProductPage, editProductPage, removeQtyProductPage, inventoryPage, sortProductsPage, scrappedPage } from './views/admin';
 import { payPartOfBillPage, scrapProductsPage, showPaidBillsPage, tableControlsPage, waiterDashboardPage } from './views/waiter.js';
+import { bartenderDashboardPage } from './views/bartender';
 
 export const container = document.querySelector('body'); // where to render everything
 
-page('/', checkIfUserLoggedIn);
+
+// Bartender pages
+page('/bartender', auth, bartenderDashboardPage);
 
 // Waiter pages
 page('/waiter', auth, waiterDashboardPage);
@@ -34,6 +37,7 @@ page('/admin/category/reorder', auth, sortCategoriesPage);
 page('/admin/employee/create', auth, createEmployeePage);
 page('/admin/employee/delete', auth, deleteEmployeePage);
 page('/admin/employee/edit', auth, editEmployeePage);
+page('*', checkIfUserLoggedIn);
 page();
 
 async function checkIfUserLoggedIn() {
@@ -138,9 +142,9 @@ async function auth(ctx, next) {
     next(); // else continue work
 }
 
-// If theres no activity for 5 minutes, show screensaver
-const screensaverTime = 5 * 60 * 1000; // 5 minutes
-var activityTimeout = setTimeout(inActive, screensaverTime);
+// If theres no activity for X minutes, show screensaver
+const screensaverTime = 1 * 60 * 1000; // 1 minutes
+// var activityTimeout = setTimeout(inActive, screensaverTime);
 
 function resetActive() {
     // Hide screensaver

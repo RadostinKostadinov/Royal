@@ -3,7 +3,9 @@ import page from 'page';
 
 export let user = JSON.parse(sessionStorage.getItem('user'));
 // Set base url so you dont type ${url} in every request
-axios.defaults.baseURL = 'http://localhost:80';
+// axios.defaults.baseURL = 'http://localhost:3000'; // LOCAL
+axios.defaults.baseURL = 'http://barroyal.eu:3000'; // LIVE
+
 // Set the token in headers
 if (user)
     axios.defaults.headers.common['authorization'] = user.token;
