@@ -3,6 +3,7 @@ import { html, render } from 'lit';
 import $ from "jquery";
 import { container } from '../app.js';
 import '../css/bartender/bartender.css';
+import { logout } from '../api.js';
 
 export async function bartenderDashboardPage() {
     const dashboard = () => html`
@@ -203,7 +204,7 @@ export async function bartenderDashboardPage() {
             </div>
             <div id="menu" class="d-flex flex-column justify-content-end gap-3 p-3">
                 <button>Маси</button>
-                <button>Назад</button>
+                <button @click=${logout}>Изход</button>
             </div>
             <div class="overflow-auto">
                 <table id="allOrders">

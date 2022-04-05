@@ -849,7 +849,8 @@ function routesConfig(app) {
                                 ingredient: "Кафе Караро",
                                 qty: 7
                             }
-                        ]
+                        ],
+                        forBartender: true
                     },
                     {
                         name: "Дълго кафе",
@@ -860,7 +861,8 @@ function routesConfig(app) {
                                 ingredient: "Кафе Караро",
                                 qty: 7
                             }
-                        ]
+                        ],
+                        forBartender: true
                     },
                     {
                         name: "Късо кафе",
@@ -871,7 +873,8 @@ function routesConfig(app) {
                                 ingredient: "Кафе Караро",
                                 qty: 7
                             }
-                        ]
+                        ],
+                        forBartender: true
                     },
                     {
                         name: "Кафе Лаваца",
@@ -882,7 +885,8 @@ function routesConfig(app) {
                                 ingredient: "Капсула Лаваца",
                                 qty: 1
                             }
-                        ]
+                        ],
+                        forBartender: true
                     },
                     {
                         name: "Дълга Лаваца",
@@ -893,7 +897,8 @@ function routesConfig(app) {
                                 ingredient: "Капсула Лаваца",
                                 qty: 1
                             }
-                        ]
+                        ],
+                        forBartender: true
                     },
                     {
                         name: "Кафе Или",
@@ -904,7 +909,8 @@ function routesConfig(app) {
                                 ingredient: "Кафе Или",
                                 qty: 7
                             }
-                        ]
+                        ],
+                        forBartender: true
                     },
                     {
                         name: "Дълго Или",
@@ -915,7 +921,8 @@ function routesConfig(app) {
                                 ingredient: "Кафе Или",
                                 qty: 7
                             }
-                        ]
+                        ],
+                        forBartender: true
                     },
                     {
                         name: "Кафе Ришар",
@@ -926,7 +933,8 @@ function routesConfig(app) {
                                 ingredient: "Капсула Ришар",
                                 qty: 1
                             }
-                        ]
+                        ],
+                        forBartender: true
                     },
                     {
                         name: "Дълго Ришар",
@@ -937,7 +945,8 @@ function routesConfig(app) {
                                 ingredient: "Капсула Ришар",
                                 qty: 1
                             }
-                        ]
+                        ],
+                        forBartender: true
                     },
                     {
                         name: "Кафе без кофейн",
@@ -948,7 +957,8 @@ function routesConfig(app) {
                                 ingredient: "Безкофейново Или",
                                 qty: 7
                             }
-                        ]
+                        ],
+                        forBartender: true
                     },
                     {
                         name: "Нескафе",
@@ -959,7 +969,8 @@ function routesConfig(app) {
                                 ingredient: "Нескафе",
                                 qty: 2
                             }
-                        ]
+                        ],
+                        forBartender: true
                     },
                 ]
             },
@@ -970,13 +981,15 @@ function routesConfig(app) {
                         name: "Чай",
                         qty: 50,
                         buyPrice: 0,
-                        sellPrice: 1.5
+                        sellPrice: 1.5,
+                        forBartender: true
                     },
                     {
                         name: "Чай каничка",
                         qty: 50,
                         buyPrice: 0,
-                        sellPrice: 1.8
+                        sellPrice: 1.8,
+                        forBartender: true
                     },
                     {
                         name: "Капучино",
@@ -991,7 +1004,8 @@ function routesConfig(app) {
                                 ingredient: "Сухо мляко",
                                 qty: 30
                             }
-                        ]
+                        ],
+                        forBartender: true
                     },
                     {
                         name: "Мляко с нес",
@@ -1006,7 +1020,8 @@ function routesConfig(app) {
                                 ingredient: "Сухо мляко",
                                 qty: 30
                             }
-                        ]
+                        ],
+                        forBartender: true
                     },
                     {
                         name: "Мокачино",
@@ -1025,7 +1040,8 @@ function routesConfig(app) {
                                 ingredient: "Шоколад",
                                 qty: 16
                             }
-                        ]
+                        ],
+                        forBartender: true
                     },
                     {
                         name: "Виенско кафе",
@@ -1040,7 +1056,8 @@ function routesConfig(app) {
                                 ingredient: "Сметана спрей",
                                 qty: 1
                             }
-                        ]
+                        ],
+                        forBartender: true
                     },
                     {
                         name: "Горещ шоколад",
@@ -1055,7 +1072,8 @@ function routesConfig(app) {
                                 ingredient: "Шоколад",
                                 qty: 33
                             }
-                        ]
+                        ],
+                        forBartender: true
                     },
                     {
                         name: "Мляко",
@@ -1066,7 +1084,8 @@ function routesConfig(app) {
                                 ingredient: "Сухо мляко",
                                 qty: 35
                             }
-                        ]
+                        ],
+                        forBartender: true
                     },
                     {
                         name: "Мляко с какао",
@@ -1081,7 +1100,8 @@ function routesConfig(app) {
                                 ingredient: "Шоколад",
                                 qty: 23
                             },
-                        ]
+                        ],
+                        forBartender: true
                     },
                     {
                         name: "Лате",
@@ -1096,7 +1116,8 @@ function routesConfig(app) {
                                 ingredient: "Сухо мляко",
                                 qty: 35
                             },
-                        ]
+                        ],
+                        forBartender: true
                     },
                     {
                         name: "3в1",
@@ -1107,7 +1128,8 @@ function routesConfig(app) {
                                 ingredient: "3в1",
                                 qty: 19
                             },
-                        ]
+                        ],
+                        forBartender: true
                     },
                     {
                         name: "Студено мляко с какао",
@@ -1122,13 +1144,15 @@ function routesConfig(app) {
                                 ingredient: "Мляко кутия",
                                 qty: 220
                             },
-                        ]
+                        ],
+                        forBartender: true
                     },
                     {
                         name: "3в1 пакетче",
                         qty: 50,
                         buyPrice: 0,
                         sellPrice: 1.5,
+                        forBartender: true
                     },
                     {
                         name: "Мляко с нес ръчно",
@@ -1143,7 +1167,8 @@ function routesConfig(app) {
                                 ingredient: "Мляко кутия",
                                 qty: 220
                             },
-                        ]
+                        ],
+                        forBartender: true
                     },
                     {
                         name: "Лате ръчно",
@@ -1158,7 +1183,8 @@ function routesConfig(app) {
                                 ingredient: "Мляко кутия",
                                 qty: 200
                             },
-                        ]
+                        ],
+                        forBartender: true
                     },
                     {
                         name: "Мляко с какао ръчно",
@@ -1173,13 +1199,15 @@ function routesConfig(app) {
                                 ingredient: "Мляко кутия",
                                 qty: 220
                             },
-                        ]
+                        ],
+                        forBartender: true
                     },
                     {
                         name: "Горещ шоколад италиански",
                         qty: 50,
                         buyPrice: 0,
                         sellPrice: 3.9,
+                        forBartender: true
                     },
                 ]
             },
@@ -1195,7 +1223,8 @@ function routesConfig(app) {
                                 ingredient: "Водка",
                                 qty: 50
                             },
-                        ]
+                        ],
+                        forBartender: true
                     },
                     {
                         name: "Уиски",
@@ -1206,7 +1235,8 @@ function routesConfig(app) {
                                 ingredient: "Уиски",
                                 qty: 50
                             },
-                        ]
+                        ],
+                        forBartender: true
                     },
                     {
                         name: "Мента",
@@ -1217,7 +1247,8 @@ function routesConfig(app) {
                                 ingredient: "Мента",
                                 qty: 50
                             },
-                        ]
+                        ],
+                        forBartender: true
                     },
                     {
                         name: "Мастика",
@@ -1228,7 +1259,8 @@ function routesConfig(app) {
                                 ingredient: "Мастика",
                                 qty: 50
                             },
-                        ]
+                        ],
+                        forBartender: true
                     },
                     {
                         name: "Джин",
@@ -1239,7 +1271,8 @@ function routesConfig(app) {
                                 ingredient: "Джин",
                                 qty: 50
                             },
-                        ]
+                        ],
+                        forBartender: true
                     },
                     {
                         name: "Коняк",
@@ -1250,7 +1283,8 @@ function routesConfig(app) {
                                 ingredient: "Коняк",
                                 qty: 50
                             },
-                        ]
+                        ],
+                        forBartender: true
                     },
                     {
                         name: "Ром",
@@ -1261,7 +1295,8 @@ function routesConfig(app) {
                                 ingredient: "Ром",
                                 qty: 50
                             },
-                        ]
+                        ],
+                        forBartender: true
                     },
                     {
                         name: "Коняк Плиска",
@@ -1272,7 +1307,8 @@ function routesConfig(app) {
                                 ingredient: "Коняк Плиска",
                                 qty: 50
                             },
-                        ]
+                        ],
+                        forBartender: true
                     },
                     {
                         name: "Чаша Вино",
@@ -1283,13 +1319,15 @@ function routesConfig(app) {
                                 ingredient: "Вино",
                                 qty: 200
                             },
-                        ]
+                        ],
+                        forBartender: true
                     },
                     {
                         name: "Мента кен",
                         qty: 50,
                         buyPrice: 0,
                         sellPrice: 3.5,
+                        forBartender: true
                     },
                 ]
             },
@@ -1309,7 +1347,8 @@ function routesConfig(app) {
                                 ingredient: "Пакетче шейк",
                                 qty: 1
                             },
-                        ]
+                        ],
+                        forBartender: true
                     },
                     {
                         name: "Лимонада",
@@ -1324,7 +1363,8 @@ function routesConfig(app) {
                                 ingredient: "Газирана вода",
                                 qty: 400
                             },
-                        ]
+                        ],
+                        forBartender: true
                     },
                     {
                         name: "Лимонада с билкови сиропи",
@@ -1339,7 +1379,8 @@ function routesConfig(app) {
                                 ingredient: "Газирана вода",
                                 qty: 400
                             },
-                        ]
+                        ],
+                        forBartender: true
                     },
                     {
                         name: "Брауни",
@@ -1358,7 +1399,8 @@ function routesConfig(app) {
                                 ingredient: "Сироп бисквитки",
                                 qty: 30
                             },
-                        ]
+                        ],
+                        forBartender: true
                     },
                     {
                         name: "Цитронада",
@@ -1373,7 +1415,8 @@ function routesConfig(app) {
                                 ingredient: "Газирана вода",
                                 qty: 300
                             },
-                        ]
+                        ],
+                        forBartender: true
                     },
                     {
                         name: "Оранжада",
@@ -1388,7 +1431,8 @@ function routesConfig(app) {
                                 ingredient: "Газирана вода",
                                 qty: 300
                             },
-                        ]
+                        ],
+                        forBartender: true
                     },
                     {
                         name: "Чокофредо",
@@ -1403,7 +1447,8 @@ function routesConfig(app) {
                                 ingredient: "Чокофредо",
                                 qty: 60
                             },
-                        ]
+                        ],
+                        forBartender: true
                     },
                     {
                         name: "Бяло фрапе",
@@ -1418,7 +1463,8 @@ function routesConfig(app) {
                                 ingredient: "Нескафе",
                                 qty: 2
                             },
-                        ]
+                        ],
+                        forBartender: true
                     },
                     {
                         name: "Черно фрапе",
@@ -1429,7 +1475,8 @@ function routesConfig(app) {
                                 ingredient: "Нескафе",
                                 qty: 2
                             },
-                        ]
+                        ],
+                        forBartender: true
                     },
                     {
                         name: "Фреш лимон",
@@ -1440,7 +1487,8 @@ function routesConfig(app) {
                                 ingredient: "Лимон",
                                 qty: 1000
                             },
-                        ]
+                        ],
+                        forBartender: true
                     },
                     {
                         name: "Фреш портокал",
@@ -1451,7 +1499,8 @@ function routesConfig(app) {
                                 ingredient: "Портокал",
                                 qty: 1000
                             },
-                        ]
+                        ],
+                        forBartender: true
                     },
                     {
                         name: "Фреш грейпфрут",
@@ -1462,7 +1511,8 @@ function routesConfig(app) {
                                 ingredient: "Грейпфрут",
                                 qty: 1000
                             },
-                        ]
+                        ],
+                        forBartender: true
                     },
                 ]
             },
@@ -1478,7 +1528,8 @@ function routesConfig(app) {
                                 ingredient: "Водка внос",
                                 qty: 50
                             },
-                        ]
+                        ],
+                        forBartender: true
                     },
                     {
                         name: "Джин внос",
@@ -1489,7 +1540,8 @@ function routesConfig(app) {
                                 ingredient: "Джин внос",
                                 qty: 50
                             },
-                        ]
+                        ],
+                        forBartender: true
                     },
                     {
                         name: "Уиски внос",
@@ -1500,7 +1552,8 @@ function routesConfig(app) {
                                 ingredient: "Уиски внос",
                                 qty: 50
                             },
-                        ]
+                        ],
+                        forBartender: true
                     },
                     {
                         name: "Джак Даниелс",
@@ -1511,7 +1564,8 @@ function routesConfig(app) {
                                 ingredient: "Джак Даниелс",
                                 qty: 50
                             },
-                        ]
+                        ],
+                        forBartender: true
                     },
                     {
                         name: "Бушмилс черен",
@@ -1522,7 +1576,8 @@ function routesConfig(app) {
                                 ingredient: "Бушмилс черен",
                                 qty: 50
                             },
-                        ]
+                        ],
+                        forBartender: true
                     },
                     {
                         name: "Черно Джони",
@@ -1533,7 +1588,8 @@ function routesConfig(app) {
                                 ingredient: "Черно Джони",
                                 qty: 50
                             },
-                        ]
+                        ],
+                        forBartender: true
                     },
                     {
                         name: "Мартини",
@@ -1544,7 +1600,8 @@ function routesConfig(app) {
                                 ingredient: "Мартини",
                                 qty: 50
                             },
-                        ]
+                        ],
+                        forBartender: true
                     },
                     {
                         name: "Бакарди",
@@ -1555,7 +1612,8 @@ function routesConfig(app) {
                                 ingredient: "Бакарди",
                                 qty: 50
                             },
-                        ]
+                        ],
+                        forBartender: true
                     },
                     {
                         name: "Кампари",
@@ -1566,7 +1624,8 @@ function routesConfig(app) {
                                 ingredient: "Кампари",
                                 qty: 50
                             },
-                        ]
+                        ],
+                        forBartender: true
                     },
                     {
                         name: "Бейлис",
@@ -1577,7 +1636,8 @@ function routesConfig(app) {
                                 ingredient: "Бейлис",
                                 qty: 50
                             },
-                        ]
+                        ],
+                        forBartender: true
                     },
                     {
                         name: "Текила",
@@ -1588,7 +1648,8 @@ function routesConfig(app) {
                                 ingredient: "Текила",
                                 qty: 50
                             },
-                        ]
+                        ],
+                        forBartender: true
                     },
                     {
                         name: "Узо",
@@ -1599,7 +1660,8 @@ function routesConfig(app) {
                                 ingredient: "Узо",
                                 qty: 50
                             },
-                        ]
+                        ],
+                        forBartender: true
                     },
                     {
                         name: "Пастис",
@@ -1610,7 +1672,8 @@ function routesConfig(app) {
                                 ingredient: "Пастис",
                                 qty: 50
                             },
-                        ]
+                        ],
+                        forBartender: true
                     },
                 ]
             },

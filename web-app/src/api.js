@@ -3,8 +3,8 @@ import page from 'page';
 
 export let user = JSON.parse(sessionStorage.getItem('user'));
 // Set base url so you dont type ${url} in every request
-// axios.defaults.baseURL = 'http://localhost:3000'; // LOCAL
-axios.defaults.baseURL = 'http://barroyal.eu:3000'; // LIVE
+axios.defaults.baseURL = 'http://localhost:3000'; // LOCAL
+// axios.defaults.baseURL = 'http://barroyal.eu:3000'; // TODO CHANGE ME WHEN LIVE
 
 // Set the token in headers
 if (user)
@@ -148,12 +148,22 @@ export async function getAllIngredients() {
     return res.data;
 }
 
-export async function addProductToBill(_id, selectedX, selectedBillId, selectedAddon) {
+// NEW WAY, all as array
+export async function addProductsToHistory(addedProducts, selectedBillId) {
+    return await axios.post('/addProductsToHistory', {
+        addedProducts, // array of products {_id, selectedX (qty)}
+        selectedBillId
+    }).catch((err) => {
+        return err.response;
+    });
+}
+
+// OLD WAY, products one by one
+export async function addProductToBill(_id, selectedX, selectedBillId) {
     return await axios.post('/addProductToBill', {
         _id, // product _id
         selectedX, // 1,2,3,4,5 (how many qty of this product to add)
         selectedBillId, // bill _id
-        selectedAddon // addon _id
     }).catch((err) => {
         return err.response;
     });
@@ -298,7 +308,6 @@ export async function login(id, pin) {
             axios.defaults.headers.common['authorization'] = user.token;
 
             // Activate full screen
-            // TODO ACTIVATE ME WHEN READY TO DEPLOY
             openFullscreen();
 
             return 'success';
@@ -380,8 +389,6 @@ export async function generateBills(_id, numberOfBills) {
 export function logout() {
     user = undefined;
     sessionStorage.clear();
-    // Exit fullscreen
-    // TODO ACTIVATE ME WHEN READY TO DEPLOY
-    // closeFullscreen();
+    closeFullscreen();
     page('/');
 }

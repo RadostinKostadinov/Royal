@@ -8,7 +8,7 @@ import { container } from "../app";
 import { html, render } from 'lit/html.js';
 import $ from "jquery";
 import 'bootstrap-icons/font/bootstrap-icons.css';
-import { getAllPaidBills, getAddonsForCategory, getLastPaidBillByTableId, addProductToBill, generateBills, getAllCategories, getAllTables, getCategoryById, logout, getBillById, removeOneFromBill, sellProducts, scrapProducts } from '../api';
+import { getAllPaidBills, getAddonsForCategory, getLastPaidBillByTableId, addProductToBill, generateBills, getAllCategories, getAllTables, getCategoryById, logout, getBillById, removeOneFromBill, sellProducts, scrapProducts, addProductsToHistory } from '../api';
 
 // Dashboard contains all the code for rendering the tables view (grid with tables)
 export async function waiterDashboardPage() {
@@ -145,12 +145,28 @@ export async function tableControlsPage(ctx) {
     let billData,
         selectedBillId, // by default the first one is selected, so its never undefined
         selectedX = 1, // can be 2,3... (number) or undefined (no X selected)
-        selectedAddon;
-    
+        addedProducts = []; // add products here and send them all at once when going back, or going to pay or moving to any other page
+
+    // NEW: Add all added products together to history
+    async function addToHistory() { // Sends all products that were added using addToArray()
+        if (!addedProducts.length) return;
+        
+        const res = await addProductsToHistory(addedProducts, selectedBillId);
+        addedProducts = []; // Reset
+        
+        if (res.status !== 200) {
+            console.error(res);
+            alert('Възникна грешка!');
+        }
+    }
+
+    // Add product to bill (NEW: doesn't add to history)
     async function addToBill(e) {
         const _id = $(e.target).attr('_id');
+        const action = 'added'; // used in addToHistory to make different arrays based on this value (added at once, removed at once, etc.)
+        addedProducts.push({ _id, selectedX, action });
 
-        const res = await addProductToBill(_id, selectedX, selectedBillId, selectedAddon);
+        const res = await addProductToBill(_id, selectedX, selectedBillId);
 
         if (res.status === 200) {
             const bill = res.data; // get bill and render all products inside it
@@ -216,6 +232,9 @@ export async function tableControlsPage(ctx) {
     `;
 
     async function changeSelectedBill(e) {
+        if (addedProducts.length) // If we have any products added to one bill, and we change the bill -> send products to server
+            await addToHistory();
+        
         const selectedBillEl = $(e.target);
         selectedBillId = selectedBillEl.attr('_id'); // set new bill as selected
 
@@ -225,8 +244,8 @@ export async function tableControlsPage(ctx) {
         // add active class to new bill
         selectedBillEl.addClass('active');
 
-        renderProductsInBill();
-        getLastPaidOnBill();
+        await renderProductsInBill();
+        await getLastPaidOnBill();
     }
 
     function changeSelectedX(e) {
@@ -282,6 +301,7 @@ export async function tableControlsPage(ctx) {
         // Get products in bill
         const res = await getBillById(_id);
 
+
         if (res.status === 200) {
             billData = res.data;
             
@@ -293,8 +313,10 @@ export async function tableControlsPage(ctx) {
     }
 
     async function rmvOneFromBill(_id) {
+        const action = 'removed'; // used in addToHistory to make different arrays based on this value (added at once, removed at once, etc.)
+        addedProducts.push({ _id, selectedX, action });
+        
         // Remove 1 qty of this product from this bill
-
         const res = await removeOneFromBill(_id, selectedBillId);
         
         if (res.status === 200) {
@@ -322,6 +344,9 @@ export async function tableControlsPage(ctx) {
 
     async function payWholeBill() {
         if (billData.products.length === 0) return;
+
+        if (addedProducts.length) // If we have any products added to one bill, and we change the bill -> send products to server
+            await addToHistory();
 
         const res = await sellProducts(billData);
 
@@ -379,6 +404,27 @@ export async function tableControlsPage(ctx) {
         ${bills.map((bill, i) => html`<button @click=${changeSelectedBill} class=${i === 0 ? 'active' : ''} _id=${bill._id}>${i+1}</button>`) }
     `;
 
+    async function goBack() {
+        if (addedProducts.length)
+            await addToHistory();
+
+        page('/');
+    }
+
+    async function goToPay() {
+        if (addedProducts.length)
+            await addToHistory();
+
+        page(`${ctx.path}/bill/${selectedBillId}/pay`)
+    }
+
+    async function goToScrap() {
+        if (addedProducts.length)
+            await addToHistory();
+
+        page(`${ctx.path}/bill/${selectedBillId}/scrap`)
+    }
+
     const controlsTemplate = () => html`
         <div id="tableControls">
             <div class="categories">
@@ -398,11 +444,11 @@ export async function tableControlsPage(ctx) {
             <div class="controlsAndAddons d-flex flex-column justify-content-between">
                 <div class="addons d-flex flex-column justify-content-evenly"></div>
                 <div class="controls d-flex flex-column justify-content-evenly">
-                    <button @click=${() => page(`${ctx.path}/bill/${selectedBillId}/pay`)}>Извади</button>
+                    <button @click=${goToPay}>Извади</button>
                     <button>Приключи с принт</button>
                     <button @click=${payWholeBill}>Приключи</button>
-                    <button @click=${() => page(`${ctx.path}/bill/${selectedBillId}/scrap`)}>Брак</button>
-                    <button @click=${() => page('/')}>Назад</button>
+                    <button @click=${goToScrap}>Брак</button>
+                    <button @click=${goBack}>Назад</button>
                 </div>
             </div>
             <div class="addedProducts"></div>

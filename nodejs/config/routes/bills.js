@@ -199,9 +199,9 @@ export function billsRoutes(app, auth) {
 
                     bill.save();
 
-                    res.json(bill); // Return bill to rerender
+                    return res.json(bill); // Return bill to rerender
 
-                    // Add action to history
+                    /* // Add action to history
                     return ProductHistory.create({
                         user: {
                             name: req.user.name,
@@ -216,7 +216,7 @@ export function billsRoutes(app, auth) {
                             price: product.product.sellPrice, // Каква е текущата цена на този продукт (с времето може да се промени)
                             productRef: product._id // Референция към продукта
                         }]
-                    });
+                    }); */
                 }
             }
 
@@ -227,6 +227,65 @@ export function billsRoutes(app, auth) {
         }
     });
 
+    // NEW: Add all added products together to history
+    app.post('/addProductsToHistory', auth, async (req, res) => {
+        try {
+            const { addedProducts, selectedBillId } = req.body;
+
+            // Validate data
+            if (!(addedProducts.length && selectedBillId))
+                return res.status(400).send('Всички данни са задължителни!');
+
+            // Check if bill exists
+            const bill = await Bill.findById(selectedBillId);
+            if (!bill)
+                return res.status(400).send('Сметката не съществува!');
+
+            // let productsHistoryArray = [];
+            let allActions = {}; // contains arrays of all actions (removed, added, etc.)
+
+            for (let prod of addedProducts) {
+                // Check if product exists
+                const product = await Product.findById(prod._id);
+
+                if (!product)
+                    return res.status(400).send('Продуктът не съществува!');
+
+                // Add to history array
+                if (!allActions.hasOwnProperty(prod.action))
+                    allActions[prod.action] = [];
+
+                allActions[prod.action].push({
+                    name: product.name, // Статично име на продукта (дори да се изтрие от БД няма проблем)
+                    qty: prod.selectedX, // Колко бройки сме добавили към масата
+                    price: product.sellPrice, // Каква е текущата цена на този продукт (с времето може да се промени)
+                    forBartender: product.forBartender, // Дали продуктът е за бармана
+                    productRef: product._id // Референция към продукта
+                });
+            }
+
+            res.send('ok');
+
+            // Add actions to history
+            for (let [action, products] of Object.entries(allActions)) {
+                ProductHistory.create({
+                    user: {
+                        name: req.user.name,
+                        userRef: req.user.uid
+                    },
+                    action: action,
+                    table: bill.table,
+                    billNumber: bill.number,
+                    products: products // all products that were added
+                });
+            }
+        } catch (err) {
+            console.error(err);
+            res.status(500).send('Възникна грешка!');
+        }
+    });
+
+    // Add product to bill (NEW: But dont save in history!)
     app.post('/addProductToBill', auth, async (req, res) => {
         try {
             const { _id, selectedX, selectedBillId } = req.body;
@@ -278,7 +337,7 @@ export function billsRoutes(app, auth) {
 
             res.json(bill); // return populated bill so frontend can re-render all products
 
-            // Add action to history
+            /* // Add action to history
             ProductHistory.create({
                 user: {
                     name: req.user.name,
@@ -291,9 +350,10 @@ export function billsRoutes(app, auth) {
                     name: product.name, // Статично име на продукта (дори да се изтрие от БД няма проблем)
                     qty: selectedX, // Колко бройки сме добавили към масата
                     price: product.sellPrice, // Каква е текущата цена на този продукт (с времето може да се промени)
+                    forBartender: product.forBartender, // Дали продуктът е за бармана
                     productRef: product._id // Референция към продукта
                 }]
-            });
+            }); */
         } catch (err) {
             console.error(err);
             res.status(500).send('Възникна грешка!');
