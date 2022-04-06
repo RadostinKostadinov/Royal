@@ -4,7 +4,7 @@ import { html, render } from 'lit/html.js';
 import $ from "jquery";
 import Sortable from 'sortablejs';
 import '../css/admin/admin.css';
-import { markHistoryAsScrapped, sortCategories, getProductById, getCategoryById, getAllUsers, editCategory, deleteCategory, deleteUser, createUser, editUser, createCategory, changeQtyProduct, createProduct, deleteProduct, editProduct, getAllCategories, getAllProducts, sortProducts, logout, getAllIngredients, createIngredient, deleteIngredient, getIngredientById, editIngredient, getAllProductsWithoutIngredients, getProductsWithoutIngredientsFromCategory, changeQtyIngredient, getAllScrapped } from '../api';
+import { markHistoryAsScrapped, sortCategories, getProductById, getCategoryById, getAllUsers, editCategory, deleteCategory, deleteUser, createUser, editUser, createCategory, changeQtyProduct, createProduct, deleteProduct, editProduct, getAllCategories, getAllProducts, sortProducts, logout, getAllIngredients, createIngredient, deleteIngredient, getIngredientById, editIngredient, getAllProductsWithoutIngredients, getProductsWithoutIngredientsFromCategory, changeQtyIngredient, getAllScrapped, getAllRestockedProducts } from '../api';
 
 const backBtn = html`<button @click=${()=> page('/admin')} class="btn btn-secondary fs-3 mt-2 ms-2">Назад</button>`;
 let contentType; //  used in loadProducts to determine if we are loading/deleting a product or ingredient
@@ -92,6 +92,11 @@ function writeInQty(e) {
     $('.qty-numpad .dot').removeClass('active');
 }
 
+function showDivs() {
+    $('#expireDateDiv').removeClass('d-none');
+    $('#quantityDiv').removeClass('d-none');
+}
+
 function selectFromSearch(e) {
     const selected = e.target.value;
 
@@ -109,7 +114,7 @@ function selectFromSearch(e) {
         unit
     };
 
-    $('#quantityDiv').removeClass('d-none');
+    showDivs();
 }
 
 export async function removeQtyProductPage() {
@@ -227,8 +232,9 @@ export async function addQtyProductPage() {
         e.preventDefault();
         const formData = new FormData(e.target);
         const action = 'add'; // add to current qty
-        let qty = +formData.get('qty');
-        let unit,
+        let qty = +formData.get('qty'),
+            expireDate = formData.get('expireDate'),
+            unit,
             selectedCategory,
             _id;
 
@@ -253,13 +259,14 @@ export async function addQtyProductPage() {
 
         let res;
         if (selectedCategory === 'ingredients')
-            res = await changeQtyIngredient(_id, qty, action);
+            res = await changeQtyIngredient(_id, qty, action, expireDate);
         else
-            res = await changeQtyProduct(_id, qty, action);
+            res = await changeQtyProduct(_id, qty, action, expireDate);
 
         if (res.status === 200) {// Successfully added qty to product
             alert(res.data);
             page('/');
+            page('/admin/product/addQty'); // redirect back to this page
         } else {
             alert('Възникна грешка!');
             console.error(res);
@@ -294,7 +301,7 @@ export async function addQtyProductPage() {
 
             <div class="mb-3 d-none" id="product">
                 <label for="_id" class="form-label">Избери продукт</label>
-                <select @change=${() => $('#quantityDiv').removeClass('d-none')} required type="text" class="form-control fs-4" name="_id" id="_id">
+                <select @change=${showDivs} required type="text" class="form-control fs-4" name="_id" id="_id">
                     <option selected disabled>Избери</option>
                 </select>
             </div>
@@ -316,6 +323,11 @@ export async function addQtyProductPage() {
                     <button @click=${writeInQty} class="btn btn-primary">0</button>
                     <button @click=${writeInQty} class="btn btn-primary dot">.</button>
                 </div>
+            </div>
+
+            <div class="mb-3 d-none" id="expireDateDiv">
+                <label for="expireDate" class="form-label">Дата</label>
+                <input name="expireDate" class="form-control fs-4" id="expireDate" type="date"/>
             </div>
             <input class="btn btn-primary fs-3" type="submit" value="Зареди" />
         </form>
@@ -1397,12 +1409,21 @@ export async function inventoryPage() {
             totals.buyPrice += product.qty * product.buyPrice;
             totals.sellPrice += product.qty * product.sellPrice;
             totals.difference += product.qty * (product.sellPrice - product.buyPrice);
+            let qty = product.qty,
+                name = product.name,
+                unit = 'бр';
+                
+            if (product.hasOwnProperty('unit') && (product.unit === 'кг' || product.unit === 'л')) {
+                qty /= 1000;
+                unit = product.unit;
+            }
 
+            qty += ` ${unit}.`
             return html`
-                <tr class="${product.qty < 20 ? 'table-danger' : ''}">
+                <tr class="${qty <= 0 ? 'table-danger' : ''}">
                     <td scope="row">${product.unit ? 'Съставка' : 'Продукт'}</td>
-                    <td scope="row">${product.name}</td>
-                    <td>${product.qty}</td>
+                    <td scope="row">${name}</td>
+                    <td>${qty}</td>
                     <td>${product.buyPrice}</td>
                     <td>${product.sellPrice}</td>
                     <td>${(product.sellPrice - product.buyPrice).toFixed(2) }</td>
@@ -1410,7 +1431,7 @@ export async function inventoryPage() {
             `
         })}
         <tr class="table-primary">
-            <th colspan="2" class="text-center">Общо: </th>
+            <th colspan="3" class="text-center">Общо: </th>
             <th>${totals.buyPrice.toFixed(2)}</th>
             <th>${totals.sellPrice.toFixed(2)}</th>
             <th>${totals.difference.toFixed(2)}</th>
@@ -1548,6 +1569,58 @@ export async function scrappedPage() {
     render(historiesRows(allScrapped), document.querySelector('tbody'));
 }
 
+export async function expireProductsPage() {
+    const products = await getAllRestockedProducts();
+    console.log(products);
+    
+    const expireTemplate = (products) => html`s
+        ${backBtn}
+    
+        <table class="mt-3 table table-striped table-light table-hover text-center">
+            <thead>
+                <tr>
+                    <th scope="col">Дата на зареждане</th>
+                    <th scope="col">Артикул</th>
+                    <th scope="col">Количество</th>
+                    <th scope="col">Срок на годност</th>
+                </tr>
+            </thead>
+            <tbody>
+                ${products.map((product) => {
+                        let qty = product.product.qty,
+                            name = product.product.name,
+                            restockDate = new Date(product.when),
+                            expireDate,
+                            unit = 'бр';
+
+                        if (product.product.expireDate) {
+                            expireDate = new Date(product.product.expireDate);
+                            expireDate = `${expireDate.getDate() < 10 ? '0' + expireDate.getDate() : expireDate.getDate()}.${(expireDate.getMonth() + 1) < 10 ? '0' + (expireDate.getMonth() + 1) : (expireDate.getMonth() + 1)}.${expireDate.getFullYear()}`;
+                        }
+                        restockDate = `${restockDate.getDate() < 10 ? '0' + restockDate.getDate() : restockDate.getDate()}.${(restockDate.getMonth() + 1) < 10 ? '0' + (restockDate.getMonth() + 1) : (restockDate.getMonth() + 1)}.${restockDate.getFullYear()}`;
+                        
+                        if (product.product.hasOwnProperty('unit') && (product.product.unit === 'кг' || product.product.unit === 'л')) {
+                            qty /= 1000;
+                            unit = product.product.unit;
+                        }
+
+                        qty += ` ${unit}.`
+                        return html`
+                            <tr>
+                                <td>${restockDate}</td>
+                                <td>${name}</td>
+                                <td>${qty}</td>
+                                <td>${expireDate}</td>
+                            </tr>
+                        `
+                })}
+            </tbody>
+        </table>
+    `;
+
+    render(expireTemplate(products), container);
+}
+
 export function showAdminDashboard() {
     const dashboard = () => html`
         <div class="p-3">
@@ -1555,6 +1628,7 @@ export function showAdminDashboard() {
                 <h1>Специални</h1>
                 <div class="d-inline-flex flex-row flex-wrap gap-3 justify-content-center">
                     <button @click=${() => page('/admin/inventory/scrapped') } class="btn btn-danger fs-4">Бракувана стока</button>
+                    <button @click=${() => page('/admin/expireProducts') } class="btn btn-primary fs-4">Срок на годност</button>
                     <button @click=${() => page('/admin/inventory') } class="btn btn-secondary fs-4">Склад</button>
                 </div>
             </div>

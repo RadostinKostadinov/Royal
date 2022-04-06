@@ -134,6 +134,15 @@ body {
 }
 
 /* PIN CODE NUMPAD */
+#numpad-wrapper {
+	position: absolute;
+	top: 50%;
+	left: 50%;
+	transform: translate(-50%, -50%);
+	width: 50vw;
+	margin: auto;
+}
+
 #numpad-wrapper #code {
 	display: flex;
 	justify-content: center;
@@ -145,12 +154,12 @@ body {
 
 #numpad-wrapper #numpad {
 	display: grid;
-	gap: 2rem;
+	gap: 1rem;
 	grid-template-columns: 1fr 1fr 1fr;
 }
 
 #numpad-wrapper #numpad button {
-	font-size: 5rem;
+	font-size: 3rem;
 }
 
 #numpad-wrapper #numpad button:last-of-type {

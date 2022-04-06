@@ -14,7 +14,7 @@ import { Table } from '../model/table.js';
 import { Ingredient } from '../model/ingredient.js';
 import { verifyToken as auth } from '../middleware/auth.js';
 import bcrypt from 'bcryptjs';
-import { ProductHistory } from '../model/history.js';
+import { ProductHistory, RestockHistory } from '../model/history.js';
 import { historiesRoutes } from './routes/histories.js';
 
 function routesConfig(app) {
@@ -549,7 +549,7 @@ function routesConfig(app) {
                 name: 'Кафе Караро',
                 unit: 'кг',
                 qty: 1000,
-                buyPrice: 22.70,
+                buyPrice: 23.90,
                 sellPrice: 215
             },
             {
@@ -619,7 +619,7 @@ function routesConfig(app) {
                 name: 'Шоколад',
                 unit: 'кг',
                 qty: 1000,
-                buyPrice: 18,
+                buyPrice: 19.8,
                 sellPrice: 36
             },
             {
@@ -687,7 +687,8 @@ function routesConfig(app) {
                                 ingredient: "Сухо мляко",
                                 qty: 15
                             },
-                        ]
+                        ],
+                        forBartender: true
                     },
                     {
                         addonForCategories: ["Кафе"],
@@ -699,7 +700,8 @@ function routesConfig(app) {
                                 ingredient: "Мляко кутия",
                                 qty: 100
                             },
-                        ]
+                        ],
+                        forBartender: true
                     },
                     {
                         addonForCategories: ["Кафе"],
@@ -739,7 +741,8 @@ function routesConfig(app) {
                                 ingredient: "Сметана спрей",
                                 qty: 1
                             },
-                        ]
+                        ],
+                        forBartender: true
                     },
                     {
                         addonForCategories: ["Летни напитки"],
@@ -751,7 +754,8 @@ function routesConfig(app) {
                                 ingredient: "Алое",
                                 qty: 200
                             },
-                        ]
+                        ],
+                        forBartender: true
                     },
                     {
                         addonForCategories: ["Безалкохолни"],
@@ -763,7 +767,8 @@ function routesConfig(app) {
                                 ingredient: "Лимон",
                                 qty: 5
                             },
-                        ]
+                        ],
+                        forBartender: true
                     },
                 ]
             },
@@ -803,7 +808,8 @@ function routesConfig(app) {
                                 ingredient: "Сок Гранини",
                                 qty: 200
                             }
-                        ]
+                        ],
+                        forBartender: true
                     },
                     {
                         name: "Сок Деллос",
@@ -1685,30 +1691,35 @@ function routesConfig(app) {
                         qty: 50,
                         buyPrice: 0,
                         sellPrice: 1.5,
+                        forBartender: true
                     },
                     {
                         name: "Бадем",
                         qty: 50,
                         buyPrice: 0,
                         sellPrice: 5,
+                        forBartender: true
                     },
                     {
                         name: "Лешник",
                         qty: 50,
                         buyPrice: 0,
                         sellPrice: 5,
+                        forBartender: true
                     },
                     {
                         name: "Шам фъстък",
                         qty: 50,
                         buyPrice: 0,
                         sellPrice: 5,
+                        forBartender: true
                     },
                     {
                         name: "Кашу",
                         qty: 50,
                         buyPrice: 0,
                         sellPrice: 5,
+                        forBartender: true
                     },
                 ]
             },
@@ -1781,10 +1792,18 @@ function routesConfig(app) {
                 categoryName: 'Други',
                 products: [
                     {
+                        name: "Торта",
+                        qty: 50,
+                        buyPrice: 2.9,
+                        sellPrice: 4.5,
+                        forBartender: true
+                    },
+                    {
                         name: "Наргиле",
                         qty: 50,
                         buyPrice: 0,
                         sellPrice: 20,
+                        forBartender: true
                     },
                     {
                         name: "Шот",
@@ -1799,7 +1818,8 @@ function routesConfig(app) {
                                 ingredient: "Сок Гранини",
                                 qty: 20
                             }
-                        ]
+                        ],
+                        forBartender: true
                     },
                 ]
             }
@@ -1849,6 +1869,7 @@ function routesConfig(app) {
 
     async function deleteHistory() {
         await ProductHistory.deleteMany();
+        await RestockHistory.deleteMany();
         console.log('\u001b[1;31mHistory deleted')
     }
 

@@ -32,6 +32,11 @@ function closeFullscreen() {
     }
 }
 
+export async function getAllRestockedProducts() {
+    const res = await axios.get('/getAllRestockedProducts');
+    return res.data;
+}
+
 export async function getAddonsForCategory(_id) {
     return await axios.post('/getAddonsForCategory', {
         _id
@@ -92,11 +97,12 @@ export async function sellProducts(billToPay) {
     });
 }
 
-export async function changeQtyIngredient(_id, qty, action) {
+export async function changeQtyIngredient(_id, qty, action, expireDate) {
     return await axios.post('/changeQtyIngredient', {
         _id,
         qty,
-        action
+        action,
+        expireDate
     }).catch((err) => {
         return err.response;
     });
@@ -186,11 +192,12 @@ export async function getBillById(_id) {
     });
 }
 
-export async function changeQtyProduct(_id, qty, action) {
+export async function changeQtyProduct(_id, qty, action, expireDate) {
     return await axios.post('/changeQtyProduct', {
         _id,
         qty,
-        action
+        action,
+        expireDate
     }).catch((err) => {
         return err.response;
     });

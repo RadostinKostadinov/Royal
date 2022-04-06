@@ -1,8 +1,13 @@
 import { Product } from "../../model/product.js";
 import { Category } from "../../model/category.js";
-import { ProductHistory } from "../../model/history.js";
+import { RestockHistory } from "../../model/history.js";
 
 export function productsRoutes(app, auth) {
+    app.get('/getAllRestockedProducts', auth, async (req, res) => {
+        const products = await RestockHistory.find().sort({ when: -1 });
+        res.json(products);
+    });
+
     app.post('/getAddonsForCategory', auth, async (req, res) => {
         try {
             const { _id } = req.body;
@@ -33,7 +38,7 @@ export function productsRoutes(app, auth) {
                 return res.status(401).send('Нямате админски достъп!')
 
             // Get user input
-            let { _id, qty, action } = req.body;
+            let { _id, qty, action, expireDate } = req.body;
 
             // Validate user input
             if (!(_id && qty && action))
@@ -59,6 +64,33 @@ export function productsRoutes(app, auth) {
 
             // Done
             res.send('Успешно променихте бройките!');
+
+            if (action === 'add') {
+                if (expireDate) {
+                    expireDate = new Date(expireDate);
+                    // Add action to history
+                    RestockHistory.create({
+                        product: {
+                            type: 'product',
+                            name: product.name,
+                            qty,
+                            expireDate,
+                            productRef: product._id
+                        }
+                    });
+                } else {
+                    // Add action to history
+                    RestockHistory.create({
+                        product: {
+                            type: 'product',
+                            name: product.name,
+                            qty,
+                            productRef: product._id
+                        }
+                    });
+                }
+
+            }
         } catch (error) {
             console.error(error);
             res.status(500).send('Възникна грешка!');

@@ -1,3 +1,4 @@
+import { RestockHistory } from "../../model/history.js";
 import { Ingredient } from "../../model/ingredient.js";
 
 export function ingredientsRoutes(app, auth) {
@@ -8,7 +9,7 @@ export function ingredientsRoutes(app, auth) {
                 return res.status(401).send('Нямате достъп!')
 
             // Get user input
-            let { _id, qty, action } = req.body;
+            let { _id, qty, action, expireDate } = req.body;
 
             // Validate user input
             if (!(_id && qty && action))
@@ -34,6 +35,34 @@ export function ingredientsRoutes(app, auth) {
 
             // Done
             res.send('Успешно променихте бройките!');
+
+            if (action === 'add') {
+                if (expireDate) {
+                    expireDate = new Date(expireDate);
+                    // Add action to history
+                    RestockHistory.create({
+                        product: {
+                            type: 'ingredient',
+                            unit: ingredient.unit,
+                            name: ingredient.name,
+                            qty,
+                            expireDate,
+                            ingredientRef: ingredient._id
+                        }
+                    });
+                } else {
+                    // Add action to history
+                    RestockHistory.create({
+                        product: {
+                            type: 'ingredient',
+                            name: ingredient.name,
+                            qty,
+                            ingredientRef: ingredient._id
+                        }
+                    });
+                }
+
+            }
         } catch (error) {
             console.error(error);
             res.status(500).send('Възникна грешка!');

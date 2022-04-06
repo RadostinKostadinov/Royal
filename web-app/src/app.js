@@ -1,9 +1,11 @@
 import page from 'page';
 import $ from 'jquery';
-import './css/global.css'
+import './bootstrap/bootstrap.min.css';
+import './bootstrap/bootstrap.bundle.min.js';
+import './css/global.css';
 import { html, render } from 'lit/html.js';
 import { getAllUsers, login, user } from './api';
-import { showAdminDashboard, createCategoryPage, deleteCategoryPage, editCategoryPage, sortCategoriesPage, createEmployeePage, deleteEmployeePage, editEmployeePage, addQtyProductPage, createProductPage, deleteProductPage, editProductPage, removeQtyProductPage, inventoryPage, sortProductsPage, scrappedPage } from './views/admin';
+import { showAdminDashboard, createCategoryPage, deleteCategoryPage, editCategoryPage, sortCategoriesPage, createEmployeePage, deleteEmployeePage, editEmployeePage, addQtyProductPage, createProductPage, deleteProductPage, editProductPage, removeQtyProductPage, inventoryPage, sortProductsPage, scrappedPage, expireProductsPage } from './views/admin';
 import { payPartOfBillPage, scrapProductsPage, showPaidBillsPage, tableControlsPage, waiterDashboardPage } from './views/waiter.js';
 import { bartenderDashboardPage } from './views/bartender';
 
@@ -22,6 +24,7 @@ page('/waiter/table/:tableId/bill/:billId/scrap', auth, scrapProductsPage);
 
 // Admin pages
 page('/admin', auth, showAdminDashboard);
+page('/admin/expireProducts', auth, expireProductsPage);
 page('/admin/inventory', auth, inventoryPage);
 page('/admin/inventory/scrapped', auth, scrappedPage);
 page('/admin/product/removeQty', auth, removeQtyProductPage);
@@ -65,8 +68,8 @@ async function checkIfUserLoggedIn() {
         `;
 
         const numpadTemplate = () => html`
-        <button @click=${() => render(usersTemplate(), container)} style="font-size: 3rem"
-            class="btn btn-secondary mt-2 ms-2">Назад</button>
+        <button @click=${()=> render(usersTemplate(), container)}
+            class="btn btn-secondary fs-1 mt-3 ms-3">Назад</button>
         
         <div id="numpad-wrapper">
             <div id="code">
@@ -82,6 +85,7 @@ async function checkIfUserLoggedIn() {
                 <button @click=${checkPinCode} class="btn btn-primary">7</button>
                 <button @click=${checkPinCode} class="btn btn-primary">8</button>
                 <button @click=${checkPinCode} class="btn btn-primary">9</button>
+                <button @click=${checkPinCode} class="btn btn-danger">X</button>
                 <button @click=${checkPinCode} class="btn btn-primary">0</button>
             </div>
         </div>
@@ -98,8 +102,10 @@ async function checkIfUserLoggedIn() {
             let screenCode = $('#code');
             let enteredNumber = $(e.target).text();
 
-            // Add to pin code
-            pinCode += enteredNumber;
+            if (enteredNumber === 'X')
+                pinCode = pinCode.slice(0, -1);
+            else
+                pinCode += enteredNumber;
 
             // Show the entered PIN and add + to the end (until 4 numbers in total)
             // ex. if entered 1, show 1+++
@@ -123,6 +129,7 @@ async function checkIfUserLoggedIn() {
                 } else if (res.status === 400) {
                     // Client error (wrong pin, false info, etc)
                     screenCode.addClass('wrong-pin');
+                    screenCode.text('++++');
                     return pinCode = ''; // Reset variable
                 }
             }

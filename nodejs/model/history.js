@@ -6,9 +6,52 @@ const possibleActions = [
     'removed', // Product Removed From Bill (премахнат 1 брой продукт от сметка, НЕ Е БРАКУВАН (премахнат от червеният Х до всеки продукт в контролното табло на масата))
     'added', // Product Added To Bill (добавени X броя продукт към сметка)
     'paid', // Paid From Bill (платени Х броя продукт от сметка)
-    'restocked', // Restocked in inventory (зареждане на стока от Анатоли)
     'scrapped', // Бракувани
 ];
+
+const restockHistorySchema = new Schema({
+    product: {
+        type: {
+            type: String,
+            enum: ['product', 'ingredient'],
+            required: true
+        },
+        name: {  // Статично име на продукта (дори да се изтрие от БД няма проблем)
+            type: String,
+            immutable: true,
+            required: true
+        },
+        qty: { // Колко бройки сме добавили/бракували/...
+            type: Number,
+            immutable: true,
+            required: true
+        },
+        expireDate: {
+            type: Date,
+            immutable: true
+        },
+        productRef: { // референция за всеки случай (ако искаме да филтрираме на някой етап)
+            type: Schema.Types.ObjectId,
+            ref: 'Product',
+            immutable: true
+        },
+        ingredientRef: { // референция за всеки случай (ако искаме да филтрираме на някой етап)
+            type: Schema.Types.ObjectId,
+            ref: 'Ingredient',
+            immutable: true
+        },
+        unit: {
+            type: String,
+            enum: ['кг', 'л', 'бр'],
+            immutable: true
+        }
+    },
+    when: {
+        type: Date,
+        default: Date.now,
+        immutable: true
+    }
+});
 
 const productHistorySchema = new Schema({
     user: {  // потребител
@@ -107,5 +150,6 @@ const productHistorySchema = new Schema({
 });
 
 const ProductHistory = mongoose.model('ProductHistory', productHistorySchema);
+const RestockHistory = mongoose.model('RestockHistory', restockHistorySchema);
 
-export { ProductHistory };
+export { ProductHistory, RestockHistory };
