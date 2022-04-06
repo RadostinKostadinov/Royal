@@ -3,8 +3,11 @@ import page from 'page';
 
 export let user = JSON.parse(sessionStorage.getItem('user'));
 // Set base url so you dont type ${url} in every request
-axios.defaults.baseURL = 'http://localhost:3000'; // LOCAL
-// axios.defaults.baseURL = 'http://barroyal.eu:3000'; // TODO CHANGE ME WHEN LIVE
+
+if (location.hostname === "localhost" || location.hostname === "127.0.0.1")
+    axios.defaults.baseURL = 'http://localhost:3000'; // LOCAL
+else
+    axios.defaults.baseURL = 'http://barroyal.eu:3000'; // LIVE
 
 // Set the token in headers
 if (user)

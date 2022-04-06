@@ -40,7 +40,8 @@ page('/admin/category/reorder', auth, sortCategoriesPage);
 page('/admin/employee/create', auth, createEmployeePage);
 page('/admin/employee/delete', auth, deleteEmployeePage);
 page('/admin/employee/edit', auth, editEmployeePage);
-page('*', checkIfUserLoggedIn);
+page('/', checkIfUserLoggedIn);
+page('*', () => page('/'));
 page();
 
 async function checkIfUserLoggedIn() {
@@ -141,7 +142,7 @@ async function checkIfUserLoggedIn() {
 
 async function auth(ctx, next) {
     //AUTHENTICATE
-    if ((ctx.path.includes('/admin') && user.role !== "admin")
+    if (!user || (ctx.path.includes('/admin') && user.role !== "admin")
         || (ctx.path.includes('/waiter') && user.role !== "waiter")
         || (ctx.path.includes('/bartender') && user.role !== "bartender")) {
         page('/'); // wrong permissions, go back go dashboard
