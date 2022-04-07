@@ -38,6 +38,12 @@ function closeFullscreen() {
     }
 }
 
+export async function createReport() {
+    return await axios.post('/createReport').catch((err) => {
+        return err.response;
+    });
+}
+
 export async function completeAll(prodRef, orderId) {
     return await axios.post('/completeAll', {
         prodRef,
@@ -54,6 +60,11 @@ export async function completeOne(prodRef, orderId) {
     }).catch((err) => {
         return err.response;
     });
+}
+
+export async function getAllReports() {
+    const res = await axios.get('/getAllReports');
+    return res.data;
 }
 
 export async function getAllOrders() {
@@ -388,17 +399,17 @@ export async function createUser(name, pin, role) {
     });
 }
 
-export async function deleteUser(uid) {
+export async function deleteUser(_id) {
     return await axios.post('/deleteUser', {
-        _id: uid
+        _id
     }).catch((err) => {
         return err.response;
     });
 }
 
-export async function editUser(uid, selectedChange, newValue) {
+export async function editUser(_id, selectedChange, newValue) {
     return await axios.post('/editUser', {
-        _id: uid,
+        _id,
         selectedChange,
         newValue
     }).catch((err) => {

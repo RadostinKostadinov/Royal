@@ -4,6 +4,7 @@ import { Ingredient } from "../../model/ingredient.js";
 
 
 export function historiesRoutes(app, auth) {
+
     app.get('/getAllPaidBills', auth, async (req, res) => {
         try {
             const allPaid = await ProductHistory.find({ action: 'paid' }).sort({ when: -1 }).populate('table');

@@ -7,6 +7,7 @@ const possibleActions = [
     'added', // Product Added To Bill (добавени X броя продукт към сметка)
     'paid', // Paid From Bill (платени Х броя продукт от сметка)
     'scrapped', // Бракувани
+    'consumed' // Консумирано от служителя
 ];
 
 const restockHistorySchema = new Schema({
@@ -127,6 +128,11 @@ const productHistorySchema = new Schema({
             ],
         }
     ],
+    addedToReport: { // дали е добавено към отчета (използва го системата, която прави проверка в 4:00 дали има останали)
+        type: Boolean,
+        default: false,
+        required: true
+    },
     reviewed: Boolean, // дали анатоли го е видял 
     reviewedDate: Date,
     when: { // дата на събитие

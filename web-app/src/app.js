@@ -1,11 +1,12 @@
 import page from 'page';
 import $ from 'jquery';
-import './bootstrap/bootstrap.min.css';
+// import './bootstrap/bootstrap.min.css';
+import './bootstrap/bootstrap.dark.min.css';
 import './bootstrap/bootstrap.bundle.min.js';
 import './css/global.css';
 import { html, render } from 'lit/html.js';
 import { getAllUsers, login, user } from './api';
-import { showAdminDashboard, createCategoryPage, deleteCategoryPage, editCategoryPage, sortCategoriesPage, createEmployeePage, deleteEmployeePage, editEmployeePage, addQtyProductPage, createProductPage, deleteProductPage, editProductPage, removeQtyProductPage, inventoryPage, sortProductsPage, scrappedPage, expireProductsPage } from './views/admin';
+import { showAdminDashboard, createCategoryPage, deleteCategoryPage, editCategoryPage, sortCategoriesPage, createEmployeePage, deleteEmployeePage, editEmployeePage, addQtyProductPage, createProductPage, deleteProductPage, editProductPage, removeQtyProductPage, inventoryPage, sortProductsPage, scrappedPage, expireProductsPage, reportsPage } from './views/admin';
 import { payPartOfBillPage, scrapProductsPage, showPaidBillsPage, tableControlsPage, waiterDashboardPage } from './views/waiter.js';
 import { bartenderDashboardPage } from './views/bartender';
 
@@ -24,6 +25,7 @@ page('/waiter/table/:tableId/bill/:billId/scrap', auth, scrapProductsPage);
 
 // Admin pages
 page('/admin', auth, showAdminDashboard);
+page('/admin/reports', auth, reportsPage);
 page('/admin/expireProducts', auth, expireProductsPage);
 page('/admin/inventory', auth, inventoryPage);
 page('/admin/inventory/scrapped', auth, scrappedPage);
@@ -69,7 +71,7 @@ async function checkIfUserLoggedIn() {
         `;
 
         const numpadTemplate = () => html`
-        <button @click=${() => render(usersTemplate(), container)}
+        <button @click=${()=> render(usersTemplate(), container)}
             class="btn btn-secondary fs-1 mt-3 ms-3">Назад</button>
         
         <div id="numpad-wrapper">

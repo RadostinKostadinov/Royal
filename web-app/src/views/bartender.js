@@ -70,8 +70,8 @@ export async function bartenderDashboardPage() {
         <tr>
             <td>${product.name}</td>
             <td>${product.qty} бр.</td>
-            <td><button @click=${()=> compltOne(product.prodRef, orderId)} class="removeOne text-uppercase">Едно</button></td>
-            <td><button @click=${()=> cmpltAll(product.prodRef, orderId)} class="removeAll text-uppercase">Всички</button>
+            <td><button @click=${() => compltOne(product.prodRef, orderId)} class="removeOne text-uppercase">Едно</button></td>
+            <td><button @click=${() => cmpltAll(product.prodRef, orderId)} class="removeAll text-uppercase">Всички</button>
             </td>
         </tr>
     `;
@@ -92,15 +92,15 @@ export async function bartenderDashboardPage() {
                     ${order.products.map((product) => productTemplate(product, order._id))}
                 </tbody>
             </table>
-            <button @click=${() => cmpltOrder(order._id)} class="finish text-uppercase">Завърши</button>
+            <button @click=${()=> cmpltOrder(order._id)} class="finish text-uppercase">Завърши</button>
         </div>
     `};
 
     const dashboard = () => html`
         <div id="bartenderDashboard">
-            <div id="orders"></div>
+            <div id="orders" class="p-3"></div>
             <div id="menu" class="d-flex flex-column justify-content-end gap-3 p-3">
-                <button @click=${() => page('/waiter')}>Маси</button>
+                <button @click=${()=> page('/waiter')}>Маси</button>
                 <button @click=${logout}>Изход</button>
             </div>
             <div class="overflow-auto">

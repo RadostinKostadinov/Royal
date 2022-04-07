@@ -47,7 +47,7 @@ export function usersRoutes(app, auth) {
 
             // Create token
             const token = jwt.sign(
-                { uid: user._id, name: user.name, role: user.role },
+                { _id: user._id, name: user.name, role: user.role },
                 process.env.TOKEN_KEY,
                 {
                     expiresIn: "12h"

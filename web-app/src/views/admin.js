@@ -4,7 +4,7 @@ import { html, render } from 'lit/html.js';
 import $ from "jquery";
 import Sortable from 'sortablejs';
 import '../css/admin/admin.css';
-import { markHistoryAsScrapped, sortCategories, getProductById, getCategoryById, getAllUsers, editCategory, deleteCategory, deleteUser, createUser, editUser, createCategory, changeQtyProduct, createProduct, deleteProduct, editProduct, getAllCategories, getAllProducts, sortProducts, logout, getAllIngredients, createIngredient, deleteIngredient, getIngredientById, editIngredient, getAllProductsWithoutIngredients, getProductsWithoutIngredientsFromCategory, changeQtyIngredient, getAllScrapped, getAllRestockedProducts } from '../api';
+import { markHistoryAsScrapped, sortCategories, getProductById, getCategoryById, getAllUsers, editCategory, deleteCategory, deleteUser, createUser, editUser, createCategory, changeQtyProduct, createProduct, deleteProduct, editProduct, getAllCategories, getAllProducts, sortProducts, logout, getAllIngredients, createIngredient, deleteIngredient, getIngredientById, editIngredient, getAllProductsWithoutIngredients, getProductsWithoutIngredientsFromCategory, changeQtyIngredient, getAllScrapped, getAllRestockedProducts, getAllReports } from '../api';
 
 const backBtn = html`<button @click=${()=> page('/admin')} class="btn btn-secondary fs-3 mt-2 ms-2">Назад</button>`;
 let contentType; //  used in loadProducts to determine if we are loading/deleting a product or ingredient
@@ -201,7 +201,7 @@ export async function removeQtyProductPage() {
             <div class="mb-3 d-none" id="quantityDiv">
                 <label for="qty" class="form-label">Добави количество</label>
                 <input required type="number" step="0.05" class="form-control fs-4" name="qty" id="qty" placeholder="пример: 50">
-                <div class="qty-numpad mt-3  d-none d-lg-grid">
+                <div class="w-50 m-auto qty-numpad mt-3 d-none d-lg-grid">
                     <button @click=${writeInQty} class="btn btn-primary">1</button>
                     <button @click=${writeInQty} class="btn btn-primary">2</button>
                     <button @click=${writeInQty} class="btn btn-primary">3</button>
@@ -309,7 +309,7 @@ export async function addQtyProductPage() {
             <div class="mb-3 d-none" id="quantityDiv">
                 <label for="qty" class="form-label">Добави количество</label>
                 <input required type="number" step="0.05" class="form-control fs-4" name="qty" id="qty" placeholder="пример: 50">
-                <div class="qty-numpad mt-3  d-none d-lg-grid">
+                <div class="w-50 m-auto qty-numpad mt-3 d-none d-lg-grid">
                     <button @click=${writeInQty} class="btn btn-primary">1</button>
                     <button @click=${writeInQty} class="btn btn-primary">2</button>
                     <button @click=${writeInQty} class="btn btn-primary">3</button>
@@ -544,17 +544,6 @@ export async function createProductPage() {
             <input required type="text" title="пример: 5.20, 5.0, 5, 0.5, 0.50" pattern="^\\d{1,}(\\.\\d{1,2})?$"
                 class="form-control fs-4" name="sellPrice" id="sellPrice" placeholder="пример: 2">
         </div>
-        <div class="mb-3 pt-3" id="ingredients">
-            <label for="sellPrice" class="form-label fs-5">Избери съставки и какво количество от тях използва продукта. Ако не използва определена съставка недей да пишеш нищо в кутийката.</label>
-            ${ ingredients.map((ingredient) => {
-                return html`
-                    <div class="mb-3">
-                        <label for=${ingredient._id} class="form-label">${ingredient.name}</label>
-                        <input type="number" min="1" class="form-control fs-4" name="ingredients" id=${ingredient._id} placeholder="пример: 50">
-                    </div>
-                `;
-            })}
-        </div>
         <div class="mb-3">
             <label class="form-label">Да се появява на монитора на</label>
             <div class="form-check">
@@ -566,12 +555,46 @@ export async function createProductPage() {
                 </div>
             </div>
         </div>
+        <div class="mb-5 pt-3" id="ingredients">
+            <label class="form-label fs-5">Избери съставки и какво количество от тях използва продукта.</label>
+            <button @click=${selectIngredient} class="btn btn-success fs-3">Добави съставка</button>
+        </div>
         <input type="submit" class="btn btn-primary fs-3 w-100" value="Създай" />
     </form>
+    <div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-fullscreen-sm-down">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="exampleModalLabel">Modal title</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    ${''/* TODO CREATE ME */}
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary">Save changes</button>
+                </div>
+            </div>
+        </div>
+    </div>
     `;
+
+    const ingredientInput = (ingredient) => html`
+        <div class="mb-3">
+            <label for=${ingredient._id} class="form-label">${ingredient.name}</label>
+            <input type="number" min="1" class="form-control fs-4" name="ingredients" id=${ingredient._id} placeholder="пример: 50">
+        </div>
+    `;
+
+    let selectedIngredients = [];
+    function selectIngredient() {
+
+    }
 
     const ingredientFields = () => html`
     ${backBtn}
+
     <form @submit=${createIngrdnt} class="m-auto mt-2 p-3 text-center fs-3">
         <div class="mb-3">
             <label for="productType" class="form-label">Тип на продукт</label>
@@ -1095,12 +1118,12 @@ export async function deleteEmployeePage() {
         e.preventDefault();
         // Get selected user
         const formData = new FormData(e.target);
-        const uid = formData.get('uid');
+        const _id = formData.get('_id');
 
-        if (uid === null)
+        if (_id === null)
             return alert('Избери служител!');
 
-        const res = await deleteUser(uid);
+        const res = await deleteUser(_id);
 
         if (res.status === 200) {// Successfully deleted user
             alert(res.data);
@@ -1116,7 +1139,7 @@ export async function deleteEmployeePage() {
         <form @submit=${delUser} class="d-flex text-center fs-3 flex-column m-auto mt-5 gap-5 p-3">
             <div>
                 <label class="form-label">Избери служител</label>
-                <select required class="form-control fs-4 text-capitalize" name="uid">
+                <select required class="form-control fs-4 text-capitalize" name="_id">
                     <option selected disabled>Избери</option>
                     ${users.map((user) => html`<option value=${user._id}>${user.name}</option>`)}
                 </select>
@@ -1139,17 +1162,17 @@ export async function editEmployeePage() {
         // Get selected user
         const formData = new FormData(e.target);
         const newValue = formData.get(selectedChange);
-        const uid = formData.get('uid');
+        const _id = formData.get('_id');
 
 
-        if (uid === null)
+        if (_id === null)
             return alert('Избери служител!');
         if (selectedChange === null)
             return alert('Избери какво да промениш!');
         if (!newValue)
             return alert('Въведи нова стойност!');
 
-        const res = await editUser(uid, selectedChange, newValue);
+        const res = await editUser(_id, selectedChange, newValue);
 
         if (res.status === 200) {// Successfully edited user
             alert(res.data);
@@ -1183,7 +1206,7 @@ export async function editEmployeePage() {
         <form autocomplete="off" @submit=${edtUser} class="d-flex text-center fs-3 flex-column m-auto mt-5 gap-5 p-3">
             <div>
                 <label class="form-label">1. Избери служител</label>
-                <select required class="form-control text-capitalize fs-4" name="uid">
+                <select required class="form-control text-capitalize fs-4" name="_id">
                     <option selected disabled>Избери</option>
                     ${users.map((user) => html`<option value=${user._id}>${user.name}</option>`)}
                 </select>
@@ -1474,7 +1497,7 @@ export async function inventoryPage() {
             </select>
         </div>
     
-        <table class="table table-striped table-light table-hover text-center">
+        <table class="table table-striped table-dark table-hover text-center">
             <thead>
                 <tr>
                     <th scope="col">Тип</th>
@@ -1494,6 +1517,77 @@ export async function inventoryPage() {
     
     // Render all products
     render(productRows(productsAndIngredients), document.querySelector('tbody'));
+}
+
+export async function reportsPage() {
+    let allScrapped = await getAllReports();
+    let allProducts = [];
+    let total = 0,
+        income = 0,
+        remaining = 0,
+        scrapped = 0,
+        consumed = 0;
+
+    const reportsRows = (reports) => html`
+        ${reports.map((report) => {
+            const date = new Date(report.when);
+            const dateString = `${date.getDate() > 9 ? date.getDate() : '0' + date.getDate()}.${(date.getMonth() + 1) > 9 ? date.getMonth() + 1 : '0' + (date.getMonth() + 1)}.${date.getFullYear()}`;
+            const timeString = `${date.getHours() > 9 ? date.getHours() : '0' + date.getHours()}:${date.getMinutes() > 9 ? date.getMinutes() : '0' + date.getMinutes()}`;
+            income += report.income;
+            remaining += report.remaining;
+            consumed += report.consumed;
+            scrapped += report.scrapped;            
+            total += report.income + report.remaining - report.consumed - report.scrapped;
+        
+
+            return html`
+                <tr>
+                    <td scope="row">${dateString}</td>
+                    <td scope="row">${timeString}</td>
+                    <td scope="row" class="text-capitalize">${report.user.name}</td>
+                    <td scope="row">${report.income}</td>
+                    <td scope="row">${report.remaining}</td>
+                    <td scope="row">${report.scrapped}</td>
+                    <td scope="row">${report.consumed}</td>
+                    <td scope="row">${report.total}</td>
+                </tr>`
+        })}
+
+        <tr class="table-primary fw-bold">
+            <td scope="row" colspan="3">Общо:</td>
+            <td scope="row">${income.toFixed(2)}</td>
+            <td scope="row">${remaining.toFixed(2)}</td>
+            <td scope="row">${scrapped.toFixed(2)}</td>
+            <td scope="row">${consumed.toFixed(2)}</td>
+            <td scope="row">${total.toFixed(2)}</td>
+        </tr>
+    `;
+    
+    const reportsTemplate = () => html`
+        ${backBtn}
+    
+        <table class="mt-3 table table-striped table-dark table-hover text-center">
+            <thead>
+                <tr>
+                    <th scope="col">Дата</th>
+                    <th scope="col">Час</th>
+                    <th scope="col">Служител</th>
+                    <th scope="col">Продажби</th>
+                    <th scope="col">Неплатени</th>
+                    <th scope="col">Брак</th>
+                    <th scope="col">Консумация</th>
+                    <th scope="col">Общ приход</th>
+                </tr>
+            </thead>
+            <tbody>
+            </tbody>
+        </table>
+    `;
+
+    render(reportsTemplate(), container);
+    
+    // Render all scrapped products
+    render(reportsRows(allScrapped), document.querySelector('tbody'));
 }
 
 export async function scrappedPage() {
@@ -1545,7 +1639,7 @@ export async function scrappedPage() {
     const scrappedTemplate = () => html`
         ${backBtn}
     
-        <table class="mt-3 table table-striped table-light table-hover text-center">
+        <table class="mt-3 table table-striped table-dark table-hover text-center">
             <thead>
                 <tr>
                     <th scope="col">Дата</th>
@@ -1573,10 +1667,10 @@ export async function expireProductsPage() {
     const products = await getAllRestockedProducts();
     console.log(products);
     
-    const expireTemplate = (products) => html`s
+    const expireTemplate = (products) => html`
         ${backBtn}
     
-        <table class="mt-3 table table-striped table-light table-hover text-center">
+        <table class="mt-3 table table-striped table-dark table-hover text-center">
             <thead>
                 <tr>
                     <th scope="col">Дата на зареждане</th>
@@ -1630,6 +1724,7 @@ export function showAdminDashboard() {
                     <button @click=${() => page('/admin/inventory/scrapped') } class="btn btn-danger fs-4">Бракувана стока</button>
                     <button @click=${() => page('/admin/expireProducts') } class="btn btn-primary fs-4">Срок на годност</button>
                     <button @click=${() => page('/admin/inventory') } class="btn btn-secondary fs-4">Склад</button>
+                    <button @click=${() => page('/admin/reports') } class="btn btn-secondary fs-4">Отчети</button>
                 </div>
             </div>
             <div class="text-center mt-4">
@@ -1662,7 +1757,11 @@ export function showAdminDashboard() {
                     <button @click=${() => page('/admin/employee/edit') } class="btn btn-secondary fs-4">Редактирай</button>
                 </div>
             </div>
-            <button @click=${logout} class="btn btn-danger fs-4 float-end">Изход</button>
+            <div class="d-flex mt-5 flex-row flex-wrap gap-3 justify-content-end">
+                <button @click=${() => page('/waiter')} class="btn btn-secondary fs-4">Маси</button>
+                <button @click=${() => page('/bartender')} class="btn btn-secondary fs-4">Поръчки</button>
+                <button @click=${logout} class="btn btn-danger fs-4">Изход</button>
+            </div>
         </div>
     `;
 

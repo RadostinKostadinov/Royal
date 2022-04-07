@@ -4,10 +4,12 @@ import { ProductHistory } from '../model/history.js';
 import { Ingredient } from '../model/ingredient.js';
 import { Product } from '../model/product.js';
 import { Order } from '../model/order.js';
+import { Table } from '../model/table.js';
 
 export async function startCronJobs() {
     // Mark all tables as paid every day at 04:00 and delete bills
     cron.schedule('0 4 * * *', async () => {
+        // Mark all bills as paid and delete them
         const allBills = await Bill.find().populate('products.product');
 
         for (let bill of allBills) {
@@ -62,11 +64,16 @@ export async function startCronJobs() {
             });
         }
 
-        // Delete all bills
         await Bill.deleteMany({});
         console.log('All bills have been automatically marked as paid and removed!');
 
         await Order.deleteMany({});
-        console.log('All orders have been automatically deleted!')
+        console.log('All orders have been automatically deleted!');
+
+        await createReport(); // create report from leftovers
+        console.log('Report automatically created!');
+
+        await Table.updateMany({}, { total: 0 });
+        console.log('Tables totals automatically reset!')
     });
 }

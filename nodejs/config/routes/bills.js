@@ -43,11 +43,13 @@ export function billsRoutes(app, auth) {
             let historyTotal = 0;
 
             const originalBill = await Bill.findById(billToScrap._id);
+            const table = await Table.findById(originalBill.table);
             for (let product of billToScrap.products) { // for every product to pay
                 for (let [index, prd] of Object.entries(originalBill.products)) { // check against every product in original bill
                     if (product.product._id.toString() === prd.product.toString()) {
                         // remove qty from original bill
                         originalBill.total = +originalBill.total.toFixed(2) - product.product.sellPrice * product.qty;
+                        table.total = +table.total.toFixed(2) - product.product.sellPrice * product.qty;
 
                         prd.qty -= product.qty;
                         if (prd.qty === 0)
@@ -82,13 +84,14 @@ export function billsRoutes(app, auth) {
             }
 
             originalBill.save();
+            table.save();
             res.json(originalBill);
 
             // Add action to history
             ProductHistory.create({
                 user: {
                     name: req.user.name,
-                    userRef: req.user.uid
+                    userRef: req.user._id
                 },
                 action: 'scrapped',
                 table: originalBill.table,
@@ -114,11 +117,13 @@ export function billsRoutes(app, auth) {
             let historyTotal = 0;
 
             const originalBill = await Bill.findById(billToPay._id);
+            const table = await Table.findById(originalBill.table);
             for (let product of billToPay.products) { // for every product to pay
                 for (let [index, prd] of Object.entries(originalBill.products)) { // check against every product in original bill
                     if (product.product._id.toString() === prd.product.toString()) {
                         // remove qty from original bill
                         originalBill.total = +originalBill.total.toFixed(2) - product.product.sellPrice * product.qty;
+                        table.total = +table.total.toFixed(2) - product.product.sellPrice * product.qty;
 
                         prd.qty -= product.qty;
                         if (prd.qty === 0)
@@ -159,6 +164,7 @@ export function billsRoutes(app, auth) {
                 }
             }
 
+            table.save();
             originalBill.save();
             res.json(originalBill);
 
@@ -166,7 +172,7 @@ export function billsRoutes(app, auth) {
             ProductHistory.create({
                 user: {
                     name: req.user.name,
-                    userRef: req.user.uid
+                    userRef: req.user._id
                 },
                 action: 'paid',
                 table: originalBill.table,
@@ -186,6 +192,7 @@ export function billsRoutes(app, auth) {
 
             // Find bill
             const bill = await Bill.findById(billId).populate('products.product');
+            const table = await Table.findById(bill.table);
 
             // Find product in bill
             for (let [index, product] of Object.entries(bill.products)) {
@@ -196,8 +203,13 @@ export function billsRoutes(app, auth) {
                         bill.products.splice(index, 1); // remove product entirely from bill
 
                     bill.total = (bill.total - product.product.sellPrice).toFixed(2); // Remove price from total
-
+                    table.total = (table.total - product.product.sellPrice).toFixed(2); // Remove price from total
                     bill.save();
+                    table.save();
+
+
+                    if (!table)
+                        return res.status(400).send('Масата не съществува!');
 
                     return res.json(bill); // Return bill to rerender
                 }
@@ -253,7 +265,7 @@ export function billsRoutes(app, auth) {
                 ProductHistory.create({
                     user: {
                         name: req.user.name,
-                        userRef: req.user.uid
+                        userRef: req.user._id
                     },
                     action: action,
                     table: bill.table,
@@ -296,6 +308,11 @@ export function billsRoutes(app, auth) {
             if (!bill)
                 return res.status(400).send('Сметката не съществува!');
 
+            const table = await Table.findById(bill.table);
+
+            if (!table)
+                return res.status(400).send('Масата не съществува!');
+
             // Check if this product is already in bill
             let productIndex;
 
@@ -314,6 +331,10 @@ export function billsRoutes(app, auth) {
             // Update bill total
             bill.total = (bill.total + product.sellPrice * selectedX).toFixed(2);
             bill.save(); // Save (because we are editing)
+
+            // Update table total
+            table.total = (table.total + product.sellPrice * selectedX).toFixed(2);
+            table.save(); // Save (because we are editing)
 
             await bill.populate('products.product'); // populate products (+ the one we created)
 

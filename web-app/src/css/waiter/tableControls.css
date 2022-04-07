@@ -223,3 +223,7 @@
 #tableControls .bills button.hasProducts:not(.active) {
 	opacity: 0.3;
 }
+
+#reportModal table td:nth-of-type(2) {
+	text-align: center;
+}

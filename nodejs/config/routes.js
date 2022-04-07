@@ -17,9 +17,10 @@ import bcrypt from 'bcryptjs';
 import { ProductHistory, RestockHistory } from '../model/history.js';
 import { historiesRoutes } from './routes/histories.js';
 import { ordersRoutes } from './routes/orders.js';
+import { reportsRoutes } from './routes/reports.js';
 
 
-function routesConfig(app, port) {
+function routesConfig(app) {
 
     // Load all routes
     categoriesRoutes(app, auth);
@@ -30,6 +31,7 @@ function routesConfig(app, port) {
     tablesRoutes(app, auth);
     historiesRoutes(app, auth);
     ordersRoutes(app, auth);
+    reportsRoutes(app, auth);
 
     // Set default 404 for all routes
     app.all('*', (req, res) => {

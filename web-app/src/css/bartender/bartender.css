@@ -22,21 +22,30 @@
 	text-transform: uppercase;
 }
 
-#bartenderDashboard #allOrders td:first-of-type,
-#bartenderDashboard #orders .order table td:first-of-type {
+#bartenderDashboard #allOrders td:first-of-type {
 	width: 38%;
 }
 
-#bartenderDashboard #allOrders td:nth-of-type(2),
+#bartenderDashboard #orders .order table td:first-of-type {
+	width: 45%;
+}
+
+#bartenderDashboard #allOrders td:nth-of-type(2) {
+	width: 15%;
+}
+
 #bartenderDashboard #orders .order table td:nth-of-type(2) {
-	width: 14%;
+	width: 25%;
 }
 
 #bartenderDashboard #allOrders td:nth-of-type(3),
-#bartenderDashboard #allOrders td:nth-of-type(4),
+#bartenderDashboard #allOrders td:nth-of-type(4) {
+	width: 24%;
+}
+
 #bartenderDashboard #orders .order table td:nth-of-type(3),
 #bartenderDashboard #orders .order table td:nth-of-type(4) {
-	width: 24%;
+	width: 15%;
 }
 
 #bartenderDashboard #allOrders tbody td:not(:first-of-type),
@@ -68,9 +77,12 @@
 	font-weight: 600;
 }
 
-#bartenderDashboard #allOrders tbody td:first-of-type,
-#bartenderDashboard #orders .order table tbody td:first-of-type {
+#bartenderDashboard #allOrders tbody td:first-of-type {
 	padding-left: 0.3rem;
+}
+
+#bartenderDashboard #orders .order table tbody td:first-of-type {
+	padding-left: 1rem;
 }
 
 #bartenderDashboard button.removeOne {
@@ -90,24 +102,32 @@
 }
 
 #bartenderDashboard #orders {
-	display: grid;
+	/* 2 columns */
+	/* display: grid;
 	grid-template-columns: 1fr 1fr;
-	align-items: start;
-	/* display: flex;
-	flex-wrap: wrap;
-	align-items: flex-start;
-	width: 100%; */
+	align-items: start; */
+
+	/* 1 column */
+	display: flex;
+	flex-direction: column;
+	width: 100%;
 
 	overflow: auto;
-	--orders-gap: 0.5rem;
+	/* Two columns */
+	/* --orders-gap: 0.5rem; */
+
+	/* One column */
+	--orders-gap: 1rem;
 	gap: var(--orders-gap);
 	padding: var(--orders-gap);
 }
 
-#bartenderDashboard #orders .order {
-	/* flex-grow: 1; */
-	/* flex: calc(50% - var(--orders-gap) * 2); */
+#bartenderDashboard #orders .order table {
+	/* 1 column */
+	width: 100%;
+}
 
+#bartenderDashboard #orders .order {
 	border: 2px solid rgba(0, 200, 146, 0.6);
 	border-radius: 10px;
 }

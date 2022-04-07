@@ -8,7 +8,7 @@ import { container } from "../app";
 import { html, render } from 'lit/html.js';
 import $ from "jquery";
 import 'bootstrap-icons/font/bootstrap-icons.css';
-import { socket, getAllPaidBills, getAddonsForCategory, getLastPaidBillByTableId, addProductToBill, generateBills, getAllCategories, getCategoryById, logout, getBillById, removeOneFromBill, sellProducts, scrapProducts, addProductsToHistory, getTables, getTableTotalById, createNewOrder } from '../api';
+import { socket, getAllPaidBills, getAddonsForCategory, getLastPaidBillByTableId, addProductToBill, generateBills, getAllCategories, getCategoryById, logout, getBillById, removeOneFromBill, sellProducts, scrapProducts, addProductsToHistory, getTables, getTableTotalById, createNewOrder, createReport } from '../api';
 
 export function stopAllSockets() {
     socket.off('order:new');
@@ -28,9 +28,9 @@ export async function waiterDashboardPage() {
     
     let selectedLocation = 'middle';
     let middleTables = await getTables('middle'); // for default view
-    if (middleTables.status === 200) {
+    if (middleTables.status === 200)
         middleTables = middleTables.data;
-    } else {
+    else {
         console.error(middleTables);
         return alert('Възникна грешка');
     }
@@ -103,7 +103,63 @@ export async function waiterDashboardPage() {
         return `${hours}:${minutes}`
     }
 
+    async function crtReport() {
+        const res = await createReport();
+
+        if (res.status === 200) {
+            const report = res.data;
+
+            render(reportTemplate(report), document.querySelector('#reportModal .modal-body'))
+        } else {
+            console.error(res);
+            alert('Възникна грешка');
+        }
+    }
+
+    const reportTemplate = (report) => html`
+        <table class="table fw-bold">
+            <tbody>
+                <tr class="table-success">
+                    <td>Продажби</td>
+                    <td>${report.income.toFixed(2) + ' лв.'}</td>
+                </tr>
+                <tr class="table-warning">
+                    <td>Неплатени</td>
+                    <td>${report.remaining.toFixed(2) +' лв.'}</td>
+                </tr>
+                <tr class="table-danger">
+                    <td>Брак</td>
+                    <td>${report.scrapped.toFixed(2) +' лв.'}</td>
+                </tr>
+                <tr class="table-secondary">
+                    <td>Консумация</td>
+                    <td>${report.consumed.toFixed(2) +' лв.'}</td>
+                </tr>
+                <tr class="table-primary">
+                    <td>Общ приход</td>
+                    <td>${report.total.toFixed(2) +' лв.'}</td>
+                </tr>
+            </tbody>
+        </table>
+    `;
+
     const dashboardTemplate = (grid) => html`
+        <div class="modal fade" id="reportModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="reportModalLabel">Междинен отчет</h5>
+                </div>
+                <div class="modal-body">
+                    
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="gray-btn" data-bs-dismiss="modal">Затвори</button>
+                </div>
+                </div>
+            </div>
+        </div>
+
         <div id="waiterDashboard" class="d-flex">
             <div id="waiterMenu" class="d-flex flex-column h-100">
                 <div id="todayInfo" class="d-flex flex-column text-center gap-1 text-uppercase">
@@ -119,6 +175,7 @@ export async function waiterDashboardPage() {
                     </div>
                     <div class="d-flex flex-column text-center gap-3 w-100">
                         <!-- <button>Меню</button> -->
+                        <button @click=${crtReport} data-bs-toggle="modal" data-bs-target="#reportModal">Отчет</button>
                         <button @click=${logout}>Изход</button>
                     </div>
                 </div>
@@ -189,6 +246,11 @@ export async function tableControlsPage(ctx) {
     // Stop listening on old sockets
     stopAllSockets();
 
+    /*  Wait 10 seconds of inactivity after adding or removing product
+    to bill before automatically creating order and adding them to history */
+    const awayTime = 10 * 1000; // 10 seconds
+    var awayTimeout;
+
     function markBillAsActiveInactive(bill) {
         if (bill.total === 0) {
             $(`[_id=${bill._id}]`).removeClass('hasProducts');
@@ -226,6 +288,7 @@ export async function tableControlsPage(ctx) {
 
     // NEW: Add all added products together to history
     async function addToHistoryAndCreateNewOrder() { // Sends all products that were added using addToArray()
+        clearTimeout(awayTimeout);
         if (addedProducts.length) {
             const res = await addProductsToHistory(addedProducts, selectedBillId);
             addedProducts = []; // Reset
@@ -245,6 +308,8 @@ export async function tableControlsPage(ctx) {
 
     // Add product to bill (NEW: doesn't add to history)
     async function addToBill(e) {
+        awayTimeout = setTimeout(addToHistoryAndCreateNewOrder, awayTime);
+
         const _id = $(e.target).attr('_id');
         const action = 'added'; // used in addToHistory to make different arrays based on this value (added at once, removed at once, etc.)
         
@@ -279,6 +344,7 @@ export async function tableControlsPage(ctx) {
 
     // Loads all products from category to display
     async function loadProductsFromCategory(e) {
+        clearTimeout(awayTimeout);
         // e could be from the initial loading of the template (with categires[0]._id)
         // or the actual event of clicking a button
         let _id;
@@ -327,6 +393,7 @@ export async function tableControlsPage(ctx) {
     `;
 
     async function changeSelectedBill(e) {
+        clearTimeout(awayTimeout);
         if (addedProducts.length) // If we have any products added to one bill, and we change the bill -> send products to server
             await addToHistoryAndCreateNewOrder();
         
@@ -408,6 +475,8 @@ export async function tableControlsPage(ctx) {
     }
 
     async function rmvOneFromBill(_id) {
+        awayTimeout = setTimeout(addToHistoryAndCreateNewOrder, awayTime);
+
         const action = 'removed'; // used in addToHistory to make different arrays based on this value (added at once, removed at once, etc.)
         
         // Add to history array
@@ -452,6 +521,7 @@ export async function tableControlsPage(ctx) {
     }
 
     async function payWholeBill() {
+        clearTimeout(awayTimeout);
         if (billData.products.length === 0) return;
 
         if (addedProducts.length) // If we have any products added to one bill, and we change the bill -> send products to server
@@ -523,6 +593,7 @@ export async function tableControlsPage(ctx) {
     `;
 
     async function goBack() {
+        clearTimeout(awayTimeout);
         if (addedProducts.length)
             await addToHistoryAndCreateNewOrder();
 
@@ -530,6 +601,7 @@ export async function tableControlsPage(ctx) {
     }
 
     async function goToPay() {
+        clearTimeout(awayTimeout);
         if (addedProducts.length)
             await addToHistoryAndCreateNewOrder();
 
@@ -537,6 +609,7 @@ export async function tableControlsPage(ctx) {
     }
 
     async function goToScrap() {
+        clearTimeout(awayTimeout);
         if (addedProducts.length)
             await addToHistoryAndCreateNewOrder();
 
@@ -1077,7 +1150,7 @@ export async function showPaidBillsPage() {
     const scrappedTemplate = () => html`
         <button class="gray-btn fs-5 mt-3 ms-3" @click=${() => page('/waiter')}>Назад</button>
 
-        <table class="mt-3 table table-striped table-light table-hover text-center">
+        <table class="mt-3 table table-striped table-dark table-hover text-center">
             <thead>
                 <tr>
                     <th scope="col">Дата</th>
