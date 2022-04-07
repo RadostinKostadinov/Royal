@@ -3,30 +3,35 @@ import mongoose from "mongoose";
 const { Schema } = mongoose;
 
 const orderSchema = new Schema({
+    tableNumber: {
+        type: Number,
+        required: true
+    },
     products: [
         {
-            name: String,
-            qty: Number,
-            buyPrice: Number,
-            sellPrice: Number,
-            total: { // auto calculated product total
+            prodRef: {
+                type: Schema.Types.ObjectId,
+                ref: "Product",
+                required: true
+            },
+            name: { // Име на продукта
+                type: String,
+                required: true
+            },
+            qty: { // Колко бройки са поръчани
                 type: Number,
-                default: function () {
-                    return this.qty * this.sellPrice
-                }
-            }
+                required: true
+            },
+            completed: { // Дали барманът е приготвил продукта
+                type: Boolean,
+                default: false,
+                required: true
+            },
         }
     ],
-    total: { // auto calculated total from all products totals
-        type: Number,
-        default: function () {
-            return this.products.reduce((prevProduct, currentProduct) => prevProduct.total + currentProduct.total)
-        }
-    },
-    date: {
+    when: { // Кога е направена поръчката
         type: Date,
-        default: Date.now,
-        immutable: true
+        default: Date.now
     }
 });
 

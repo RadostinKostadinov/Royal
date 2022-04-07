@@ -1,19 +1,63 @@
 import page from 'page';
 import '../css/waiter/menu.css';
 import '../css/waiter/tables/tables.css';
-import '../css/waiter/tables/middleTables.css';
+import '../css/waiter/tables/middle.css';
 import '../css/waiter/tableControls.css';
 import '../css/waiter/payPartOfBill.css';
 import { container } from "../app";
 import { html, render } from 'lit/html.js';
 import $ from "jquery";
 import 'bootstrap-icons/font/bootstrap-icons.css';
-import { getAllPaidBills, getAddonsForCategory, getLastPaidBillByTableId, addProductToBill, generateBills, getAllCategories, getAllTables, getCategoryById, logout, getBillById, removeOneFromBill, sellProducts, scrapProducts, addProductsToHistory } from '../api';
+import { socket, getAllPaidBills, getAddonsForCategory, getLastPaidBillByTableId, addProductToBill, generateBills, getAllCategories, getCategoryById, logout, getBillById, removeOneFromBill, sellProducts, scrapProducts, addProductsToHistory, getTables, getTableTotalById, createNewOrder } from '../api';
+
+function stopAllSockets() {
+    socket.off('billChanged');
+    socket.off('pay-scrap-refresh');
+    socket.off('addToScrap/returnToBill');
+    socket.off('addToPay/returnToBill');
+    socket.off('wholeBillPaid');
+    socket.off('entered-payPartOfBillPage');
+    socket.off('entered-scrapProductsPage');
+}
 
 // Dashboard contains all the code for rendering the tables view (grid with tables)
 export async function waiterDashboardPage() {
+    // Stop listening on old sockets
+    stopAllSockets();
+    
+    let selectedLocation = 'middle';
+    let middleTables = await getTables('middle'); // for default view
+    if (middleTables.status === 200) {
+        middleTables = middleTables.data;
+    } else {
+        console.error(middleTables);
+        return alert('Възникна грешка');
+    }
+
+    // Rerender table total when someone adds/removes/scraps.. product from the bill
+    socket.on('billChanged', async (bill) => {
+        const tableId = bill.table,
+            tableDiv = $(`[_id="${tableId}"]`);
+
+        // If this table is currently on screen, update total
+        if (tableDiv.length) {
+            const res = await getTableTotalById(tableId);
+            const newTotal = res.data.toFixed(2),
+                totalSpan = $(`[_id="${tableId}"] .total`);
+            // Set new total
+            if (newTotal > 0) {
+                totalSpan.text(newTotal);
+                tableDiv.addClass('taken');
+            }
+            else {
+                // No products in table, remove total and class
+                totalSpan.text('');
+                tableDiv.removeClass('taken');
+            }
+        }
+    });
+
     // Get all tables from db
-    const { middleTables, insideTables, outsideTables } = await getAllTables();
     const date = new Date();
 
     function getDay() {
@@ -62,17 +106,15 @@ export async function waiterDashboardPage() {
         <div id="waiterDashboard" class="d-flex">
             <div id="waiterMenu" class="d-flex flex-column h-100">
                 <div id="todayInfo" class="d-flex flex-column text-center gap-1 text-uppercase">
-                    <div>
-                        ${getDay()}
-                    </div>
+                    <div>${getDay()}</div>
                     <div>${getDate()}</div>
                     <div>${getTime()}</div>
                 </div>
                 <div class="d-flex flex-column align-items-center mt-5 mb-5 justify-content-between h-100 w-100 ps-2 pe-2">
                     <div id="changeTablesViewButtons" class="d-flex flex-column text-center gap-3 w-100">
-                        <button id="insideTablesBtn" @click=${(clickedBtn) => changeTablesView(clickedBtn, 'insideTables')}>Вътре</button>
-                        <button class="active" id="middleTablesBtn" @click=${(clickedBtn) => changeTablesView(clickedBtn, 'middleTables')}>Градина</button>
-                        <button id="outsideTablesBtn" @click=${(clickedBtn) => changeTablesView(clickedBtn, 'outsideTables')}>Навън</button>
+                        <button id="insideTablesBtn" @click=${(clickedBtn) => changeTablesView(clickedBtn, 'inside')}>Вътре</button>
+                        <button class="active" id="middleTablesBtn" @click=${(clickedBtn) => changeTablesView(clickedBtn, 'middle')}>Градина</button>
+                        <button id="outsideTablesBtn" @click=${(clickedBtn) => changeTablesView(clickedBtn, 'outside')}>Навън</button>
                     </div>
                     <div class="d-flex flex-column text-center gap-3 w-100">
                         <button>Меню</button>
@@ -111,31 +153,63 @@ export async function waiterDashboardPage() {
     `;
 
     // This functions changes the table's view (shows the inside, outside or garden tables grid)
-    function changeTablesView(clickedBtnEvent, viewName) {
-        const clickedBtn = clickedBtnEvent.target;
+    async function changeTablesView(clickedBtnEvent, viewName) {
+        if (clickedBtnEvent !== null) { // if not coming from socket
+            const clickedBtn = clickedBtnEvent.target;
+            // Remove active class from any button that has it
+            $('#changeTablesViewButtons button.active').removeClass('active');
+
+            // Add active class to clicked btn
+            $(clickedBtn).addClass('active');
+        }
+
         let viewToRender;
 
-        // Remove active class from any button that has it
-        $('#changeTablesViewButtons button.active').removeClass('active');
+        selectedLocation = viewName;
+        const res = await getTables(selectedLocation);
 
-        if (viewName === 'outsideTables')
-            viewToRender = outsideTables;
-        else if (viewName === 'middleTables')
-            viewToRender = middleTables;
-        else if (viewName === 'insideTables')
-            viewToRender = insideTables;
+        if (res.status === 200)
+            viewToRender = res.data;
+        else {
+            console.error(res);
+            alert('Възникна грешка!');
+        }
         
-        // Add active class to clicked btn
-        $(clickedBtn).addClass('active');
-
-        render(dashboardTemplate(gridTemplate(viewName, viewToRender)), container);
+        selectedLocation = viewName;
+        render(dashboardTemplate(gridTemplate(selectedLocation, viewToRender)), container);
     }
 
     // Render default view (dashboard + middle tables)
-    render(dashboardTemplate(gridTemplate('middleTables', middleTables)), container);
+    render(dashboardTemplate(gridTemplate(selectedLocation, middleTables)), container);
 }
 
 export async function tableControlsPage(ctx) {
+    // Stop listening on old sockets
+    stopAllSockets();
+
+    function markBillAsActiveInactive(bill) {
+        if (bill.total === 0) {
+            $(`[_id=${bill._id}]`).removeClass('hasProducts');
+        } else {
+            $(`[_id=${bill._id}]`).addClass('hasProducts');
+        }
+    }
+
+    // Rerender products in bill when someone scraps a product from the bill
+    socket.on('billChanged', (bill) => {
+        // First check if this user is on the same table
+        if (bill.table !== selectedTable)
+            return;
+
+        markBillAsActiveInactive(bill);
+
+        // Check if on same TABLE and BILL
+        if (bill._id !== selectedBillId)
+            return;
+        
+        renderProductsInBill(bill); // if yes, rerender products in that bill
+    });
+
     const selectedTable = ctx.params.tableId; // Get selected (clicked) table _id
 
     if (selectedTable === null) return page('/');
@@ -145,18 +219,25 @@ export async function tableControlsPage(ctx) {
     let billData,
         selectedBillId, // by default the first one is selected, so its never undefined
         selectedX = 1, // can be 2,3... (number) or undefined (no X selected)
-        addedProducts = []; // add products here and send them all at once when going back, or going to pay or moving to any other page
+        addedProducts = [],
+        newOrderProducts = {}; // add products HISTORY here and send them all at once when going back, or going to pay or moving to any other page
 
     // NEW: Add all added products together to history
-    async function addToHistory() { // Sends all products that were added using addToArray()
-        if (!addedProducts.length) return;
+    async function addToHistoryAndCreateNewOrder() { // Sends all products that were added using addToArray()
+        if (addedProducts.length) {
+            const res = await addProductsToHistory(addedProducts, selectedBillId);
+            addedProducts = []; // Reset
+    
+            if (res.status !== 200) {
+                console.error(res);
+                alert('Възникна грешка!');
+            }
+        }
         
-        const res = await addProductsToHistory(addedProducts, selectedBillId);
-        addedProducts = []; // Reset
-        
-        if (res.status !== 200) {
-            console.error(res);
-            alert('Възникна грешка!');
+        if (Object.keys(newOrderProducts).length) {
+            await createNewOrder(Object.values(newOrderProducts), ctx.params.tableId);
+            socket.emit('order:new'); // notify bartender of new order
+            newOrderProducts = {}; // Reset
         }
     }
 
@@ -164,15 +245,27 @@ export async function tableControlsPage(ctx) {
     async function addToBill(e) {
         const _id = $(e.target).attr('_id');
         const action = 'added'; // used in addToHistory to make different arrays based on this value (added at once, removed at once, etc.)
+        
+        // Add to history array
         addedProducts.push({ _id, selectedX, action });
+
+        // Add to new order
+        // If product is already in newOrder, add to its quantity
+        if (newOrderProducts.hasOwnProperty(_id))
+            newOrderProducts[_id].qty += selectedX;
+        else
+            newOrderProducts[_id] = { _id, qty: selectedX };
+        
 
         const res = await addProductToBill(_id, selectedX, selectedBillId);
 
         if (res.status === 200) {
-            const bill = res.data; // get bill and render all products inside it
-            billData = bill;
-
-            renderProductsInBill(bill);
+            // get bill and render all products inside it
+            billData = res.data;
+            
+            markBillAsActiveInactive(billData);
+            socket.emit('billChanged', billData); // send new bill to server to rerender for anyone in same view
+            renderProductsInBill(billData);
         } else {
             console.error(res);
             alert('Възникна грешка');
@@ -233,7 +326,7 @@ export async function tableControlsPage(ctx) {
 
     async function changeSelectedBill(e) {
         if (addedProducts.length) // If we have any products added to one bill, and we change the bill -> send products to server
-            await addToHistory();
+            await addToHistoryAndCreateNewOrder();
         
         const selectedBillEl = $(e.target);
         selectedBillId = selectedBillEl.attr('_id'); // set new bill as selected
@@ -281,8 +374,8 @@ export async function tableControlsPage(ctx) {
             // 201 == created, 200 == already created (no problem)
             const bills = res.data;
             selectedBillId = bills[0]._id; // set first bill as selected automatically
+                        
             await renderProductsInBill();// load its products
-            
             render(billsTemplate(bills), document.querySelector('#tableControls .bills'));
             getLastPaidOnBill();
         } else {
@@ -314,14 +407,28 @@ export async function tableControlsPage(ctx) {
 
     async function rmvOneFromBill(_id) {
         const action = 'removed'; // used in addToHistory to make different arrays based on this value (added at once, removed at once, etc.)
+        
+        // Add to history array
         addedProducts.push({ _id, selectedX, action });
+
+        // Remove qty from new order (if product exists)
+        if (newOrderProducts.hasOwnProperty(_id)) {
+            newOrderProducts[_id].qty -= selectedX;
+
+            // If qty is 0, remove from newOrder
+            if (newOrderProducts[_id].qty === 0)
+                delete newOrderProducts[_id];
+        }
         
         // Remove 1 qty of this product from this bill
         const res = await removeOneFromBill(_id, selectedBillId);
         
         if (res.status === 200) {
-            const bill = res.data;
-            renderProductsInBill(bill);
+            billData = res.data;
+
+            markBillAsActiveInactive(billData);
+            socket.emit('billChanged', billData); // send new bill to server to rerender for anyone in same view
+            renderProductsInBill(billData);
         } else {
             console.error(res);
             alert('Възникна грешка!');
@@ -346,11 +453,14 @@ export async function tableControlsPage(ctx) {
         if (billData.products.length === 0) return;
 
         if (addedProducts.length) // If we have any products added to one bill, and we change the bill -> send products to server
-            await addToHistory();
+            await addToHistoryAndCreateNewOrder();
 
         const res = await sellProducts(billData);
 
         if (res.status === 200) {
+            billData = res.data;
+            socket.emit('wholeBillPaid'); // used in the "Извади" screen, to remove all products from there
+            socket.emit('billChanged', billData); // send new bill to server to rerender for anyone in same view
             page(`/waiter`);
         } else {
             console.error(res);
@@ -401,26 +511,32 @@ export async function tableControlsPage(ctx) {
 
     // i==0 (if first bill, mark it as "active")
     const billsTemplate = (bills) => html`
-        ${bills.map((bill, i) => html`<button @click=${changeSelectedBill} class=${i === 0 ? 'active' : ''} _id=${bill._id}>${i+1}</button>`) }
+        ${bills.map((bill, i) => {
+            let classes = [
+                i === 0 ? 'active' : '',
+                bill.total > 0 ? 'hasProducts' : ''];
+
+            return html`<button @click=${changeSelectedBill} class=${classes.join(' ')} _id=${bill._id}>${i+1}</button>`
+        }) }
     `;
 
     async function goBack() {
         if (addedProducts.length)
-            await addToHistory();
+            await addToHistoryAndCreateNewOrder();
 
         page('/');
     }
 
     async function goToPay() {
         if (addedProducts.length)
-            await addToHistory();
+            await addToHistoryAndCreateNewOrder();
 
         page(`${ctx.path}/bill/${selectedBillId}/pay`)
     }
 
     async function goToScrap() {
         if (addedProducts.length)
-            await addToHistory();
+            await addToHistoryAndCreateNewOrder();
 
         page(`${ctx.path}/bill/${selectedBillId}/scrap`)
     }
@@ -445,7 +561,7 @@ export async function tableControlsPage(ctx) {
                 <div class="addons d-flex flex-column justify-content-evenly"></div>
                 <div class="controls d-flex flex-column justify-content-evenly">
                     <button @click=${goToPay}>Извади</button>
-                    <button>Приключи с принт</button>
+                    <button style="opacity: 0.2">Приключи с принт</button>
                     <button @click=${payWholeBill}>Приключи</button>
                     <button @click=${goToScrap}>Брак</button>
                     <button @click=${goBack}>Назад</button>
@@ -462,6 +578,9 @@ export async function tableControlsPage(ctx) {
 }
 
 export async function payPartOfBillPage(ctx) {
+    // Stop listening on old sockets
+    stopAllSockets();
+    
     const selectedTable = ctx.params.tableId;
     let bill = (await getBillById(ctx.params.billId)).data;
     let productsToPay = {
@@ -472,11 +591,59 @@ export async function payPartOfBillPage(ctx) {
         total: 0,
     };
 
+    socket.on('wholeBillPaid', () => {
+        // Whole bill is paid, remove all products from here
+        productsToPay.products = [];
+        productsToPay.total = 0;
+        bill.products = [];
+        bill.total = 0;
+        rerender(bill, productsToPay);
+    });
+
+    socket.on('addToPay/returnToBill', (data) => {
+        // First check if we are on same bill
+        if (bill._id !== data.bill._id)
+            return;
+
+        bill = data.bill;
+        productsToPay = data.productsToPay;
+
+        rerender(bill, productsToPay)
+    });
+
+    socket.on('pay-scrap-refresh', (data) => {
+        // If one user used sellProducts or scrapProducts, make every other user refresh their content
+        // Otherwise, one user can pay some products and the other can still scrap them at the same time
+
+        // First check if we are on same bill
+        if (bill._id !== data.bill._id)
+            return;
+
+        bill = data.bill;
+        productsToPay.total = 0;
+        productsToPay.products = [];
+
+        rerender(bill, productsToPay)
+    });
+
+    // Check if someone just entered, and if so - send them this user's bill and productsToPay
+    socket.on('entered-payPartOfBillPage', () => {
+        socket.emit('addToPay/returnToBill', { bill, productsToPay });
+    });
+
+    // Emit first time entering the page, to notify the user that is already editing (if any) to send their info
+    socket.emit('entered-payPartOfBillPage');
+
+    function rerender(bill, productsToPay) {
+        render(productsInBillTemplate(bill), document.getElementById('productsInBill'));
+        render(productsToPayTemplate(productsToPay), document.getElementById('productsToPay'));
+        render(html`${bill.total.toFixed(2)}`, document.querySelector('#totalOnTable .price'))
+        render(html`${productsToPay.total.toFixed(2)}`, document.querySelector('#totalToPay .price'))
+    }
+
     function addToPay(index, product) {
         // Transfer 1 qty of this product
-        
         // index in bill.products array
-
         product.qty--; // this is referencing directly the object in bill
         bill.total -= product.product.sellPrice;
 
@@ -501,11 +668,10 @@ export async function payPartOfBillPage(ctx) {
         }
         productsToPay.total += product.product.sellPrice;
 
+        socket.emit('addToPay/returnToBill', { bill, productsToPay});
+
         // Rerender both bill and toPay
-        render(productsInBillTemplate(bill), document.getElementById('productsInBill'));
-        render(productsToPayTemplate(productsToPay), document.getElementById('productsToPay'));
-        render(html`${bill.total.toFixed(2)}`, document.querySelector('#totalOnTable .price'))
-        render(html`${productsToPay.total.toFixed(2)}`, document.querySelector('#totalToPay .price'))
+        rerender(bill, productsToPay);
     }
 
     function returnToBill(index, product) {
@@ -534,11 +700,10 @@ export async function payPartOfBillPage(ctx) {
         }
         bill.total += product.product.sellPrice;
 
+        socket.emit('addToPay/returnToBill', { bill, productsToPay });
+
         // Rerender both bill and toPay
-        render(productsInBillTemplate(bill), document.getElementById('productsInBill'));
-        render(productsToPayTemplate(productsToPay), document.getElementById('productsToPay'));
-        render(html`${bill.total.toFixed(2)}`, document.querySelector('#totalOnTable .price'))
-        render(html`${productsToPay.total.toFixed(2)}`, document.querySelector('#totalToPay .price'))
+        rerender(bill, productsToPay);
     }
 
     const productsInBillTemplate = (bill) => html`
@@ -582,7 +747,7 @@ export async function payPartOfBillPage(ctx) {
                         <td width="50%">${product.product.name}</td>
                         <td width="15%">${product.qty}</td>
                         <td width="15%">${(product.product.sellPrice * product.qty).toFixed(2)}</td>
-                        <td @click=${() => returnToBill(index, product)} width="20%" class="text-uppercase back">Върни</td>
+                        <td @click=${() => returnToBill(index, product)} width="20%" class="cursor-pointer text-uppercase back">Върни</td>
                     </tr>`
                 })}
             </tbody>
@@ -590,11 +755,23 @@ export async function payPartOfBillPage(ctx) {
     `;
 
     async function sellPrdcts() {
-        if (productsToPay.length === 0) return;
+        if (productsToPay.products.length === 0) return;
 
         const res = await sellProducts(productsToPay);
 
         if (res.status === 200) {
+            // Notify anyone that is already in this screen
+            productsToPay.products = [];
+            productsToPay.total = 0;
+
+            // Notify anyone that is scrapping products
+            socket.emit('pay-scrap-refresh', { bill });
+
+            // Notify anyone still paying products
+            socket.emit('addToPay/returnToBill', { bill, productsToPay });
+
+            // Notify that bill changed, rerender wherever needed
+            socket.emit('billChanged', bill); // send new bill to server to rerender for anyone in same view
             page(`/waiter/table/${selectedTable}`);
         } else {
             console.error(res);
@@ -629,16 +806,17 @@ export async function payPartOfBillPage(ctx) {
     `;
 
     render(template(), container);
-    render(productsInBillTemplate(bill), document.getElementById('productsInBill'));
-    render(html`${(bill.total).toFixed(2)}`, document.querySelector('#totalOnTable .price'))
-    render(html`${(productsToPay.total).toFixed(2)}`, document.querySelector('#totalToPay .price'))
+    rerender(bill, productsToPay);
 }
 
 export async function scrapProductsPage(ctx) {
+    // Stop listening on old sockets
+    stopAllSockets();
+    
     const selectedTable = ctx.params.tableId;
     let bill = (await getBillById(ctx.params.billId)).data;
     
-    let productsToPay = {
+    let productsToScrap = {
         _id: bill._id, // bill id
         number: bill.number, // bill number
         table: bill.table, // table id
@@ -646,11 +824,59 @@ export async function scrapProductsPage(ctx) {
         total: 0,
     };
 
+    socket.on('wholeBillPaid', () => {
+        // Whole bill is paid, remove all products from here
+        productsToScrap.products = [];
+        productsToScrap.total = 0;
+        bill.products = [];
+        bill.total = 0;
+        rerender(bill, productsToScrap);
+    });
+
+    socket.on('addToScrap/returnToBill', (data) => {
+        // First check if we are on same bill
+        if (bill._id !== data.bill._id)
+            return;
+
+        bill = data.bill;
+        productsToScrap = data.productsToScrap;
+
+        rerender(bill, productsToScrap)
+    });
+    
+    socket.on('pay-scrap-refresh', (data) => {
+        // If one user used sellProducts or scrapProducts, make every other user refresh their content
+        // Otherwise, one user can pay some products and the other can still scrap them at the same time
+        
+        // First check if we are on same bill
+        if (bill._id !== data.bill._id)
+            return;
+
+        bill = data.bill;
+        productsToScrap.total = 0;
+        productsToScrap.products = [];
+
+        rerender(bill, productsToScrap)
+    });
+
+    // Check if someone just entered, and if so - send them this user's bill and productsToScrap
+    socket.on('entered-scrapProductsPage', () => {
+        socket.emit('addToScrap/returnToBill', { bill, productsToScrap });
+    });
+
+    // Emit first time entering the page, to notify the user that is already editing (if any) to send their info
+    socket.emit('entered-scrapProductsPage');
+
+    function rerender(bill, productsToScrap) {
+        render(productsInBillTemplate(bill), document.getElementById('productsInBill'));
+        render(productsToPayTemplate(productsToScrap), document.getElementById('productsToPay'));
+        render(html`${bill.total.toFixed(2)}`, document.querySelector('#totalOnTable .price'))
+        render(html`${productsToScrap.total.toFixed(2)}`, document.querySelector('#totalToPay .price'))
+    }
+
     function addToScrap(index, product) {
         // Transfer 1 qty of this product
-        
         // index in bill.products array
-
         product.qty--; // this is referencing directly the object in bill
         bill.total -= product.product.sellPrice;
 
@@ -658,7 +884,7 @@ export async function scrapProductsPage(ctx) {
             bill.products.splice(index, 1); // remove from array if qty = 0
 
         let foundProduct = false;
-        for (let pr of productsToPay.products) {
+        for (let pr of productsToScrap.products) {
             if (pr.product._id === product.product._id) {
                 pr.qty++;
                 foundProduct = true;
@@ -668,28 +894,27 @@ export async function scrapProductsPage(ctx) {
 
         // if product not found, create it
         if (foundProduct === false) {
-            productsToPay.products.push({
+            productsToScrap.products.push({
                 product: product.product,
                 qty: 1
             });
         }
-        productsToPay.total += product.product.sellPrice;
+        productsToScrap.total += product.product.sellPrice;
+
+        socket.emit('addToScrap/returnToBill', { bill, productsToScrap });
 
         // Rerender both bill and toPay
-        render(productsInBillTemplate(bill), document.getElementById('productsInBill'));
-        render(productsToPayTemplate(productsToPay), document.getElementById('productsToPay'));
-        render(html`${bill.total.toFixed(2)}`, document.querySelector('#totalOnTable .price'))
-        render(html`${productsToPay.total.toFixed(2)}`, document.querySelector('#totalToPay .price'))
+        rerender(bill, productsToScrap);
     }
 
     function returnToBill(index, product) {
         // Transfer 1 qty of this product BACK to bill
 
         product.qty--;
-        productsToPay.total = productsToPay.total - product.product.sellPrice;
+        productsToScrap.total = productsToScrap.total - product.product.sellPrice;
 
         if (product.qty === 0)
-            productsToPay.products.splice(index, 1);
+            productsToScrap.products.splice(index, 1);
 
         let foundProduct = false;
         for (let pr of bill.products) {
@@ -708,11 +933,10 @@ export async function scrapProductsPage(ctx) {
         }
         bill.total += product.product.sellPrice;
 
+        socket.emit('addToScrap/returnToBill', { bill, productsToScrap });
+
         // Rerender both bill and toPay
-        render(productsInBillTemplate(bill), document.getElementById('productsInBill'));
-        render(productsToPayTemplate(productsToPay), document.getElementById('productsToPay'));
-        render(html`${bill.total.toFixed(2)}`, document.querySelector('#totalOnTable .price'))
-        render(html`${productsToPay.total.toFixed(2)}`, document.querySelector('#totalToPay .price'))
+        rerender(bill, productsToScrap);
     }
 
     const productsInBillTemplate = (bill) => html`
@@ -756,7 +980,7 @@ export async function scrapProductsPage(ctx) {
                         <td width="50%">${product.product.name}</td>
                         <td width="15%">${product.qty}</td>
                         <td width="15%">${(product.product.sellPrice * product.qty).toFixed(2)}</td>
-                        <td @click=${() => returnToBill(index, product)} width="20%" class="text-uppercase back">Върни</td>
+                        <td @click=${() => returnToBill(index, product)} width="20%" class="cursor-pointer text-uppercase back">Върни</td>
                     </tr>`
                 })}
             </tbody>
@@ -764,11 +988,23 @@ export async function scrapProductsPage(ctx) {
     `;
 
     async function scrapPrdcts() {
-        if (productsToPay.length === 0) return;
+        if (productsToScrap.length === 0) return;
 
-        const res = await scrapProducts(productsToPay);
+        const res = await scrapProducts(productsToScrap);
 
         if (res.status === 200) {
+            // Notify anyone that is already in this screen
+            productsToScrap.products = [];
+            productsToScrap.total = 0;
+
+            // Notify anyone that is paying products
+            socket.emit('pay-scrap-refresh', { bill });
+
+            // Notify anyone still scrapping products
+            socket.emit('addToScrap/returnToBill', { bill, productsToScrap });
+
+            // Notify that bill changed, rerender wherever needed
+            socket.emit('billChanged', bill); // send new bill to server to rerender for anyone in same view
             page(`/waiter/table/${selectedTable}`);
         } else {
             console.error(res);
@@ -804,10 +1040,10 @@ export async function scrapProductsPage(ctx) {
     render(template(), container);
     render(productsInBillTemplate(bill), document.getElementById('productsInBill'));
     render(html`${(bill.total).toFixed(2)}`, document.querySelector('#totalOnTable .price'))
-    render(html`${(productsToPay.total).toFixed(2)}`, document.querySelector('#totalToPay .price'))
+    render(html`${(productsToScrap.total).toFixed(2)}`, document.querySelector('#totalToPay .price'))
 }
 
-export async function showPaidBillsPage(ctx) {
+export async function showPaidBillsPage() {
     const allPaidBills = await getAllPaidBills();
 
     const historiesRows = (histories) => html`
@@ -837,7 +1073,7 @@ export async function showPaidBillsPage(ctx) {
     `;
     
     const scrappedTemplate = () => html`
-        <button @click=${() => page('/')}>Назад</button>
+        <button class="gray-btn fs-5 mt-3 ms-3" @click=${() => page('/')}>Назад</button>
 
         <table class="mt-3 table table-striped table-light table-hover text-center">
             <thead>
@@ -861,8 +1097,3 @@ export async function showPaidBillsPage(ctx) {
     // Render all scrapped products
     render(historiesRows(allPaidBills), document.querySelector('tbody'));
 }
-
-// TODO
-/* 
-Бутона ПЛАЩАНИЯ в topMenu - да излиза екран с всички плащания подредени по час, за всяка маса и сметка
-*/

@@ -162,7 +162,8 @@
 }
 
 #tableControls .controls button,
-#tableControls .addons button {
+#tableControls .addons button,
+.gray-btn {
 	color: var(--color-sidemenu);
 	background-color: var(--bg-btn);
 	border: 1px solid transparent;
@@ -212,8 +213,13 @@
 	font-size: 1.5rem;
 }
 
-#tableControls .bills button.active {
+#tableControls .bills button.active,
+#tableControls .bills button.hasProducts {
 	color: var(--color-btn-bill-active);
 	border-color: var(--border-btn-bill-active);
 	background-color: var(--bg-btn-categories-active);
+}
+
+#tableControls .bills button.hasProducts:not(.active) {
+	opacity: 0.3;
 }

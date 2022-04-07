@@ -26,9 +26,9 @@ export function billsRoutes(app, auth) {
                 lastPaid = allPaid[allPaid.length - 1];
 
             res.json(lastPaid);
-        } catch (error) {
-            console.error(error);
-            res.status(500).send('Възникна грешка!');
+        } catch (err) {
+            console.error(err);
+            res.status(500).send(err);
         }
     });
 
@@ -82,7 +82,7 @@ export function billsRoutes(app, auth) {
             }
 
             originalBill.save();
-            res.send('Продуктите са бракувани');
+            res.json(originalBill);
 
             // Add action to history
             ProductHistory.create({
@@ -97,9 +97,9 @@ export function billsRoutes(app, auth) {
                 products: historyProducts,
                 reviewed: false
             });
-        } catch (error) {
-            console.error(error);
-            res.status(500).send('Възникна грешка!');
+        } catch (err) {
+            console.error(err);
+            res.status(500).send(err);
         }
     });
 
@@ -160,7 +160,7 @@ export function billsRoutes(app, auth) {
             }
 
             originalBill.save();
-            res.send('Продуктите са платени');
+            res.json(originalBill);
 
             // Add action to history
             ProductHistory.create({
@@ -174,9 +174,9 @@ export function billsRoutes(app, auth) {
                 total: historyTotal,
                 products: historyProducts
             });
-        } catch (error) {
-            console.error(error);
-            res.status(500).send('Възникна грешка!');
+        } catch (err) {
+            console.error(err);
+            res.status(500).send(err);
         }
     });
 
@@ -200,30 +200,13 @@ export function billsRoutes(app, auth) {
                     bill.save();
 
                     return res.json(bill); // Return bill to rerender
-
-                    /* // Add action to history
-                    return ProductHistory.create({
-                        user: {
-                            name: req.user.name,
-                            userRef: req.user.uid
-                        },
-                        action: 'removed',
-                        table: bill.table,
-                        billNumber: bill.number,
-                        products: [{
-                            name: product.product.name, // Статично име на продукта (дори да се изтрие от БД няма проблем)
-                            qty: 1, // Колко бройки сме добавили към масата
-                            price: product.product.sellPrice, // Каква е текущата цена на този продукт (с времето може да се промени)
-                            productRef: product._id // Референция към продукта
-                        }]
-                    }); */
                 }
             }
 
             res.status(400).send('Не е намерен такъв продукт в тази сметка!')
         } catch (err) {
             console.error(err);
-            res.status(500).send('Възникна грешка!');
+            res.status(500).send(err);
         }
     });
 
@@ -241,7 +224,6 @@ export function billsRoutes(app, auth) {
             if (!bill)
                 return res.status(400).send('Сметката не съществува!');
 
-            // let productsHistoryArray = [];
             let allActions = {}; // contains arrays of all actions (removed, added, etc.)
 
             for (let prod of addedProducts) {
@@ -281,7 +263,7 @@ export function billsRoutes(app, auth) {
             }
         } catch (err) {
             console.error(err);
-            res.status(500).send('Възникна грешка!');
+            res.status(500).send(err);
         }
     });
 
@@ -336,27 +318,9 @@ export function billsRoutes(app, auth) {
             await bill.populate('products.product'); // populate products (+ the one we created)
 
             res.json(bill); // return populated bill so frontend can re-render all products
-
-            /* // Add action to history
-            ProductHistory.create({
-                user: {
-                    name: req.user.name,
-                    userRef: req.user.uid
-                },
-                action: 'added',
-                table: bill.table,
-                billNumber: bill.number,
-                products: [{
-                    name: product.name, // Статично име на продукта (дори да се изтрие от БД няма проблем)
-                    qty: selectedX, // Колко бройки сме добавили към масата
-                    price: product.sellPrice, // Каква е текущата цена на този продукт (с времето може да се промени)
-                    forBartender: product.forBartender, // Дали продуктът е за бармана
-                    productRef: product._id // Референция към продукта
-                }]
-            }); */
         } catch (err) {
             console.error(err);
-            res.status(500).send('Възникна грешка!');
+            res.status(500).send(err);
         }
     });
 
@@ -370,7 +334,7 @@ export function billsRoutes(app, auth) {
             res.json(bill);
         } catch (err) {
             console.error(err);
-            res.status(500).send('Възникна грешка!');
+            res.status(500).send(err);
         }
     });
 
@@ -395,7 +359,7 @@ export function billsRoutes(app, auth) {
                 return res.status(400).send('Масата не съществува!');
 
             // Check if this table already has bills initialized
-            let bills = await Bill.find({ table: table._id }, '_id').sort({ number: 1 });
+            let bills = await Bill.find({ table: table._id }, ['_id', 'total']).sort({ number: 1 });
             if (bills.length > 0)
                 return res.json(bills); // return bills IDS only
 
@@ -410,7 +374,7 @@ export function billsRoutes(app, auth) {
             res.status(201).json(bills);
         } catch (err) {
             console.error(err);
-            res.status(500).send('Възникна грешка!');
+            res.status(500).send(err);
         }
     });
 }

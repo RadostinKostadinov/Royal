@@ -61,11 +61,10 @@ export function ingredientsRoutes(app, auth) {
                         }
                     });
                 }
-
             }
-        } catch (error) {
-            console.error(error);
-            res.status(500).send('Възникна грешка!');
+        } catch (err) {
+            console.error(err);
+            res.status(500).send(err);
         }
     });
 
@@ -103,7 +102,7 @@ export function ingredientsRoutes(app, auth) {
             res.status(201).send('Успешно създадена съставка!');
         } catch (err) {
             console.error(err);
-            res.status(500).send('Възникна грешка!');
+            res.status(500).send(err);
         }
     });
 
@@ -129,7 +128,7 @@ export function ingredientsRoutes(app, auth) {
             res.send('Успешно изтрихте тази съставка!');
         } catch (err) {
             console.error(err);
-            res.status(500).send('Възникна грешка!');
+            res.status(500).send(err);
         }
     });
 
@@ -172,9 +171,9 @@ export function ingredientsRoutes(app, auth) {
 
             // Done
             res.send('Успешно променена съставка!');
-        } catch (error) {
-            console.error(error);
-            res.status(500).send('Възникна грешка!');
+        } catch (err) {
+            console.error(err);
+            res.status(500).send(err);
         }
     });
 
@@ -189,9 +188,9 @@ export function ingredientsRoutes(app, auth) {
             const ingredient = await Ingredient.findById(_id);
 
             res.json(ingredient);
-        } catch (error) {
-            console.error(error);
-            res.status(500).send('Възникна грешка!');
+        } catch (err) {
+            console.error(err);
+            res.status(500).send(err);
         }
     });
 
@@ -201,7 +200,7 @@ export function ingredientsRoutes(app, auth) {
             res.json(ingredients);
         } catch (err) {
             console.error(err);
-            res.status(500).send('Възникна грешка!');
+            res.status(500).send(err);
         }
     });
 }

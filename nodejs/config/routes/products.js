@@ -4,8 +4,13 @@ import { RestockHistory } from "../../model/history.js";
 
 export function productsRoutes(app, auth) {
     app.get('/getAllRestockedProducts', auth, async (req, res) => {
-        const products = await RestockHistory.find().sort({ when: -1 });
-        res.json(products);
+        try {
+            const products = await RestockHistory.find().sort({ when: -1 });
+            res.json(products);
+        } catch (err) {
+            console.error(err);
+            res.status(500).send(err);
+        }
     });
 
     app.post('/getAddonsForCategory', auth, async (req, res) => {
@@ -14,9 +19,9 @@ export function productsRoutes(app, auth) {
 
             const addons = await Product.find({ addonForCategories: _id }).sort({ position: 1 });
             res.json(addons);
-        } catch (error) {
-            console.error(error);
-            res.status(500).send('Възникна грешка!');
+        } catch (err) {
+            console.error(err);
+            res.status(500).send(err);
         }
     });
 
@@ -25,9 +30,9 @@ export function productsRoutes(app, auth) {
             //$ne === not equal to empty array
             const addons = await Product.find({ addonForCategories: { $ne: [] } }).sort({ position: 1 });
             res.json(addons);
-        } catch (error) {
-            console.error(error);
-            res.status(500).send('Възникна грешка!');
+        } catch (err) {
+            console.error(err);
+            res.status(500).send(err);
         }
     });
 
@@ -91,9 +96,9 @@ export function productsRoutes(app, auth) {
                 }
 
             }
-        } catch (error) {
-            console.error(error);
-            res.status(500).send('Възникна грешка!');
+        } catch (err) {
+            console.error(err);
+            res.status(500).send(err);
         }
     });
 
@@ -153,9 +158,9 @@ export function productsRoutes(app, auth) {
 
             // Done
             res.status(201).send('Успешно създаден продукт!');
-        } catch (error) {
-            console.error(error);
-            res.status(500).send('Възникна грешка!');
+        } catch (err) {
+            console.error(err);
+            res.status(500).send(err);
         }
     });
 
@@ -194,9 +199,9 @@ export function productsRoutes(app, auth) {
             await product.remove(); // Delete the product
 
             res.send('Успешно изтрихте този продукт!');
-        } catch (error) {
-            console.error(error);
-            res.status(500).send('Възникна грешка!');
+        } catch (err) {
+            console.error(err);
+            res.status(500).send(err);
         }
     });
 
@@ -285,9 +290,9 @@ export function productsRoutes(app, auth) {
 
             // Done
             res.send('Успешно променен продукт!');
-        } catch (error) {
-            console.error(error);
-            res.status(500).send('Възникна грешка!');
+        } catch (err) {
+            console.error(err);
+            res.status(500).send(err);
         }
     });
 
@@ -308,9 +313,9 @@ export function productsRoutes(app, auth) {
             }
 
             res.send('Успешна подредба!');
-        } catch (error) {
-            console.error(error);
-            res.status(500).send('Възникна грешка!');
+        } catch (err) {
+            console.error(err);
+            res.status(500).send(err);
         }
     });
 
@@ -320,9 +325,9 @@ export function productsRoutes(app, auth) {
 
             const products = await Product.find({ category: _id, ingredients: { $size: 0 } }).sort({ position: 1 });
             res.json(products);
-        } catch (error) {
-            console.error(error);
-            res.status(500).send('Възникна грешка!');
+        } catch (err) {
+            console.error(err);
+            res.status(500).send(err);
         }
     });
 
@@ -330,9 +335,9 @@ export function productsRoutes(app, auth) {
         try {
             const products = await Product.find({ ingredients: { $size: 0 } }).sort({ position: 1 });
             res.json(products);
-        } catch (error) {
-            console.error(error);
-            res.status(500).send('Възникна грешка!');
+        } catch (err) {
+            console.error(err);
+            res.status(500).send(err);
         }
     });
 
@@ -340,9 +345,9 @@ export function productsRoutes(app, auth) {
         try {
             const products = await Product.find().sort({ position: 1 });
             res.json(products);
-        } catch (error) {
-            console.error(error);
-            res.status(500).send('Възникна грешка!');
+        } catch (err) {
+            console.error(err);
+            res.status(500).send(err);
         }
     });
 
@@ -357,9 +362,9 @@ export function productsRoutes(app, auth) {
             const product = await Product.findById(_id).populate('ingredients.ingredient');
 
             res.json(product);
-        } catch (error) {
-            console.error(error);
-            res.status(500).send('Възникна грешка!');
+        } catch (err) {
+            console.error(err);
+            res.status(500).send(err);
         }
     });
 }

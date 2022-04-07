@@ -8,9 +8,9 @@ export function addonsRoutes(app, auth) {
             // Get addons that match category id
             const addons = await Addon.find({ categories: _id }); // Finds any category id in array of categories
             res.json(addons);
-        } catch (error) {
-            console.error(error);
-            res.status(500).send('Възникна грешка!');
+        } catch (err) {
+            console.error(err);
+            res.status(500).send(err);
         }
     });
 
@@ -18,9 +18,9 @@ export function addonsRoutes(app, auth) {
         try {
             const addons = await Addon.find();
             res.json(addons);
-        } catch (error) {
-            console.error(error);
-            res.status(500).send('Възникна грешка!');
+        } catch (err) {
+            console.error(err);
+            res.status(500).send(err);
         }
     });
 

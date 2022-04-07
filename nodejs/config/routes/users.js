@@ -39,7 +39,7 @@ export function usersRoutes(app, auth) {
             return res.status(200).send({ name: user.name, role: user.role, token });
         } catch (err) {
             console.error(err);
-            res.status(500).send('Възникна грешка!');
+            res.status(500).send(err);
         }
     });
 
@@ -80,19 +80,23 @@ export function usersRoutes(app, auth) {
             });
 
             res.status(201).send('Успешно създаден служител!');
-        } catch (error) {
-            console.error(error);
-            res.status(500).send('Възникна грешка!');
+        } catch (err) {
+            console.error(err);
+            res.status(500).send(err);
         }
     });
 
     app.get('/getAllUsers', async (req, res) => {
-        /* Returns list of all users (as {username, uid}) */
+        try {
+            /* Returns list of all users (as {username, uid}) */
+            // ({}, 'name') means "no search criteria", return only the "name" property
+            const users = await User.find({}, 'name');
 
-        // ({}, 'name') means "no search criteria", return only the "name" property
-        const users = await User.find({}, 'name');
-
-        res.json(users);
+            res.json(users);
+        } catch (err) {
+            console.error(err);
+            res.status(500).send(err);
+        }
     });
 
     app.post('/deleteUser', auth, async (req, res) => {
@@ -111,9 +115,9 @@ export function usersRoutes(app, auth) {
             await User.findByIdAndDelete(_id);
 
             res.send('Успешно изтрихте този служител!');
-        } catch (error) {
-            console.error(error);
-            res.status(500).send('Възникна грешка!');
+        } catch (err) {
+            console.error(err);
+            res.status(500).send(err);
         }
     });
 
@@ -151,9 +155,9 @@ export function usersRoutes(app, auth) {
             await User.findByIdAndUpdate(_id, { [selectedChange]: newValue });
 
             res.send('Успешна промяна!');
-        } catch (error) {
-            console.error(error);
-            res.status(500).send('Възникна грешка!');
+        } catch (err) {
+            console.error(err);
+            res.status(500).send(err);
         }
     });
 }

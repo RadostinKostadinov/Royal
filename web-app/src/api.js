@@ -1,18 +1,21 @@
 import axios from 'axios';
 import page from 'page';
+import { io } from "socket.io-client";
 
 export let user = JSON.parse(sessionStorage.getItem('user'));
 // Set base url so you dont type ${url} in every request
+let nodeURL = 'http://localhost:3000';
 
-if (location.hostname === "localhost" || location.hostname === "127.0.0.1")
-    axios.defaults.baseURL = 'http://localhost:3000'; // LOCAL
-else
-    axios.defaults.baseURL = 'http://barroyal.eu:3000'; // LIVE
+if (location.hostname !== "localhost" && location.hostname !== "127.0.0.1")
+    nodeURL = 'http://barroyal.eu:3000'; // LIVE
+
+axios.defaults.baseURL = nodeURL;
 
 // Set the token in headers
 if (user)
     axios.defaults.headers.common['authorization'] = user.token;
 
+export var socket = io(nodeURL);
 var elem = document.documentElement;
 
 function openFullscreen() {
@@ -35,6 +38,29 @@ function closeFullscreen() {
     }
 }
 
+export async function completeAll(prodRef, orderId) {
+    return await axios.post('/completeAll', {
+        prodRef,
+        orderId
+    }).catch((err) => {
+        return err.response;
+    });
+}
+
+export async function completeOne(prodRef, orderId) {
+    return await axios.post('/completeOne', {
+        prodRef,
+        orderId
+    }).catch((err) => {
+        return err.response;
+    });
+}
+
+export async function getAllOrders() {
+    const res = await axios.get('/getAllOrders');
+    return res.data;
+}
+
 export async function getAllRestockedProducts() {
     const res = await axios.get('/getAllRestockedProducts');
     return res.data;
@@ -51,10 +77,6 @@ export async function getAddonsForCategory(_id) {
 export async function getAllAddons() {
     const res = await axios.get('/getAllAddons');
     return res.data;
-}
-
-export async function scrapProduct(productId, qty, historyId, productIndex) {
-
 }
 
 export async function getAllPaidBills() {
@@ -155,6 +177,24 @@ export async function getIngredientById(_id) {
 export async function getAllIngredients() {
     const res = await axios.get('/getAllIngredients');
     return res.data;
+}
+
+
+export async function completeOrder(_id) {
+    return await axios.post('/completeOrder', {
+        _id
+    }).catch((err) => {
+        return err.response;
+    });
+}
+
+export async function createNewOrder(products, tableId) {
+    return await axios.post('/createNewOrder', {
+        products,
+        tableId
+    }).catch((err) => {
+        return err.response;
+    });
 }
 
 // NEW WAY, all as array
@@ -267,9 +307,20 @@ export async function getProductById(_id) {
     });
 }
 
-export async function getAllTables() {
-    const res = await axios.get('/getAllTables');
-    return res.data;
+export async function getTableTotalById(_id) {
+    return await axios.post('/getTableTotalById', {
+        _id
+    }).catch((err) => {
+        return err.response;
+    });
+}
+
+export async function getTables(location) {
+    return await axios.post('/getTables', {
+        location
+    }).catch((err) => {
+        return err.response;
+    });
 }
 
 export async function getProductsWithoutIngredientsFromCategory(_id) {
@@ -318,7 +369,7 @@ export async function login(id, pin) {
             axios.defaults.headers.common['authorization'] = user.token;
 
             // Activate full screen
-            openFullscreen();
+            // openFullscreen();
 
             return 'success';
         })
@@ -399,6 +450,6 @@ export async function generateBills(_id, numberOfBills) {
 export function logout() {
     user = undefined;
     sessionStorage.clear();
-    closeFullscreen();
+    //closeFullscreen();
     page('/');
 }

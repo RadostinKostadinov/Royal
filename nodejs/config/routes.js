@@ -16,6 +16,7 @@ import { verifyToken as auth } from '../middleware/auth.js';
 import bcrypt from 'bcryptjs';
 import { ProductHistory, RestockHistory } from '../model/history.js';
 import { historiesRoutes } from './routes/histories.js';
+import { ordersRoutes } from './routes/orders.js';
 
 function routesConfig(app) {
     // Load all routes
@@ -26,6 +27,8 @@ function routesConfig(app) {
     billsRoutes(app, auth);
     tablesRoutes(app, auth);
     historiesRoutes(app, auth);
+    ordersRoutes(app, auth);
+
     // Set default 404 for all routes
     app.get('*', (req, res) => {
         res.status(404).send('404 Not Found');
@@ -44,21 +47,20 @@ function routesConfig(app) {
 
     /* TODO DELETE THIS DEFAULTS WHEN FINALIZING APP */
     async function createDefaultUsers() {
-        const hashPin = await bcrypt.hash("1234", 10);
         const users = [
             {
                 name: "Анатоли",
-                pin: hashPin,
+                pin: await bcrypt.hash("1976", 10),
                 role: "admin"
             },
             {
                 name: "Димитър",
-                pin: hashPin,
+                pin: await bcrypt.hash("1994", 10),
                 role: "waiter"
             },
             {
                 name: "Ивелин",
-                pin: hashPin,
+                pin: await bcrypt.hash("1999", 10),
                 role: "bartender"
             }
         ]
@@ -173,11 +175,6 @@ function routesConfig(app) {
             {
                 type: 'bar',
                 name: 'Бар',
-                location: 'inside'
-            },
-            {
-                type: 'bar',
-                name: 'Бар2',
                 location: 'inside'
             },
             {
@@ -1864,13 +1861,13 @@ function routesConfig(app) {
             table.bills = [];
             table.save();
         }
-        console.log('\u001b[1;31mAll bills deleted')
+        console.log('Bills deleted')
     }
 
     async function deleteHistory() {
         await ProductHistory.deleteMany();
         await RestockHistory.deleteMany();
-        console.log('\u001b[1;31mHistory deleted')
+        console.log('History deleted')
     }
 
     async function createDefaults() {

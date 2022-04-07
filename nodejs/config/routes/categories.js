@@ -12,9 +12,9 @@ export function categoriesRoutes(app, auth) {
                 categories = await Category.find().sort({ position: 1 });
 
             res.json(categories);
-        } catch (error) {
-            console.error(error);
-            res.status(500).send('Възникна грешка!');
+        } catch (err) {
+            console.error(err);
+            res.status(500).send(err);
         }
     });
 
@@ -33,9 +33,9 @@ export function categoriesRoutes(app, auth) {
             await Category.create({ name });
 
             res.send('Успешно създадохте нова категория!');
-        } catch (error) {
-            console.error(error);
-            res.status(500).send('Възникна грешка!');
+        } catch (err) {
+            console.error(err);
+            res.status(500).send(err);
         }
     });
 
@@ -55,9 +55,9 @@ export function categoriesRoutes(app, auth) {
             await Category.findByIdAndDelete(_id); // delete category
 
             res.send('Успешно изтрихте категорията!');
-        } catch (error) {
-            console.error(error);
-            res.status(500).send('Възникна грешка!');
+        } catch (err) {
+            console.error(err);
+            res.status(500).send(err);
         }
     });
 
@@ -76,9 +76,9 @@ export function categoriesRoutes(app, auth) {
             await Category.findByIdAndUpdate(_id, { name });
 
             res.send('Успешна промяна!');
-        } catch (error) {
-            console.error(error);
-            res.status(500).send('Възникна грешка!');
+        } catch (err) {
+            console.error(err);
+            res.status(500).send(err);
         }
     });
 
@@ -99,9 +99,9 @@ export function categoriesRoutes(app, auth) {
             }
 
             res.send('Успешна подредба!');
-        } catch (error) {
-            console.error(error);
-            res.status(500).send('Възникна грешка!');
+        } catch (err) {
+            console.error(err);
+            res.status(500).send(err);
         }
     });
 
@@ -120,9 +120,9 @@ export function categoriesRoutes(app, auth) {
                 category.products.sort(sortByPosition); // sort products by position property
 
             res.json(category);
-        } catch (error) {
-            console.error(error);
-            res.status(500).send('Възникна грешка!');
+        } catch (err) {
+            console.error(err);
+            res.status(500).send(err);
         }
     });
 

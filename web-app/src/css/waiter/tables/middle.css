@@ -1,4 +1,4 @@
-#middleTables {
+.tablesGrid#middle {
 	/* https://grid.layoutit.com/?id=f1eVamO */
 	display: grid;
 	grid-template-columns: 133fr 89fr 39fr 187fr 73fr 117fr 99fr 91fr 122fr 40fr 25fr 155fr;

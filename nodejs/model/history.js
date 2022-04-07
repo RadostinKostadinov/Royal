@@ -103,17 +103,6 @@ const productHistorySchema = new Schema({
                 immutable: true,
                 required: true
             },
-            forBartender: {
-                type: Boolean,
-                default: false,
-                immutable: true,
-                required: true
-            },
-            completed: { // Когато барманът приготви продукта, това става true
-                type: Boolean,
-                default: false,
-                required: true
-            },
             productRef: { // референция за всеки случай (ако искаме да филтрираме на някой етап)
                 type: Schema.Types.ObjectId,
                 ref: 'Product',
@@ -139,9 +128,7 @@ const productHistorySchema = new Schema({
         }
     ],
     reviewed: Boolean, // дали анатоли го е видял 
-    reviewedDate: {
-        type: Date,
-    },
+    reviewedDate: Date,
     when: { // дата на събитие
         type: Date,
         default: Date.now,

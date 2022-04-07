@@ -8,9 +8,9 @@ export function historiesRoutes(app, auth) {
         try {
             const allPaid = await ProductHistory.find({ action: 'paid' }).sort({ when: -1 }).populate('table');
             res.json(allPaid);
-        } catch (error) {
-            console.error(error);
-            res.status(500).send('Възникна грешка!');
+        } catch (err) {
+            console.error(err);
+            res.status(500).send(err);
         }
     });
 
@@ -18,9 +18,9 @@ export function historiesRoutes(app, auth) {
         try {
             const allScrapped = await ProductHistory.find({ action: 'scrapped', reviewed: false }).sort({ when: -1 }).populate('table');
             res.json(allScrapped);
-        } catch (error) {
-            console.error(error);
-            res.status(500).send('Възникна грешка!');
+        } catch (err) {
+            console.error(err);
+            res.status(500).send(err);
         }
     });
 
@@ -53,9 +53,9 @@ export function historiesRoutes(app, auth) {
             // Success, return ALL history to rerender
             const allScrapped = await ProductHistory.find({ action: 'scrapped', reviewed: false }).populate('table');
             res.json(allScrapped);
-        } catch (error) {
-            console.error(error);
-            res.status(500).send('Възникна грешка!');
+        } catch (err) {
+            console.error(err);
+            res.status(500).send(err);
         }
     });
 }

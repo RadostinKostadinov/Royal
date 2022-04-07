@@ -54,6 +54,10 @@
 	color: var(--orange);
 }
 
+#payPartOfBill #productsToPay .back {
+	color: var(--green);
+}
+
 #payPartOfBill .productsTables {
 	overflow: hidden;
 }
