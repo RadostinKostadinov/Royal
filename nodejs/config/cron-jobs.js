@@ -3,6 +3,7 @@ import { Bill } from '../model/bill.js';
 import { ProductHistory } from '../model/history.js';
 import { Ingredient } from '../model/ingredient.js';
 import { Product } from '../model/product.js';
+import { Order } from '../model/order.js';
 
 export async function startCronJobs() {
     // Mark all tables as paid every day at 04:00 and delete bills
@@ -63,6 +64,9 @@ export async function startCronJobs() {
 
         // Delete all bills
         await Bill.deleteMany({});
-        console.log('All bills have been automatically paid and removed!');
+        console.log('All bills have been automatically marked as paid and removed!');
+
+        await Order.deleteMany({});
+        console.log('All orders have been automatically deleted!')
     });
 }

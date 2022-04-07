@@ -69,7 +69,7 @@ async function checkIfUserLoggedIn() {
         `;
 
         const numpadTemplate = () => html`
-        <button @click=${()=> render(usersTemplate(), container)}
+        <button @click=${() => render(usersTemplate(), container)}
             class="btn btn-secondary fs-1 mt-3 ms-3">Назад</button>
         
         <div id="numpad-wrapper">
@@ -132,6 +132,8 @@ async function checkIfUserLoggedIn() {
                     screenCode.addClass('wrong-pin');
                     screenCode.text('++++');
                     return pinCode = ''; // Reset variable
+                } else if (res.status === 403) {
+                    return alert(res.data);
                 }
             }
         }
@@ -142,32 +144,40 @@ async function checkIfUserLoggedIn() {
 
 async function auth(ctx, next) {
     //AUTHENTICATE
-    if (!user || (ctx.path.includes('/admin') && user.role !== "admin")
-        || (ctx.path.includes('/waiter') && user.role !== "waiter")
-        || (ctx.path.includes('/bartender') && user.role !== "bartender")) {
+    if (!user || (ctx.path.includes('/admin') && user.role !== "admin")) {
         page('/'); // wrong permissions, go back go dashboard
     }
+
     next(); // else continue work
 }
 
 // If theres no activity for X minutes, show screensaver
 const screensaverTime = 5 * 60 * 1000; // 5 minutes
-var activityTimeout = setTimeout(inActive, screensaverTime);
+const blackscreenTime = 30 * 60 * 1000; // 30 minutes
+var screensaverTimeout = setTimeout(inActive, screensaverTime);
+var blackscreenTimeout = setTimeout(showBlackScreen, blackscreenTime);
 
 function resetActive() {
     // Hide screensaver
     $('#screensaver').hide();
+    $('#blackscreen').hide();
 
-    clearTimeout(activityTimeout);
-    activityTimeout = setTimeout(inActive, screensaverTime);
+    clearTimeout(screensaverTimeout);
+    clearTimeout(blackscreenTimeout);
+
+    screensaverTimeout = setTimeout(inActive, screensaverTime);
+    blackscreenTimeout = setTimeout(showBlackScreen, blackscreenTime);
 }
 
-// No activity do something.
 function inActive() {
     // Show screensaver
     $('#screensaver').show();
 }
 
-// Check for mousemove, could add other events here such as checking for key presses ect.
+function showBlackScreen() {
+    // Show black screen
+    $('#blackscreen').show();
+}
+
 $(document).bind('mousemove', function () { resetActive() });
 $(document).bind('click', function () { resetActive() });

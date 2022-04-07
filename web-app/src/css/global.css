@@ -67,6 +67,15 @@ body {
 	animation-direction: alternate;
 }
 
+#blackscreen {
+	z-index: 9999999;
+	background-color: rgba(0, 0, 0, 0.9);
+	display: none;
+	width: 100%;
+	height: 100%;
+	position: absolute;
+}
+
 #screensaver {
 	z-index: 999999;
 	display: none;

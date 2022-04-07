@@ -18,7 +18,9 @@ import { ProductHistory, RestockHistory } from '../model/history.js';
 import { historiesRoutes } from './routes/histories.js';
 import { ordersRoutes } from './routes/orders.js';
 
-function routesConfig(app) {
+
+function routesConfig(app, port) {
+
     // Load all routes
     categoriesRoutes(app, auth);
     productsRoutes(app, auth);
@@ -30,20 +32,9 @@ function routesConfig(app) {
     ordersRoutes(app, auth);
 
     // Set default 404 for all routes
-    app.get('*', (req, res) => {
+    app.all('*', (req, res) => {
         res.status(404).send('404 Not Found');
     });
-    app.post('*', (req, res) => {
-        res.status(404).send('404 Not Found');
-    });
-    app.put('*', (req, res) => {
-        res.status(404).send('404 Not Found');
-    });
-    app.delete('*', (req, res) => {
-        res.status(404).send('404 Not Found');
-    });
-
-
 
     /* TODO DELETE THIS DEFAULTS WHEN FINALIZING APP */
     async function createDefaultUsers() {

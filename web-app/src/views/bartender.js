@@ -3,8 +3,10 @@ import { html, render } from 'lit';
 import { container } from '../app.js';
 import '../css/bartender/bartender.css';
 import { getAllOrders, socket, logout, completeOne, completeAll, completeOrder } from '../api.js';
+import { stopAllSockets } from './waiter.js';
 
 export async function bartenderDashboardPage() {
+    stopAllSockets();
     let { orders, allProducts } = await getAllOrders();
 
     socket.on('order:new', async (data) => {
@@ -98,7 +100,7 @@ export async function bartenderDashboardPage() {
         <div id="bartenderDashboard">
             <div id="orders"></div>
             <div id="menu" class="d-flex flex-column justify-content-end gap-3 p-3">
-                <button>Маси</button>
+                <button @click=${() => page('/waiter')}>Маси</button>
                 <button @click=${logout}>Изход</button>
             </div>
             <div class="overflow-auto">

@@ -1,11 +1,19 @@
 import { User } from "../../model/user.js";
 import jwt from 'jsonwebtoken';
 import bcrypt from "bcryptjs";
+import { BannedIp } from "../../model/banned-ip.js";
 
+let wrongLogins = []
 
 export function usersRoutes(app, auth) {
     app.post('/login', async (req, res) => {
         try {
+            const bannedIps = await BannedIp.find({}, 'ip'); //returns only the ips
+
+            // Check if req.ip is in any object inbannedIps
+            if (bannedIps.some(obj => obj.ip === req.ip))
+                return res.status(403).send('Прекалено много грешни опити!\nСвържи се с админитратор за да отстрани проблема!')
+
             // Get user input
             const { id, pin } = req.body;
 
@@ -20,8 +28,22 @@ export function usersRoutes(app, auth) {
                 return res.status(400).send('Потребителят не съществува');
 
             // Check pin
-            if (!(await bcrypt.compare(pin, user.pin)))
+            if (!(await bcrypt.compare(pin, user.pin))) {
+                wrongLogins.push(req.ip);
+
+                // Check if req.ip is inside wrongLogins more than 10 times
+                if (wrongLogins.filter(ip => ip === req.ip).length > 10) {
+                    // Block this ip
+                    await BannedIp.create({ ip: req.ip });
+                    // Remove all instances of this ip from wrongLogins
+                    wrongLogins = wrongLogins.filter(ip => ip !== req.ip);
+                }
+
                 return res.status(400).send('Грешен пин');
+            }
+
+            // Remove all instances of this ip from wrongLogins
+            wrongLogins = wrongLogins.filter(ip => ip !== req.ip);
 
             // Create token
             const token = jwt.sign(

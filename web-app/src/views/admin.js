@@ -1060,7 +1060,7 @@ export function createEmployeePage() {
 
     const newTemplate = () => html`
         ${backBtn}
-        <form @submit=${getDataFromForm} class="d-flex m-auto mt-5 flex-column gap-5 p-3 fs-3">
+        <form autocomplete="off" @submit=${getDataFromForm} class="d-flex m-auto mt-5 flex-column gap-5 p-3 fs-3">
             <div class="text-center">
                 <label class="form-label">Име на служител</label>
                 <input class="form-control fs-3" name="name" required type="text" placeholder="пример: Иван" />
@@ -1180,7 +1180,7 @@ export async function editEmployeePage() {
 
     const editTemplate = () => html`
         ${backBtn}
-        <form @submit=${edtUser} class="d-flex text-center fs-3 flex-column m-auto mt-5 gap-5 p-3">
+        <form autocomplete="off" @submit=${edtUser} class="d-flex text-center fs-3 flex-column m-auto mt-5 gap-5 p-3">
             <div>
                 <label class="form-label">1. Избери служител</label>
                 <select required class="form-control text-capitalize fs-4" name="uid">

@@ -10,7 +10,8 @@ import $ from "jquery";
 import 'bootstrap-icons/font/bootstrap-icons.css';
 import { socket, getAllPaidBills, getAddonsForCategory, getLastPaidBillByTableId, addProductToBill, generateBills, getAllCategories, getCategoryById, logout, getBillById, removeOneFromBill, sellProducts, scrapProducts, addProductsToHistory, getTables, getTableTotalById, createNewOrder } from '../api';
 
-function stopAllSockets() {
+export function stopAllSockets() {
+    socket.off('order:new');
     socket.off('billChanged');
     socket.off('pay-scrap-refresh');
     socket.off('addToScrap/returnToBill');
@@ -117,7 +118,7 @@ export async function waiterDashboardPage() {
                         <button id="outsideTablesBtn" @click=${(clickedBtn) => changeTablesView(clickedBtn, 'outside')}>Навън</button>
                     </div>
                     <div class="d-flex flex-column text-center gap-3 w-100">
-                        <button>Меню</button>
+                        <!-- <button>Меню</button> -->
                         <button @click=${logout}>Изход</button>
                     </div>
                 </div>
@@ -125,6 +126,7 @@ export async function waiterDashboardPage() {
             
             <div class="d-flex flex-column w-100">
                 <div id="topMenu">
+                    <button @click=${() => page('/bartender')}>Поръчки</button>
                     <button @click=${() => page('/waiter/showPaidBills')}>Плащания</button>
                 </div>
     
@@ -212,7 +214,7 @@ export async function tableControlsPage(ctx) {
 
     const selectedTable = ctx.params.tableId; // Get selected (clicked) table _id
 
-    if (selectedTable === null) return page('/');
+    if (selectedTable === null) return page('/waiter');
 
     const categories = await getAllCategories(false); // Get all categories to display
 
@@ -524,7 +526,7 @@ export async function tableControlsPage(ctx) {
         if (addedProducts.length)
             await addToHistoryAndCreateNewOrder();
 
-        page('/');
+        page('/waiter');
     }
 
     async function goToPay() {
@@ -1073,7 +1075,7 @@ export async function showPaidBillsPage() {
     `;
     
     const scrappedTemplate = () => html`
-        <button class="gray-btn fs-5 mt-3 ms-3" @click=${() => page('/')}>Назад</button>
+        <button class="gray-btn fs-5 mt-3 ms-3" @click=${() => page('/waiter')}>Назад</button>
 
         <table class="mt-3 table table-striped table-light table-hover text-center">
             <thead>

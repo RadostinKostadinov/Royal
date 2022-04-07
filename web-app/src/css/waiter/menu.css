@@ -37,8 +37,8 @@
 	height: 10.16%;
 	background-color: var(--bg-menu);
 	display: flex;
-	flex-direction: row-reverse;
-	padding: 0.5rem 0.5rem;
+	justify-content: space-between;
+	padding: 0.5rem 2rem;
 }
 
 #topMenu button {

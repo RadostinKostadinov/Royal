@@ -22,7 +22,7 @@ const port = process.env.PORT || 80;
 
 mongoConfig();
 expressConfig(app, express);
-routesConfig(app);
+routesConfig(app, port);
 startCronJobs();
 socketsInitialize(io);
 
