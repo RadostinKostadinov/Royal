@@ -1,6 +1,6 @@
 import page from 'page';
 import { html, render } from 'lit';
-import { container } from '../app.js';
+import { container, unbindScreensaver } from '../app.js';
 import '../css/bartender/bartender.css';
 import { stopAllSockets, getAllOrders, socket, logout, completeOne, completeAll, completeOrder, clearAllOrders } from '../api.js';
 
@@ -83,8 +83,8 @@ export async function bartenderDashboardPage() {
         <tr>
             <td>${product.name}</td>
             <td>${product.qty} бр.</td>
-            <td><button @click=${()=> compltOne(product.prodRef, orderId)} class="removeOne text-uppercase">Едно</button></td>
-            <td><button @click=${()=> cmpltAll(product.prodRef, orderId)} class="removeAll text-uppercase">Всички</button>
+            <td><button @click=${() => compltOne(product.prodRef, orderId)} class="removeOne text-uppercase">Едно</button></td>
+            <td><button @click=${() => cmpltAll(product.prodRef, orderId)} class="removeAll text-uppercase">Всички</button>
             </td>
         </tr>
     `;
@@ -105,7 +105,7 @@ export async function bartenderDashboardPage() {
                     ${order.products.map((product) => productTemplate(product, order._id))}
                 </tbody>
             </table>
-            <button @click=${() => cmpltOrder(order._id)} class="finish text-uppercase">Завърши</button>
+            <button @click=${()=> cmpltOrder(order._id)} class="finish text-uppercase">Завърши</button>
         </div>
     `};
 
@@ -114,10 +114,10 @@ export async function bartenderDashboardPage() {
             <div id="orders" class="p-3"></div>
             <div id="menu" class="d-flex flex-column justify-content-between gap-3 p-3">
                 <div class="d-flex h-50 flex-column gap-3">
-                    <button @click=${()=> socket.emit('order:clearAll')}>Изчисти всички</button>
+                    <button @click=${() => socket.emit('order:clearAll')}>Изчисти всички</button>
                 </div>
                 <div class="d-flex h-50 flex-column justify-content-end gap-3">
-                    <button @click=${()=> page('/waiter')}>Маси</button>
+                    <button @click=${() => page('/waiter')}>Маси</button>
                     <button @click=${logout}>Изход</button>
                 </div>
             </div>

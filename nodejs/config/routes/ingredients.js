@@ -1,12 +1,14 @@
 import { RestockHistory } from "../../model/history.js";
 import { Ingredient } from "../../model/ingredient.js";
+import { Product } from "../../model/product.js";
 
 export function ingredientsRoutes(app, auth) {
-    app.post('/changeQtyIngredient', auth, async (req, res) => {
+    app.post('/scrapRestockIngredient', auth, async (req, res) => {
         try {
             // Check if user is admin
-            if (req.user.role !== 'admin')
-                return res.status(401).send('Нямате достъп!')
+            console.log(req.user);
+            // if (req.user.role !== 'admin')
+            // return res.status(401).send('Нямате достъп!')
 
             // Get user input
             let { _id, qty, action, expireDate } = req.body;
@@ -15,20 +17,20 @@ export function ingredientsRoutes(app, auth) {
             if (!(_id && qty && action))
                 return res.status(400).send('Всички полета са задължителни!');
 
-            // Check if qty is integer
-            if (qty % 1 !== 0)
-                return res.status(400).send('Бройката трябва да е цяло число (примерно 10, 500)!');
-
-            if (action !== 'add' && action !== 'remove')
+            if (!['restock', 'scrap'].includes(action))
                 return res.status(400).send('Невалидно действие!');
 
             // Get references to ingredient
             const ingredient = await Ingredient.findById(_id);
 
+            // Check if ingredient is in kg, l or br
+            if (['кг', 'л'].includes(ingredient.unit))
+                qty *= 1000;
+
             // Change qty
-            if (action === 'add')
+            if (action === 'restock')
                 ingredient.qty += qty;
-            else if (action === 'remove')
+            else if (action === 'scrap')
                 ingredient.qty -= qty;
 
             ingredient.save(); // Save changes
@@ -36,31 +38,19 @@ export function ingredientsRoutes(app, auth) {
             // Done
             res.send('Успешно променихте бройките!');
 
-            if (action === 'add') {
-                if (expireDate) {
-                    expireDate = new Date(expireDate);
-                    // Add action to history
-                    RestockHistory.create({
-                        product: {
-                            type: 'ingredient',
-                            unit: ingredient.unit,
-                            name: ingredient.name,
-                            qty,
-                            expireDate,
-                            ingredientRef: ingredient._id
-                        }
-                    });
-                } else {
-                    // Add action to history
-                    RestockHistory.create({
-                        product: {
-                            type: 'ingredient',
-                            name: ingredient.name,
-                            qty,
-                            ingredientRef: ingredient._id
-                        }
-                    });
-                }
+            if (action === 'restock' && expireDate) {
+                expireDate = new Date(expireDate);
+                // Add action to history
+                RestockHistory.create({
+                    product: {
+                        type: 'ingredient',
+                        unit: ingredient.unit,
+                        name: ingredient.name,
+                        qty,
+                        expireDate,
+                        ingredientRef: ingredient._id
+                    }
+                });
             }
         } catch (err) {
             console.error(err);
@@ -75,7 +65,7 @@ export function ingredientsRoutes(app, auth) {
                 return res.status(401).send('Нямате достъп!');
 
             // Get user input
-            const { name, unit, qty, buyPrice, sellPrice } = req.body;
+            let { name, unit, qty, buyPrice, sellPrice } = req.body;
 
             // Validate user input
             if (!(name && unit && qty && buyPrice && sellPrice))
@@ -89,6 +79,10 @@ export function ingredientsRoutes(app, auth) {
             // Check if qty is integer
             if (qty % 1 !== 0)
                 return res.status(400).send('Бройката трябва да е цяло число (примерно 10, 500)!');
+
+            // Check if ingredient is in kg, l or br
+            if (['кг', 'л'].includes(unit))
+                qty *= 1000;
 
             // Create user in database
             await Ingredient.create({
@@ -124,6 +118,20 @@ export function ingredientsRoutes(app, auth) {
                 return res.status(400).send('Няма съставка с това _id!');
 
             await ingredient.remove(); // Delete the ingredient
+
+            // Find all products that contain this ingredient
+            const products = await Product.find({ 'ingredients.ingredient': _id });
+
+            // Delete the ingredient from the products
+            for (let product of products) {
+                const ingredientIndex = product.ingredients.findIndex(ingredient => ingredient.ingredient === _id);
+                product.ingredients.splice(ingredientIndex, 1);
+                //FIXME ТРЯБВА ДА ИЗТРИВА ПРОДУКТА АКО НЯМА ПОВЕЧЕ СЪСТАВКИ, СЪЩО И ОТ ВСИЧКИ СМЕТКИ И МАСИ
+                if (product.ingredients.length === 0)
+                    await product.remove();
+                else
+                    product.save();
+            }
 
             res.send('Успешно изтрихте тази съставка!');
         } catch (err) {
@@ -164,7 +172,7 @@ export function ingredientsRoutes(app, auth) {
             // Update product values
             ingredient.name = name;
             ingredient.unit = unit;
-            ingredient.qty = qty;
+            ingredient.qty = ['кг', 'л'].includes(ingredient.unit) ? qty * 1000 : qty;
             ingredient.buyPrice = buyPrice;
             ingredient.sellPrice = sellPrice;
             ingredient.save();

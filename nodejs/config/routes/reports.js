@@ -2,6 +2,7 @@ import { ProductHistory } from "../../model/history.js";
 import { Report } from "../../model/report.js";
 import { Table } from "../../model/table.js";
 import { User } from "../../model/user.js"
+import { Bill } from "../../model/bill.js"
 
 export async function updateReport(req, res) {
     // Updates a users report when they add, sell, scraps or removes a product from bill
@@ -55,6 +56,7 @@ export async function updateReport(req, res) {
             report.consumed = consumed;
             report.scrapped = scrapped;
             report.total = total;
+            report.when = new Date();
             await report.save();
         } else {
             // Create the new report
@@ -70,15 +72,69 @@ export async function updateReport(req, res) {
             });
         }
 
-        console.log(report);
         return report;
     } catch (err) {
         console.log(err);
-        res.status(500).send(err);
+        return { status: 500, data: err };
+    }
+}
+
+export async function createSystemReport() {
+    try {
+        // Find tables with leftover totals
+        const tables = await Table.find({
+            total: {
+                $gt: 0
+            }
+        });
+
+        if (tables.length) {
+            let income = 0;
+
+
+            for (let table of tables) {
+                income += table.total;
+                table.total = 0;
+                await table.save();
+            }
+
+            // Create system report
+            await Report.create({
+                user: {
+                    name: 'Система'
+                },
+                income,
+                scrapped: 0,
+                consumed: 0,
+                total: income
+            });
+
+            console.log('System report created from leftovers!');
+        }
+
+        await Bill.deleteMany();
+        console.log('All bills deleted!')
+    } catch (err) {
+        console.log(err);
     }
 }
 
 export function reportsRoutes(app, auth) {
+    app.get('/updateReport', auth, async (req, res) => {
+        try {
+
+            const rs = await updateReport(req, res);
+
+            if (rs.hasOwnProperty('status') && rs.status === 500)
+                return res.status(500).json(rs);
+
+            res.send('ok');
+        } catch (err) {
+            console.log(err);
+            res.status(500).send(err);
+        }
+    });
+
     app.get('/getTodaysReport', auth, async (req, res) => {
         try {
             const today = new Date();
@@ -122,7 +178,19 @@ export function reportsRoutes(app, auth) {
         }
     });
 
-    app.post('/finishReport', auth, async (req, res) => {
+    app.get('/getAllReports', auth, async (req, res) => {
+        try {
+            // Check if user is admin
+            if (req.user.role !== 'admin')
+                return res.status(401).send('Нямате админски достъп!')
 
+            // Get all users reports from today
+            const reports = await Report.find();
+
+            res.json(reports);
+        } catch (err) {
+            console.log(err);
+            res.status(500).send(err);
+        }
     });
 }

@@ -104,33 +104,4 @@ export function categoriesRoutes(app, auth) {
             res.status(500).send(err);
         }
     });
-
-    app.post('/getCategoryById', auth, async (req, res) => {
-        try {
-            const { _id } = req.body
-
-            // Validate user input
-            if (!_id)
-                return res.status(400).send('Избери категория!');
-
-            // Create category in database
-            const category = await Category.findById({ _id }).populate(['products']);
-
-            if (category.products !== undefined)
-                category.products.sort(sortByPosition); // sort products by position property
-
-            res.json(category);
-        } catch (err) {
-            console.error(err);
-            res.status(500).send(err);
-        }
-    });
-
-    function sortByPosition(a, b) {
-        if (a.position < b.position)
-            return -1
-        if (a.position > b.position)
-            return 1;
-        return 0;
-    }
 }

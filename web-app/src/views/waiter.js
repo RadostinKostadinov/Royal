@@ -8,7 +8,7 @@ import { container } from "../app";
 import { html, render } from 'lit/html.js';
 import $ from "jquery";
 import 'bootstrap-icons/font/bootstrap-icons.css';
-import { fixPrice, stopAllSockets, socket, getAllPaidBills, getAddonsForCategory, getLastPaidBillByTableId, addProductToBill, generateBills, getAllCategories, getCategoryById, logout, getBillById, removeOneFromBill, sellProducts, scrapProducts, addProductsToHistory, getTables, getTableTotalById, createNewOrder, getTodaysReport } from '../api';
+import { fixPrice, stopAllSockets, socket, getAllPaidBills, getAddonsForCategory, getLastPaidBillByTableId, addProductToBill, generateBills, getAllCategories, getProductsFromCategory, logout, getBillById, removeOneFromBill, sellProducts, scrapProducts, addProductsToHistory, getTables, getTableTotalById, createNewOrder, getTodaysReport } from '../api';
 
 // Dashboard contains all the code for rendering the tables view (grid with tables)
 export async function waiterDashboardPage() {
@@ -354,12 +354,12 @@ export async function tableControlsPage(ctx) {
 
         if (!_id) return;
 
-        const res = await getCategoryById(_id);
+        const res = await getProductsFromCategory(_id);
 
         if (res.status === 200) {
-            const category = res.data;
+            const products = res.data;
             
-            render(productsTemplate(category.products), document.querySelector('#tableControls .products'))
+            render(productsTemplate(products), document.querySelector('#tableControls .products'))
         
             // Check if category has addons for products
             const addonsRes = await getAddonsForCategory(_id);

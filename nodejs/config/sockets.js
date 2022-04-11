@@ -3,6 +3,10 @@ import { clearAllOrders, getAllOrders } from "./routes/orders.js";
 function socketsInitialize(io) {
     io.on('connection', (socket) => {
 
+        socket.on('product:deleted', async () => {
+            io.emit('product:deleted');
+        });
+
         socket.on('order:clearAll', async () => {
             const res = await clearAllOrders();
             // Emit to everyone including the sender

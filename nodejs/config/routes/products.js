@@ -1,6 +1,40 @@
 import { Product } from "../../model/product.js";
 import { Category } from "../../model/category.js";
 import { RestockHistory } from "../../model/history.js";
+import { Bill } from "../../model/bill.js";
+import { Table } from "../../model/table.js";
+
+export async function deleteProductFromEverywhere(product) {
+    // Delete from all bills
+    const bills = await Bill.find({ 'products.product': product._id });
+
+    for (let bill of bills) {
+        // Find product in bill.products, delete it and update total
+        let i = 0;
+        for (let pr of bill.products) {
+            if (pr.product.toString() === product._id.toString()) {
+                // Update bill total
+                bill.total -= pr.qty * product.sellPrice;
+
+                // Update table total
+                const table = await Table.findById(bill.table);
+
+                table.total -= pr.qty * product.sellPrice;
+
+                // Delete product from bill.products array
+                bill.products.splice(i, 1);
+
+                await bill.save();
+                await table.save();
+                break;
+            }
+            i++;
+        }
+    }
+
+    // Finally delete product
+    await product.remove();
+}
 
 export function productsRoutes(app, auth) {
     app.get('/getAllRestockedProducts', auth, async (req, res) => {
@@ -36,7 +70,7 @@ export function productsRoutes(app, auth) {
         }
     });
 
-    app.post('/changeQtyProduct', auth, async (req, res) => {
+    app.post('/scrapRestockProduct', auth, async (req, res) => {
         try {
             // Check if user is admin
             if (req.user.role !== 'admin')
@@ -53,16 +87,16 @@ export function productsRoutes(app, auth) {
             if (qty % 1 !== 0)
                 return res.status(400).send('Бройката трябва да е цяло число (примерно 10, 500)!');
 
-            if (action !== 'add' && action !== 'remove')
+            if (!['restock', 'scrap'].includes(action))
                 return res.status(400).send('Невалидно действие!');
 
             // Get references to product
             const product = await Product.findById(_id);
 
             // Change qty
-            if (action === 'add')
+            if (action === 'restock')
                 product.qty += qty;
-            else if (action === 'remove')
+            else if (action === 'scrap')
                 product.qty -= qty;
 
             product.save(); // Save changes
@@ -70,32 +104,32 @@ export function productsRoutes(app, auth) {
             // Done
             res.send('Успешно променихте бройките!');
 
-            if (action === 'add') {
-                if (expireDate) {
-                    expireDate = new Date(expireDate);
-                    // Add action to history
-                    RestockHistory.create({
-                        product: {
-                            type: 'product',
-                            name: product.name,
-                            qty,
-                            expireDate,
-                            productRef: product._id
-                        }
-                    });
-                } else {
-                    // Add action to history
-                    RestockHistory.create({
-                        product: {
-                            type: 'product',
-                            name: product.name,
-                            qty,
-                            productRef: product._id
-                        }
-                    });
-                }
-
+            if (action === 'restock' && expireDate) {
+                expireDate = new Date(expireDate);
+                // Add action to history
+                RestockHistory.create({
+                    product: {
+                        type: 'product',
+                        name: product.name,
+                        qty,
+                        expireDate,
+                        productRef: product._id
+                    }
+                });
             }
+        } catch (err) {
+            console.error(err);
+            res.status(500).send(err);
+        }
+    });
+
+    app.post('/getProductsIngredients', auth, async (req, res) => {
+        try {
+            const { _id } = req.body;
+
+            const product = await Product.findOne({ _id }, 'ingredients').populate('ingredients.ingredient');
+
+            res.json(product.ingredients);
         } catch (err) {
             console.error(err);
             res.status(500).send(err);
@@ -118,7 +152,6 @@ export function productsRoutes(app, auth) {
                 forBartender = false;
             else
                 return res.status(400).send('Грешна стойност от checkbox bartender!');
-
 
             // Validate user input depending on what they chose (create product or create product from ingredients)
             if (!(name && buyPrice && sellPrice && categoryId))
@@ -148,13 +181,9 @@ export function productsRoutes(app, auth) {
                 return res.status(400).send('Категорията не съществува!');
 
             // Create product in database
-            const product = await Product.create({
+            await Product.create({
                 name, qty, ingredients, buyPrice, sellPrice, category, forBartender
             });
-
-            // Add reference of product to category "products" array
-            category.products.push(product._id);
-            category.save(); // Save (because we are editing)
 
             // Done
             res.status(201).send('Успешно създаден продукт!');
@@ -165,7 +194,6 @@ export function productsRoutes(app, auth) {
     });
 
     app.post('/deleteProduct', auth, async (req, res) => {
-        /*  Delete product by id */
         try {
             // Check if user is admin
             if (req.user.role !== 'admin')
@@ -177,28 +205,35 @@ export function productsRoutes(app, auth) {
             if (!_id)
                 return res.status(400).send('Избери продукт!');
 
-            // Get references to product and its category
+            // Get references to product
             const product = await Product.findById(_id);
 
             if (!product)
                 return res.status(400).send('Няма продукт с това _id!');
 
-            const productCategory = await Category.findById(product.category);
+            // await product.remove(); // Delete the product
 
-            if (!productCategory)
-                return res.status(400).send('Няма категория коята да съдържа този продукт!');
-
-            // Remove product reference in category
-            const index = productCategory.products.indexOf(_id); // Find the product index in the products array
-
-            if (index > -1)
-                productCategory.products.splice(index, 1); // remove the product from the array
-
-            productCategory.save(); // save the changes to the category
-
-            await product.remove(); // Delete the product
+            //FIXME ТРЯБВА ДА ИЗТРИВА ОТ ВСИЧКИ СМЕТКИ И МАСИ
+            await deleteProductFromEverywhere(product);
 
             res.send('Успешно изтрихте този продукт!');
+        } catch (err) {
+            console.error(err);
+            res.status(500).send(err);
+        }
+    });
+
+    app.post('/getProductsFromCategory', auth, async (req, res) => {
+        try {
+            const { _id } = req.body
+
+            // Validate user input
+            if (!_id)
+                return res.status(400).send('Избери категория!');
+
+            const products = await Product.find({ category: _id }).sort({ position: 1 });
+
+            res.json(products);
         } catch (err) {
             console.error(err);
             res.status(500).send(err);
@@ -246,46 +281,27 @@ export function productsRoutes(app, auth) {
 
             // Get references to product, new category and old category
             const product = await Product.findById(_id);
-            const oldCategory = await Category.findById(product.category);
             const newCategory = await Category.findById(categoryId);
 
             // Check if both categories exists
-            if (!(oldCategory && newCategory))
+            if (!newCategory)
                 return res.status(400).send('Категорията не съществува!');
 
             // Update product values
             product.name = name;
             product.buyPrice = buyPrice;
             product.sellPrice = sellPrice;
-            product.categoryId = categoryId;
+            product.category = categoryId;
             product.forBartender = forBartender;
 
             if (qty) { // if simple product, change qty and remove ingredients (there shouldnt be any)
                 product.ingredients = [];
-                product.qty = qty;
+                product.qty = +qty;
             } else if (ingredients) { // if product from ingredients, delete qty and update ingredients
                 delete product.qty;
                 product.ingredients = ingredients;
             }
 
-
-            // Do this only if the category has changed
-            if (oldCategory._id !== newCategory._id) {
-                // Replace the product's category id property
-                product.category = newCategory._id;
-
-                // Remove product reference in old category
-                const index = oldCategory.products.indexOf(_id); // Find the product index in the products array
-
-                if (index > -1)
-                    oldCategory.products.splice(index, 1); // remove the product from the array
-
-                oldCategory.save(); // save the changes to the category
-
-                // Add reference of product in new category
-                newCategory.products.push(product._id);
-                newCategory.save(); // Save (because we are editing)
-            }
             product.save();
 
             // Done

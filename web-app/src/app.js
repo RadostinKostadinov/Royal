@@ -6,7 +6,7 @@ import './bootstrap/bootstrap.bundle.min.js';
 import './css/global.css';
 import { html, render } from 'lit/html.js';
 import { getAllUsers, login, user } from './api';
-import { showAdminDashboard, createCategoryPage, deleteCategoryPage, editCategoryPage, sortCategoriesPage, createEmployeePage, deleteEmployeePage, editEmployeePage, addQtyProductPage, createProductPage, deleteProductPage, editProductPage, removeQtyProductPage, inventoryPage, sortProductsPage, scrappedPage, expireProductsPage, reportsPage } from './views/admin';
+import { showAdminDashboard, createCategoryPage, deleteCategoryPage, editCategoryPage, sortCategoriesPage, createEmployeePage, deleteEmployeePage, editEmployeePage, scrapRestockProductPage, createProductPage, deleteProductPage, editProductPage, removeQtyProductPage, inventoryPage, sortProductsPage, scrappedPage, expireProductsPage, reportsPage } from './views/admin';
 import { payPartOfBillPage, scrapProductsPage, showPaidBillsPage, tableControlsPage, waiterDashboardPage } from './views/waiter.js';
 import { bartenderDashboardPage } from './views/bartender';
 
@@ -29,8 +29,8 @@ page('/admin/reports', auth, reportsPage);
 page('/admin/expireProducts', auth, expireProductsPage);
 page('/admin/inventory', auth, inventoryPage);
 page('/admin/inventory/scrapped', auth, scrappedPage);
-page('/admin/product/removeQty', auth, removeQtyProductPage);
-page('/admin/product/addQty', auth, addQtyProductPage);
+page('/admin/product/scrap', auth, scrapRestockProductPage);
+page('/admin/product/restock', auth, scrapRestockProductPage);
 page('/admin/product/create', auth, createProductPage);
 page('/admin/product/delete', auth, deleteProductPage);
 page('/admin/product/edit', auth, editProductPage);
@@ -49,11 +49,11 @@ page();
 async function checkIfUserLoggedIn() {
     if (user) {
         if (user.role === 'admin') {
-            page('/admin');
+            page.redirect('/admin');
         } else if (user.role === 'waiter') {
-            page('/waiter');
+            page.redirect('/waiter');
         } else if (user.role === 'bartender') {
-            page('/bartender');
+            page.redirect('/bartender')
         }
     } else {
         let selectedUser,
@@ -159,8 +159,7 @@ const blackscreenTime = 30 * 60 * 1000; // 30 minutes
 var screensaverTimeout = setTimeout(inActive, screensaverTime);
 var blackscreenTimeout = setTimeout(showBlackScreen, blackscreenTime);
 
-function resetActive(e) {
-    e.preventDefault();
+function resetActive() {
     // Hide screensaver
     $('#screensaver').hide();
     $('#blackscreen').hide();
@@ -173,15 +172,17 @@ function resetActive(e) {
 }
 
 function inActive() {
-    // Show screensaver
-    $('#screensaver').show();
+    // Check if on bartender screen
+    if (!$('#bartenderDashboard').length)
+        $('#screensaver').show(); // Show screensaver
 }
 
 function showBlackScreen() {
-    // Show black screen
-    $('#blackscreen').show();
+    // Check if on bartender screen
+    if (!$('#bartenderDashboard').length)
+        $('#blackscreen').show(); // Show black screen
 }
 
-$(document).bind('mousemove', resetActive);
+// $(document).bind('mousemove', resetActive);
 $(document).bind('click', resetActive);
 $(document).bind('touch', resetActive);

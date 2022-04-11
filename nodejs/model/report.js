@@ -35,11 +35,6 @@ const reportSchema = new Schema({
     when: {
         type: Date,
         default: Date.now
-    },
-    finished: { // Дали служителя е натиснал "Приключи"
-        type: Boolean,
-        default: false,
-        required: true
     }
 });
 

@@ -59,6 +59,8 @@ body {
 	position: absolute;
 	top: 50%;
 	left: 50%;
+	font-weight: 600;
+	font-size: 10rem;
 	transform: translate(-50%, -50%);
 	font-weight: 600;
 	font-size: 10rem;
@@ -69,6 +71,7 @@ body {
 
 #blackscreen {
 	z-index: 9999999;
+	border: none;
 	background-color: rgba(0, 0, 0, 0.9);
 	display: none;
 	width: 100%;
@@ -77,6 +80,8 @@ body {
 }
 
 #screensaver {
+	pointer-events: all;
+	border: none;
 	z-index: 999999;
 	display: none;
 	color: black;

@@ -4,14 +4,16 @@ import { html, render } from 'lit/html.js';
 import $ from "jquery";
 import Sortable from 'sortablejs';
 import '../css/admin/admin.css';
-import { fixPrice, markHistoryAsScrapped, sortCategories, getProductById, getCategoryById, getAllUsers, editCategory, deleteCategory, deleteUser, createUser, editUser, createCategory, changeQtyProduct, createProduct, deleteProduct, editProduct, getAllCategories, getAllProducts, sortProducts, logout, getAllIngredients, createIngredient, deleteIngredient, getIngredientById, editIngredient, getAllProductsWithoutIngredients, getProductsWithoutIngredientsFromCategory, changeQtyIngredient, getAllScrapped, getAllRestockedProducts, getAllReports } from '../api';
+import { fixPrice, markHistoryAsScrapped, sortCategories, getProductById, getProductsFromCategory, getAllUsers, editCategory, deleteCategory, deleteUser, createUser, editUser, createCategory, scrapRestockProduct, createProduct, deleteProduct, editProduct, getAllCategories, getAllProducts, sortProducts, logout, getAllIngredients, createIngredient, deleteIngredient, getIngredientById, editIngredient, getAllProductsWithoutIngredients, getProductsWithoutIngredientsFromCategory, scrapRestockIngredient, getAllScrapped, getAllRestockedProducts, getAllReports, getProductsIngredients } from '../api';
 
 const backBtn = html`<button @click=${()=> page('/admin')} class="btn btn-secondary fs-3 mt-2 ms-2">Назад</button>`;
 let contentType; //  used in loadProducts to determine if we are loading/deleting a product or ingredient
-let selectedFromSearch;
+let selectedProductFromSearch,
+    selectedIngredientFromSearch;
 
 async function loadProducts(e, showProductsFromIngredients) {
-    selectedFromSearch = undefined;
+    selectedProductFromSearch = undefined;
+    selectedIngredientFromSearch = undefined;
     
     // Get selected category
     const categoryId = e.target.value;
@@ -28,7 +30,7 @@ async function loadProducts(e, showProductsFromIngredients) {
         contentToRender = res;
     } else {
         // Get category and render products as options
-        const res = await getCategoryById(categoryId);
+        const res = await getProductsFromCategory(categoryId);
 
         
         if (res.status === 200) {
@@ -36,7 +38,7 @@ async function loadProducts(e, showProductsFromIngredients) {
             let productsWithoutIngredients = [];
 
             if (showProductsFromIngredients === false) {
-                for (let [index, product] of Object.entries(res.data.products)) {
+                for (let product of res.data) {
                     if (product.hasOwnProperty('qty'))
                         productsWithoutIngredients.push(product);
                 }
@@ -44,7 +46,7 @@ async function loadProducts(e, showProductsFromIngredients) {
                 contentToRender = productsWithoutIngredients;
             }
             else 
-                contentToRender = res.data.products;
+                contentToRender = res.data;
         }
         if (res.status === 400)
             return alert(res.data);
@@ -97,7 +99,7 @@ function showDivs() {
     $('#quantityDiv').removeClass('d-none');
 }
 
-function selectFromSearch(e) {
+function selectProductFromSearch(e) {
     const selected = e.target.value;
 
     if (!selected) return;
@@ -105,10 +107,11 @@ function selectFromSearch(e) {
     const _id = $(`datalist option[value="${selected}"]`).attr('_id');
     const type = $(`datalist option[value="${selected}"]`).attr('type');
     const unit = $(`datalist option[value="${selected}"]`).attr('unit');
+
     if (!_id)
         return $('#quantityDiv').addClass('d-none');
 
-    selectedFromSearch = {
+    selectedProductFromSearch = {
         _id,
         type,
         unit
@@ -117,135 +120,209 @@ function selectFromSearch(e) {
     showDivs();
 }
 
-export async function removeQtyProductPage() {
-    const categories = await getAllCategories(true);
-    const allProducts = await getAllProductsWithoutIngredients();
-    const allIngredients = await getAllIngredients();
-    
-    async function remQty(e) {
-        e.preventDefault();
-        const formData = new FormData(e.target);
-        const action = 'remove'; // add to current qty
-        let qty = +formData.get('qty');
-        let unit,
-            selectedCategory,
-            _id;
+function selectIngredientFromSearch(e) {
+    const selected = e.target.value;
 
-        // Check if selected using select or search
-        if (selectedFromSearch) {
-            _id = selectedFromSearch._id;
-            unit = selectedFromSearch.unit;
-            selectedCategory = selectedFromSearch.type;
-        } else {
-            _id = formData.get('_id');
-            unit = $('#product option:selected').attr('unit');
-            selectedCategory = formData.get('categoryId');
-        }
-        
-        if (_id === null)
-            return alert('Избери продукт!');
-        if (qty === null)
-            return alert('Въведи количество!');
+    if (!selected) return;
 
-        if (unit === 'кг' || unit === 'л')
-            qty *= 1000;
+    const _id = $(`datalist option[value="${selected}"]`).attr('_id');
 
-        let res;
-        if (selectedCategory === 'ingredients')
-            res = await changeQtyIngredient(_id, qty, action);
-        else
-            res = await changeQtyProduct(_id, qty, action);
+    if (!_id)
+        return $('#quantityDiv').addClass('d-none');
 
-        if (res.status === 200) {// Successfully added qty to product
-            alert(res.data);
-            page('/');
-        } else {
-            alert('Възникна грешка!');
-            console.error(res);
-        }
-    }
+    selectedIngredientFromSearch = {
+        _id,
+        name: selected
+    };
 
-    const removeQtyTemplate = () => html`
-        ${backBtn}
-        <form @submit=${remQty} class="d-flex text-center fs-3 flex-column m-auto mt-5 gap-5 p-3">
-            <div class="mb-3 d-lg-none">
-                <label for="productSearch" class="form-label">Търси</label>
-                <input @change=${selectFromSearch} class="form-control" type="text" list="allproducts" name="productSearch" id="productSearch">
-                <datalist id="allproducts">
-                    ${allIngredients.map(el => {
-                        return html`<option type="ingredients" unit=${el.unit} _id=${el._id} value=${el.name + ` (${el.unit})`} />`
-                    })}
-                    ${allProducts.map(el => {
-                        return html`<option type="product" _id=${el._id} value=${el.name}/>`
-                    })}
-                </datalist>
-            </div>
+    showDivs();
+}
 
+const prIngInputs = (prOrIng, categories, type) => html`
+    <div class="mb-3">
+        <label for="name" class="form-label">Име</label>
+        <input required type="text" class="form-control fs-4" value=${prOrIng ? prOrIng.name : ''} name="name" id="name" placeholder="пример: Бира">
+    </div>
+    ${
+        (prOrIng && prOrIng.unit) || type === 'ingredient'
+        ? html`
             <div class="mb-3">
-                <label for="categoryId" class="form-label d-lg-none">или избери категория</label>
-                <label for="categoryId" class="form-label d-none d-lg-block">Избери категория</label>
-                <select @change=${(e) => loadProducts(e, false)} required type="text" class="form-control fs-4" name="categoryId" id="categoryId">
+                <label for="unit" class="form-label">Мерна единица</label>
+                <select required class="form-control fs-4" name="unit" id="unit">
+                    <option ?selected=${!prOrIng} disabled>Избери</option>
+                    <option ?selected=${prOrIng ? (prOrIng.unit === 'кг') : false} value="кг">килограм</option>
+                    <option ?selected=${prOrIng ? (prOrIng.unit === 'л') : false} value="л">литър</option>
+                    <option ?selected=${prOrIng ? (prOrIng.unit === 'бр') : false } value="бр">брой</option>
+                </select>
+            </div>
+        `
+        : ''
+    }
+    ${
+        type !== 'productFromIngredients'
+        ? html`
+            <div class="mb-3">
+                <label for="qty" class="form-label">Количество</label>
+                <input required type="number" min=${type === 'ingredient' ? '' : 1 } step=${type === 'ingredient' ? 0.05 : ''} value=${prOrIng ? (type === 'ingredient' && ['кг','л'].includes(prOrIng.unit) ? prOrIng.qty/1000 : prOrIng.qty) : ''} class="form-control fs-4" name="qty" id="qty" placeholder="пример: 50">
+            </div>
+        `
+        : ''
+    }
+    <div class="mb-3">
+        <label for="buyPrice" class="form-label">Доставна цена</label>
+        <input required type="text" title="пример: 5.20, 5.0, 5, 0.5, 0.50" value=${prOrIng ? prOrIng.buyPrice : ''} pattern="^\\d{1,}(\\.\\d{1,2})?$" class="form-control fs-4" name="buyPrice" id="buyPrice" placeholder="пример: 1.50">
+    </div>
+    <div class="mb-3">
+        <label for="sellPrice" class="form-label">Продажна цена</label>
+        <input required type="text" title="пример: 5.20, 5.0, 5, 0.5, 0.50" value=${prOrIng ? prOrIng.sellPrice : ''} pattern="^\\d{1,}(\\.\\d{1,2})?$" class="form-control fs-4" name="sellPrice" id="sellPrice" placeholder="пример: 2">
+    </div>
+    ${
+        categories || ['product', 'productFromIngredients'].includes(type) ? 
+        html`
+            <div class="mb-3">
+                <label for="pr-categoryId" class="form-label">Категория</label>
+                <select required type="text" class="form-control fs-4" name="pr-categoryId" id="pr-categoryId">
                     <option selected disabled>Избери</option>
-                    <option value="ingredients">Съставки</option>
                     ${categories.map((category) => html`<option value=${category._id}>${category.name}</option>`)}
                 </select>
             </div>
-
-            <div class="mb-3 d-none" id="product">
-                <label for="_id" class="form-label">Избери продукт</label>
-                <select @change=${() => $('#quantityDiv').removeClass('d-none')} required type="text" class="form-control fs-4" name="_id" id="_id">
-                    <option selected disabled>Избери</option>
-                </select>
-            </div>
-            
-            <div class="mb-3 d-none" id="quantityDiv">
-                <label for="qty" class="form-label">Добави количество</label>
-                <input required type="number" step="0.05" class="form-control fs-4" name="qty" id="qty" placeholder="пример: 50">
-                <div class="w-50 m-auto qty-numpad mt-3 d-none d-lg-grid">
-                    <button @click=${writeInQty} class="btn btn-primary">1</button>
-                    <button @click=${writeInQty} class="btn btn-primary">2</button>
-                    <button @click=${writeInQty} class="btn btn-primary">3</button>
-                    <button @click=${writeInQty} class="btn btn-primary">4</button>
-                    <button @click=${writeInQty} class="btn btn-primary">5</button>
-                    <button @click=${writeInQty} class="btn btn-primary">6</button>
-                    <button @click=${writeInQty} class="btn btn-primary">7</button>
-                    <button @click=${writeInQty} class="btn btn-primary">8</button>
-                    <button @click=${writeInQty} class="btn btn-primary">9</button>
-                    <button @click=${writeInQty} class="btn btn-danger">X</button>
-                    <button @click=${writeInQty} class="btn btn-primary">0</button>
-                    <button @click=${writeInQty} class="btn btn-primary dot">.</button>
+        `
+        : ''
+    }
+    ${
+        ['product', 'productFromIngredients'].includes(type)
+        ? html`
+            <div class="mb-3">
+                <label class="form-label">Да се появява на монитора на</label>
+                <div class="form-check">
+                    <div class="d-inline-block">
+                        <input class="form-check-input" type="checkbox" value="true" name="forBartender" id="forBartender">
+                        <label class="form-check-label" for="forBartender">
+                            Барман
+                        </label>
+                    </div>
                 </div>
             </div>
-            <input class="btn btn-danger fs-3" type="submit" value="Бракувай" />
-        </form>
-    `;
+        `
+        : ''
+    }
 
-    render(removeQtyTemplate(), container);
+    ${
+        type === 'productFromIngredients'
+        ? html`
+            <div class="mb-5 pt-3" id="ingredients">
+                <label class="form-label fs-3">Избери съставки</label>
+                <div id="selectedIngredients"></div>
+                <button type="button" class="btn btn-success fs-3" data-bs-toggle="modal" data-bs-target="#addIngredientModal">Добави съставка</button>
+            </div>
+        `
+        : ''
+    }
+`;
+
+let addedIngredients = [];
+
+const addIngredientModal = (ingredients) => html`
+        <div class="modal fade" id="addIngredientModal" tabindex="-1" aria-labelledby="addIngredientModal" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered modal-fullscreen-sm-down modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title fs-4" id="exampleModalLabel">Добави съставка</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body fs-4 text-center">
+                        <div class="mb-3">
+                            <label for="ingredientSearch" class="form-label">Търси</label>
+                            <input @change=${selectIngredientFromSearch} class="form-control fs-4" type="text" list="allingredients" name="ingredientSearch" id="ingredientSearch">
+                            <datalist id="allingredients">
+                                ${ingredients.map(el => {
+                                    return html`<option type="ingredients" unit=${el.unit} _id=${el._id} name=${el.name} value=${el.name + ` (${el.unit})`} />`
+                                })}
+                            </datalist>
+                        </div>
+                        <div class="mb-3">
+                            <label for="ingredientSelect" class="form-label">или избери</label>
+                            <select type="text" class="form-control fs-4" name="ingredientSelect" id="ingredientSelect">
+                                <option selected disabled>Избери</option>
+                                ${ingredients.map((ingredient) => html`<option value=${ingredient._id}>${ingredient.name}</option>`)}
+                            </select>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary fs-4" data-bs-dismiss="modal">Затвори</button>
+                        <button @click=${addIngredient} type="button" data-bs-dismiss="modal" class="btn btn-primary fs-4">Добави</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+`;
+
+function addIngredient() {
+    let ingredient = {};
+    const fromSelect = {
+        _id: $('#ingredientSelect').val(),
+        name: $('#ingredientSelect option:selected').text(),
+    }
+
+    if (!fromSelect._id && !selectedIngredientFromSearch)
+        return alert('Избери съставка!');
+
+    if (fromSelect._id) {
+        ingredient._id = fromSelect._id;
+        ingredient.name = fromSelect.name;
+    } else {
+        ingredient._id = selectedIngredientFromSearch._id;
+        ingredient.name = selectedIngredientFromSearch.name;
+    }
+
+    // Check if already added to ingredients
+    for (let el of addedIngredients) {
+        if (el._id === ingredient._id) {
+            return alert('Съставката вече е добавена!');
+        }
+    }
+
+    addedIngredients.push(ingredient);
+
+    // Rerender    
+    render(ingredientsTemplate(), document.getElementById('selectedIngredients'));
 }
 
-export async function addQtyProductPage() {
+const ingredientsTemplate = () => html`
+        ${
+            addedIngredients.map(ingredient => {
+                return html`
+                    <div class="mb-3">
+                        <label for=${ingredient._id} class="form-label">${ingredient.name}</label>
+                        <input type="number" value=${ingredient.qty} class="form-control fs-4" name="ingredients" id=${ingredient._id} placeholder="пример: 50">
+                    </div>
+                `;
+            })
+        }
+`;  
+
+export async function scrapRestockProductPage(ctx) {
+    // Check if coming for restock or scrapping
+    const action = ctx.path.includes('restock') ? 'restock' : 'scrap';
     const categories = await getAllCategories(true);
     const allProducts = await getAllProductsWithoutIngredients();
     const allIngredients = await getAllIngredients();
     
-    async function addQty(e) {
+    async function scrapRestock(e) {
         e.preventDefault();
         const formData = new FormData(e.target);
-        const action = 'add'; // add to current qty
         let qty = +formData.get('qty'),
             expireDate = formData.get('expireDate'),
-            unit,
             selectedCategory,
             _id;
 
         // Check if selected using select or search
-        if (selectedFromSearch) {
-            _id = selectedFromSearch._id;
-            unit = selectedFromSearch.unit;
-            selectedCategory = selectedFromSearch.type;
+        if (selectedProductFromSearch) {
+            _id = selectedProductFromSearch._id;
+            selectedCategory = selectedProductFromSearch.type;
+            selectedProductFromSearch = undefined;
         } else {
             _id = formData.get('_id');
-            unit = $('#product option:selected').attr('unit');
             selectedCategory = formData.get('categoryId');
         }
         
@@ -254,31 +331,42 @@ export async function addQtyProductPage() {
         if (qty === null)
             return alert('Въведи количество!');
 
-        if (unit === 'кг' || unit === 'л')
-            qty *= 1000;
-
         let res;
+
         if (selectedCategory === 'ingredients')
-            res = await changeQtyIngredient(_id, qty, action, expireDate);
+            res = await scrapRestockIngredient(_id, qty, action, expireDate);
         else
-            res = await changeQtyProduct(_id, qty, action, expireDate);
+            res = await scrapRestockProduct(_id, qty, action, expireDate);
 
         if (res.status === 200) {// Successfully added qty to product
             alert(res.data);
-            page('/');
-            page('/admin/product/addQty'); // redirect back to this page
+
+            // Clear all inputs and hide divs
+            $('#product').addClass('d-none');
+            $('#quantityDiv').addClass('d-none');
+            $('#expireDateDiv').addClass('d-none');
+
+            $('#productSearch').val(''); // Clear search input
+            $('#qty').val(''); // Clear qty input
+            $('#expireDate').val(''); // Clear expire date input
+
+            if (!selectedProductFromSearch) {
+                $('#categoryId').val('Избери'); // Clear category select
+                $('#_id').val('Избери'); // Clear product select
+            }
+
         } else {
             alert('Възникна грешка!');
             console.error(res);
         }
     }
 
-    const addQtyTemplate = () => html`
+    const template = () => html`
         ${backBtn}
-        <form @submit=${addQty} class="d-flex text-center fs-3 flex-column m-auto mt-5 gap-5 p-3">
-            <div class="mb-3 d-lg-none">
+        <form @submit=${scrapRestock} class="d-flex text-center fs-3 flex-column m-auto mt-5 gap-5 p-3">
+            <div class="mb-3">
                 <label for="productSearch" class="form-label">Търси</label>
-                <input @change=${selectFromSearch} class="form-control" type="text" list="allproducts" name="productSearch" id="productSearch">
+                <input @change=${selectProductFromSearch} class="form-control fs-4" type="text" list="allproducts" name="productSearch" id="productSearch">
                 <datalist id="allproducts">
                     ${allIngredients.map(el => {
                         return html`<option type="ingredients" unit=${el.unit} _id=${el._id} value=${el.name + ` (${el.unit})`} />`
@@ -290,8 +378,7 @@ export async function addQtyProductPage() {
             </div>
 
             <div class="mb-3">
-                <label for="categoryId" class="form-label d-lg-none">или избери категория</label>
-                <label for="categoryId" class="form-label d-none d-lg-block">Избери категория</label>
+                <label for="categoryId" class="form-label">или избери категория</label>
                 <select @change=${(e) => loadProducts(e, false)} required type="text" class="form-control fs-4" name="categoryId" id="categoryId">
                     <option selected disabled>Избери</option>
                     <option value="ingredients">Съставки</option>
@@ -307,7 +394,7 @@ export async function addQtyProductPage() {
             </div>
             
             <div class="mb-3 d-none" id="quantityDiv">
-                <label for="qty" class="form-label">Добави количество</label>
+                <label for="qty" class="form-label">Количество</label>
                 <input required type="number" step="0.05" class="form-control fs-4" name="qty" id="qty" placeholder="пример: 50">
                 <div class="w-50 m-auto qty-numpad mt-3 d-none d-lg-grid">
                     <button @click=${writeInQty} class="btn btn-primary">1</button>
@@ -329,28 +416,34 @@ export async function addQtyProductPage() {
                 <label for="expireDate" class="form-label">Дата</label>
                 <input name="expireDate" class="form-control fs-4" id="expireDate" type="date"/>
             </div>
-            <input class="btn btn-primary fs-3" type="submit" value="Зареди" />
+            ${ action === 'restock' 
+            ? html`<input class="btn btn-primary fs-3" type="submit" value="Зареди" />`
+            : html`<input class="btn btn-danger fs-3" type="submit" value="Бракувай" />`
+            }
+            
         </form>
     `;
 
-    render(addQtyTemplate(), container);
+    render(template(), container);
 }
 
 export async function createProductPage() {
     const categories = await getAllCategories();
     const ingredients = await getAllIngredients();
+    addedIngredients = [];
 
     async function createPrdct(e) {
         e.preventDefault();
+
         // Get data from form
         const formData = new FormData(e.target);
         const name = formData.get('name');
         const qty = +formData.get('qty');
         const buyPrice = +formData.get('buyPrice');
         const sellPrice = +formData.get('sellPrice');
-        const categoryId = formData.get('categoryId');
+        const categoryId = formData.get('pr-categoryId');
         const forBartender = formData.get('forBartender') || false;
-
+        
         if (categoryId === null)
             return alert('Избери категория!');
 
@@ -369,23 +462,22 @@ export async function createProductPage() {
 
     async function createPrdctFromIngrdnts(e) {
         e.preventDefault();
+
         // Get data from form
         const formData = new FormData(e.target);
         const name = formData.get('name');
         const buyPrice = +formData.get('buyPrice');
         const sellPrice = +formData.get('sellPrice');
-        const categoryId = formData.get('categoryId');
+        const categoryId = formData.get('pr-categoryId');
         const forBartender = formData.get('forBartender') || false;
-        const allIngredients = formData.getAll('ingredients');
+        const allIngredients = document.querySelectorAll('input[name="ingredients"]');
         let selectedIngredients = [];
 
-        // get _id of selected ingredients
-        for (let i in allIngredients) {
-            if (allIngredients[i]) { // if ingredient has value in input
-                // convert from ['5'] to [{ ingridient: ingredient._id, qty: qty}]
+        for (let ingredient of allIngredients) {
+            if (ingredient.value) {
                 selectedIngredients.push({
-                        ingredient: ingredients[i]._id,
-                        qty: allIngredients[i]
+                    ingredient: ingredient.id,
+                    qty: +ingredient.value
                 });
             }
         }
@@ -394,7 +486,7 @@ export async function createProductPage() {
             return alert('Избери категория!');
 
         if (!selectedIngredients.length) // if no ingredients selected
-            return alert('Избери поне една съставка!');
+            return alert('Добави поне една съставка!');
 
         const res = await createProduct(name, undefined, selectedIngredients, buyPrice, sellPrice, categoryId, forBartender);
 
@@ -473,41 +565,25 @@ export async function createProductPage() {
                 <option value="ingredient">Съставка</option>
             </select>
         </div>
+        ${prIngInputs(undefined, categories, 'product')}
+        <input type="submit" class="btn btn-primary fs-3 w-100" value="Създай"/>
+    </form>
+    `;
+
+    const ingredientFields = () => html`
+    ${backBtn}
+    <form @submit=${createIngrdnt} class="m-auto mt-2 p-3 text-center fs-3">
         <div class="mb-3">
-            <label for="categoryId" class="form-label">Категория</label>
-            <select required class="form-control fs-4" name="categoryId" id="categoryId">
-                <option selected disabled>Избери</option>
-                ${categories.map((category) => html`<option value=${category._id}>${category.name}</option>`)}
+            <label for="productType" class="form-label">Тип на продукт</label>
+            <select @change=${selectProductType} required class="form-control fs-4" name="productType" id="productType">
+                <option disabled>Избери</option>
+                <option value="product">Продукт</option>
+                <option value="productFromIngredients">Продукт от съставки</option>
+                <option selected value="ingredient">Съставка</option>
             </select>
         </div>
-        <div class="mb-3">
-            <label for="name" class="form-label">Име</label>
-            <input required type="text" class="form-control fs-4" name="name" id="name" placeholder="пример: Бира">
-        </div>
-        <div class="mb-3">
-            <label for="qty" class="form-label">Количество</label>
-            <input required type="number" min="1" class="form-control fs-4" name="qty" id="qty" placeholder="пример: 50">
-        </div>
-        <div class="mb-3">
-            <label for="buyPrice" class="form-label">Доставна цена</label>
-            <input required type="text" title="пример: 5.20, 5.0, 5, 0.5, 0.50" pattern="^\\d{1,}(\\.\\d{1,2})?$" class="form-control fs-4" name="buyPrice" id="buyPrice" placeholder="пример: 1.50">
-        </div>
-        <div class="mb-3">
-            <label for="sellPrice" class="form-label">Продажна цена</label>
-            <input required type="text" title="пример: 5.20, 5.0, 5, 0.5, 0.50" pattern="^\\d{1,}(\\.\\d{1,2})?$" class="form-control fs-4" name="sellPrice" id="sellPrice" placeholder="пример: 2">
-        </div>
-        <div class="mb-3">
-            <label class="form-label">Да се появява на монитора на</label>
-            <div class="form-check">
-                <div class="d-inline-block">
-                    <input class="form-check-input" type="checkbox" value="true" name="forBartender" id="forBartender">
-                    <label class="form-check-label" for="forBartender">
-                        Барман
-                    </label>
-                </div>
-            </div>
-        </div>
-        <input type="submit" class="btn btn-primary fs-3 w-100" value="Създай"/>
+        ${prIngInputs(undefined, undefined, 'ingredient')}
+        <input type="submit" class="btn btn-primary fs-3 w-100" value="Създай" />
     </form>
     `;
 
@@ -523,117 +599,10 @@ export async function createProductPage() {
                 <option value="ingredient">Съставка</option>
             </select>
         </div>
-        <div class="mb-3">
-            <label for="categoryId" class="form-label">Категория</label>
-            <select required class="form-control fs-4" name="categoryId" id="categoryId">
-                <option selected disabled>Избери</option>
-                ${categories.map((category) => html`<option value=${category._id}>${category.name}</option>`)}
-            </select>
-        </div>
-        <div class="mb-3">
-            <label for="name" class="form-label">Име</label>
-            <input required type="text" class="form-control fs-4" name="name" id="name" placeholder="пример: Бира">
-        </div>
-        <div class="mb-3">
-            <label for="buyPrice" class="form-label">Доставна цена</label>
-            <input required type="text" title="пример: 5.20, 5.0, 5, 0.5, 0.50" pattern="^\\d{1,}(\\.\\d{1,2})?$"
-                class="form-control fs-4" name="buyPrice" id="buyPrice" placeholder="пример: 1.50">
-        </div>
-        <div class="mb-3">
-            <label for="sellPrice" class="form-label">Продажна цена</label>
-            <input required type="text" title="пример: 5.20, 5.0, 5, 0.5, 0.50" pattern="^\\d{1,}(\\.\\d{1,2})?$"
-                class="form-control fs-4" name="sellPrice" id="sellPrice" placeholder="пример: 2">
-        </div>
-        <div class="mb-3">
-            <label class="form-label">Да се появява на монитора на</label>
-            <div class="form-check">
-                <div class="d-inline-block">
-                    <input class="form-check-input" type="checkbox" value="true" name="forBartender" id="forBartender">
-                    <label class="form-check-label" for="forBartender">
-                        Барман
-                    </label>
-                </div>
-            </div>
-        </div>
-        <div class="mb-5 pt-3" id="ingredients">
-            <label class="form-label fs-5">Избери съставки и какво количество от тях използва продукта.</label>
-            <button @click=${selectIngredient} class="btn btn-success fs-3">Добави съставка</button>
-        </div>
+        ${prIngInputs(undefined, categories, 'productFromIngredients')}
         <input type="submit" class="btn btn-primary fs-3 w-100" value="Създай" />
     </form>
-    <div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-fullscreen-sm-down">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="exampleModalLabel">Modal title</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    ${''/* TODO CREATE ME */}
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                    <button type="button" class="btn btn-primary">Save changes</button>
-                </div>
-            </div>
-        </div>
-    </div>
-    `;
-
-    const ingredientInput = (ingredient) => html`
-        <div class="mb-3">
-            <label for=${ingredient._id} class="form-label">${ingredient.name}</label>
-            <input type="number" min="1" class="form-control fs-4" name="ingredients" id=${ingredient._id} placeholder="пример: 50">
-        </div>
-    `;
-
-    let selectedIngredients = [];
-    function selectIngredient() {
-
-    }
-
-    const ingredientFields = () => html`
-    ${backBtn}
-
-    <form @submit=${createIngrdnt} class="m-auto mt-2 p-3 text-center fs-3">
-        <div class="mb-3">
-            <label for="productType" class="form-label">Тип на продукт</label>
-            <select @change=${selectProductType} required class="form-control fs-4" name="productType" id="productType">
-                <option disabled>Избери</option>
-                <option value="product">Продукт</option>
-                <option value="productFromIngredients">Продукт от съставки</option>
-                <option selected value="ingredient">Съставка</option>
-            </select>
-        </div>
-        <div class="mb-3">
-            <label for="name" class="form-label">Име</label>
-            <input required type="text" class="form-control fs-4" name="name" id="name" placeholder="пример: Бира">
-        </div>
-        <div class="mb-3">
-            <label for="unit" class="form-label">Мерна единица</label>
-            <select required class="form-control fs-4" name="unit" id="unit">
-                <option selected disabled>Избери</option>
-                <option value="кг">килограм</option>
-                <option value="л">литър</option>
-                <option value="бр">брой</option>
-            </select>
-        </div>
-        <div class="mb-3">
-            <label for="qty" class="form-label">Количество</label>
-            <input required type="number" min="1" class="form-control fs-4" name="qty" id="qty" placeholder="пример: 50">
-        </div>
-        <div class="mb-3">
-            <label for="buyPrice" class="form-label">Доставна цена</label>
-            <input required type="text" title="пример: 5.20, 5.0, 5, 0.5, 0.50" pattern="^\\d{1,}(\\.\\d{1,2})?$"
-                class="form-control fs-4" name="buyPrice" id="buyPrice" placeholder="пример: 1.50">
-        </div>
-        <div class="mb-3">
-            <label for="sellPrice" class="form-label">Продажна цена</label>
-            <input required type="text" title="пример: 5.20, 5.0, 5, 0.5, 0.50" pattern="^\\d{1,}(\\.\\d{1,2})?$"
-                class="form-control fs-4" name="sellPrice" id="sellPrice" placeholder="пример: 2">
-        </div>
-        <input type="submit" class="btn btn-primary fs-3 w-100" value="Създай" />
-    </form>
+    ${addIngredientModal(ingredients)}
     `;
 
     render(typeSelect(), container);
@@ -641,23 +610,36 @@ export async function createProductPage() {
 
 export async function deleteProductPage() {
     const categories = await getAllCategories();
+    const allProducts = await getAllProducts();
+    const allIngredients = await getAllIngredients();
 
     async function delProduct(e) {
         e.preventDefault();
-        // Get selected user
+
         const formData = new FormData(e.target);
-        const _id = formData.get('_id');
+        let _id,
+            selectedCategory;
+
+        // Check if selected using select or search
+        if (selectedProductFromSearch) {
+            _id = selectedProductFromSearch._id;
+            selectedCategory = selectedProductFromSearch.type;
+        } else {
+            _id = formData.get('_id');
+            selectedCategory = formData.get('categoryId');
+        }
 
         if (_id === null)
             return alert('Избери продукт!');
 
         let res;
-        if (contentType === 'product')
-            res = await deleteProduct(_id);
-        else if (contentType === 'ingredient')
+        if (selectedCategory === 'ingredients')
             res = await deleteIngredient(_id);
+        else
+            res = await deleteProduct(_id);
 
         if (res.status === 200) {// Successfully deleted product/ingredient
+            //TODO EMIT HERE 'product:deleted' and implement it everywhere
             alert(res.data);
             page('/');
         } else {
@@ -670,7 +652,19 @@ export async function deleteProductPage() {
         ${backBtn}
         <form @submit=${delProduct} class="d-flex text-center fs-3 flex-column m-auto mt-5 gap-5 p-3">
             <div class="mb-3">
-                <label for="categoryId" class="form-label">1. Избери категория</label>
+                <label for="productSearch" class="form-label">Търси</label>
+                <input @change=${selectProductFromSearch} class="form-control fs-4" type="text" list="allproducts" name="productSearch" id="productSearch">
+                <datalist id="allproducts">
+                    ${allIngredients.map(el => {
+                        return html`<option type="ingredients" unit=${el.unit} _id=${el._id} value=${el.name + ` (${el.unit})`} />`
+                    })}
+                    ${allProducts.map(el => {
+                        return html`<option type="product" _id=${el._id} value=${el.name}/>`
+                    })}
+                </datalist>
+            </div>
+            <div class="mb-3">
+                <label for="categoryId" class="form-label">или избери категория</label>
                 <select @change=${loadProducts} required type="text" class="form-control fs-4" name="categoryId" id="categoryId">
                     <option selected disabled>Избери</option>
                     <option value="ingredients">Съставки</option>
@@ -683,7 +677,7 @@ export async function deleteProductPage() {
                 </select>
             </div>
             <div class="mb-3 d-none" id="product">
-                <label for="_id" class="form-label">2. Избери продукт</label>
+                <label for="_id" class="form-label">Избери продукт</label>
                 <select required type="text" class="form-control fs-4" name="_id" id="_id">
                     <option selected disabled>Избери</option>
                 </select>
@@ -696,51 +690,55 @@ export async function deleteProductPage() {
 }
 
 export async function editProductPage() {
-    const categories = await getAllCategories();
-    const ingredients = await getAllIngredients();
-    console.log('here');
+    const categories = await getAllCategories(true);
+    const allProducts = await getAllProducts();
+    const allIngredients = await getAllIngredients();
+    addedIngredients = [];
+    selectedIngredientFromSearch = undefined;
+    selectedProductFromSearch = undefined;
 
-    async function getData(e) {
-        console.log('hi');
+    async function edtProduct(e) {
         e.preventDefault();
         // Get data from form
         const formData = new FormData(e.target);
-        const _id = formData.get('_id');
+        let _id;
         const name = formData.get('name');
         const unit = formData.get('unit');
         let qty = formData.get('qty');
         const buyPrice = +formData.get('buyPrice');
         const sellPrice = +formData.get('sellPrice');
-        let selectedIngredients;
+        const allIngredients = document.querySelectorAll('input[name="ingredients"]');
 
-        return console.log({_id, name, unit, qty, buyPrice, sellPrice});
+        if (selectedProductFromSearch)
+            _id = selectedProductFromSearch._id;
+        else
+            _id = formData.get('_id');
 
         let res;
+
         if (contentType === 'ingredient') {
             qty = +qty;
             if (unit === undefined || unit === 'Избери')
-                return alert('Избери мерна единица!')
+            return alert('Избери мерна единица!')
             res = await editIngredient(_id, name, unit, qty, buyPrice, sellPrice)
         } else {
             const categoryId = formData.get('pr-categoryId');
             const forBartender = formData.get('forBartender') || false;
+            let selectedIngredients;
 
+            
             if (categoryId === null)
-                return alert('Избери категория!');
-
+            return alert('Избери категория!');
+            
             if (qty) // simple product
                 qty = +qty;
             else { // product from ingredients
-                const allIngredients = formData.getAll('ingredients');
                 selectedIngredients = [];
-
-                // get _id of selected ingredients
-                for (let i in allIngredients) {
-                    if (allIngredients[i]) { // if ingredient has value in input
-                        // convert from ['5'] to [{ ingridient: ingredient._id, qty: qty}]
+                for (let ingredient of allIngredients) {
+                    if (ingredient.value) {
                         selectedIngredients.push({
-                            ingredient: ingredients[i]._id,
-                            qty: allIngredients[i]
+                            ingredient: ingredient.id,
+                            qty: +ingredient.value
                         });
                     }
                 }
@@ -764,54 +762,30 @@ export async function editProductPage() {
     }
 
     async function loadProductInfo(e) {
-        $('#product-info').removeClass('d-none');
+        let _id;
 
-        const _id = e.target.value;
+        if (e.target.id === 'productSearch') {
+            _id = $(`datalist option[value="${e.target.value}"]`).attr('_id');
+            contentType = $(`datalist option[value="${e.target.value}"]`).attr('type') === 'ingredients' ? 'ingredient' : 'product';
+            selectedProductFromSearch = {
+                _id
+            }
+        }
+        else
+            _id = e.target.value;
+            
+        $('#product-info').removeClass('d-none');
 
         if (_id === null || _id === 'Избери') 
             return alert('Избери категория!');
 
+
+
         if (contentType === 'ingredient') {
             const res = await getIngredientById(_id);
             const ingredient = res.data;
-
-            let unithtml;
-            if (ingredient.unit === 'кг')
-                unithtml = html`
-                <div class="mb-3">
-                    <label for="unit" class="form-label">Мерна единица</label>
-                    <select required class="form-control fs-4" name="unit" id="unit">
-                        <option disabled>Избери</option>
-                        <option selected value="кг">килограм</option>
-                        <option value="л">литър</option>
-                        <option value="бр">брой</option>
-                    </select>
-                </div>`
-            if (ingredient.unit === 'л')
-                unithtml = html`
-                <div class="mb-3">
-                    <label for="unit" class="form-label">Мерна единица</label>
-                    <select required class="form-control fs-4" name="unit" id="unit">
-                        <option disabled>Избери</option>
-                        <option value="кг">килограм</option>
-                        <option selected value="л">литър</option>
-                        <option value="бр">брой</option>
-                    </select>
-                </div>`
-            if (ingredient.unit === 'бр')
-                unithtml = html`
-                <div class="mb-3">
-                    <label for="unit" class="form-label">Мерна единица</label>
-                    <select required class="form-control fs-4" name="unit" id="unit">
-                        <option disabled>Избери</option>
-                        <option value="кг">килограм</option>
-                        <option value="л">литър</option>
-                        <option selected value="бр">брой</option>
-                    </select>
-                </div>`
             
-            render(ingredientFields(ingredient, unithtml), document.getElementById('product-info'))
-            
+            render(prIngInputs(ingredient, undefined, 'ingredient'), document.getElementById('product-info'))
         }
         else {
             const res = await getProductById(_id);
@@ -820,18 +794,30 @@ export async function editProductPage() {
 
                 // Check if product is made of ingredients or if its simple product
                 if (product.ingredients.length) {
-                    // First render all ingredients
-                    render(productsFromIngredientsFields(product, ingredients), document.getElementById('product-info'));
+                    // Render product first
+                    render(prIngInputs(product, categories, 'productFromIngredients'), document.getElementById('product-info'));
+                    
+                    // Get products ingredients ids, names and qty
+                    const res = await getProductsIngredients(_id);
 
-                    // Then fill the values for every one that this product has
-                    for (let ingredient of product.ingredients) {
-                        $(`#${ingredient.ingredient._id}`).val(ingredient.qty);
+                    if (res.status === 200) {
+                        const ingredients = res.data;
+
+                        addedIngredients = [];
+                        for (let ingredient of ingredients) 
+                            addedIngredients.push({ _id: ingredient.ingredient._id, name: ingredient.ingredient.name, qty: ingredient.qty });
+
+                        // Render ingredients
+                        render(ingredientsTemplate(), document.getElementById('selectedIngredients'));
+                    } else {
+                        console.error(res);
+                        return alert('Възникна грешка!');
                     }
                 }
                 else
-                    render(productFields(product), document.getElementById('product-info'));
+                    render(prIngInputs(product, categories, 'product'), document.getElementById('product-info'));
                 
-                $('#pr-forBartender').attr('checked', product.forBartender);
+                $('#forBartender').attr('checked', product.forBartender);
                 $('#pr-categoryId').val(product.category);
             }
         }
@@ -873,7 +859,7 @@ export async function editProductPage() {
                 return html`
                     <div class="mb-3">
                         <label for=${ingredient._id} class="form-label">${ingredient.name}</label>
-                        <input type="number" min="1" class="form-control fs-4" name="ingredients" id=${ingredient._id} placeholder="пример: 50">
+                        <input type="number" class="form-control fs-4" name="ingredients" id=${ingredient._id} placeholder="пример: 50">
                     </div>
                 `;
             })}
@@ -892,93 +878,41 @@ export async function editProductPage() {
         </div>
     `;
 
-    const productFields = (product) => html`
-        <div class="mb-3">
-            <label for="pr-name" class="form-label">Име</label>
-            <input required type="text" class="form-control fs-4" name="name" id="pr-name" value=${product.name} placeholder="пример: Бира">
-        </div>
-
-        <div class="mb-3">
-            <label for="pr-qty" class="form-label">Количество</label>
-            <input required type="number" min="1" class="form-control fs-4" name="qty" id="pr-qty" value=${product.qty} placeholder="пример: 50">
-        </div>
-
-        <div class="mb-3">
-            <label for="pr-buyPrice" class="form-label">Доставна цена</label>
-            <input required type="text" title="пример: 5.20, 5.0, 5, 0.5, 0.50" value=${product.buyPrice} pattern="^\\d{1,}(\\.\\d{1,2})?$" class="form-control fs-4" name="buyPrice" id="pr-buyPrice" placeholder="пример: 1.50">
-        </div>
-
-        <div class="mb-3">
-            <label for="pr-sellPrice" class="form-label">Продажна цена</label>
-            <input required type="text" title="пример: 5.20, 5.0, 5, 0.5, 0.50" value=${product.sellPrice} pattern="^\\d{1,}(\\.\\d{1,2})?$" class="form-control fs-4" name="sellPrice" id="pr-sellPrice" placeholder="пример: 2">
-        </div>
-
-        <div class="mb-3">
-            <label for="pr-categoryId" class="form-label">Категория</label>
-            <select required type="text" class="form-control fs-4" name="pr-categoryId" id="pr-categoryId">
-                <option selected disabled>Избери</option>
-                ${categories.map((category) => html`<option value=${category._id}>${category.name}</option>`)}
-            </select>
-        </div>
-
-        <div class="mb-3">
-            <label class="form-label">Да се появява на монитора на</label>
-            <div class="form-check">
-                <div class="d-inline-block">
-                    <input class="form-check-input" type="checkbox" value="true" name="forBartender" id="pr-forBartender">
-                    <label class="form-check-label" for="forBartender">
-                        Барман
-                    </label>
-                </div>
-            </div>
-        </div>
-    `;
-
-    const ingredientFields = (ingredient, unithtml) => html`
-        <div class="mb-3">
-            <label for="pr-name" class="form-label">Име</label>
-            <input required type="text" class="form-control fs-4" name="name" id="pr-name" value=${ingredient.name} placeholder="пример: Бира">
-        </div>
-
-        ${unithtml}
-
-        <div class="mb-3">
-            <label for="pr-qty" class="form-label">Количество</label>
-            <input required type="number" min="1" class="form-control fs-4" name="qty" id="pr-qty" value=${ingredient.qty} placeholder="пример: 50">
-        </div>
-
-        <div class="mb-3">
-            <label for="pr-buyPrice" class="form-label">Доставна цена</label>
-            <input required type="text" title="пример: 5.20, 5.0, 5, 0.5, 0.50" value=${ingredient.buyPrice} pattern="^\\d{1,}(\\.\\d{1,2})?$" class="form-control fs-4" name="buyPrice" id="pr-buyPrice" placeholder="пример: 1.50">
-        </div>
-
-        <div class="mb-3">
-            <label for="pr-sellPrice" class="form-label">Продажна цена</label>
-            <input required type="text" title="пример: 5.20, 5.0, 5, 0.5, 0.50" value=${ingredient.sellPrice} pattern="^\\d{1,}(\\.\\d{1,2})?$" class="form-control fs-4" name="sellPrice" id="pr-sellPrice" placeholder="пример: 2">
-        </div>
-    `;
-
     const formTemplate = () => html`
     ${backBtn}
-    <form @submit=${getData} class="m-auto p-3 text-center fs-3">
+    <form @submit=${edtProduct} class="m-auto p-3 text-center fs-3">
         <div class="mb-3">
-            <label for="categoryId" class="form-label">1. Избери категория</label>
-            <select @change=${loadProducts} required type="text" class="form-control fs-4" name="categoryId" id="categoryId">
+                <label for="productSearch" class="form-label">Търси</label>
+                <input @change=${loadProductInfo} class="form-control fs-4" type="text" list="allproducts" name="productSearch" id="productSearch">
+                <datalist id="allproducts">
+                    ${allIngredients.map(el => {
+                        return html`<option type="ingredients" _id=${el._id} value=${el.name + ` (${el.unit})`} />`
+                    })}
+                    ${allProducts.map(el => {
+                        return html`<option type="product" _id=${el._id} value=${el.name}/>`
+                    })}
+                </datalist>
+        </div>
+
+        <div class="mb-3">
+            <label for="categoryId" class="form-label">или избери категория</label>
+            <select @change=${(e) => loadProducts(e, true)} required type="text" class="form-control fs-4" name="categoryId" id="categoryId">
                 <option selected disabled>Избери</option>
                 <option value="ingredients">Съставки</option>
                 ${categories.map((category) => html`<option value=${category._id}>${category.name}</option>`)}
             </select>
         </div>
+
         <div class="mb-3 d-none" id="product">
-            <label for="_id" class="form-label">2. Избери продукт</label>
+            <label for="_id" class="form-label">Избери продукт</label>
             <select @change=${loadProductInfo} required type="text" class="form-control fs-4" name="_id" id="_id">
                 <option selected disabled>Избери</option>
             </select>
         </div>
-        <div id="product-info" class="mb-3 d-none">
-        </div>
-        <input type="submit">
-        <!-- <input type="submit" class="btn btn-primary fs-3 w-100" value="Промени"/> -->
+
+        <div id="product-info" class="mb-3 d-none"></div>
+        ${addIngredientModal(allIngredients)}
+        <input type="submit" class="btn btn-primary mt-3 fs-3 w-100" value="Промени"/>
     </form>
     `;
 
@@ -986,7 +920,8 @@ export async function editProductPage() {
 }
 
 export async function sortProductsPage() {
-    const categories = await getAllCategories();
+    const categories = await getAllCategories(true);
+
     async function saveOrder() {
         const sortedProducts = sortable.toArray(); // returns array with the 'data-id' attr for sorted categories
 
@@ -1011,12 +946,12 @@ export async function sortProductsPage() {
         if (_id === null || _id === 'Избери')
             return alert('Избери категория!');
 
-        const res = await getCategoryById(_id);
-        const category = res.data;
+        const res = await getProductsFromCategory(_id);
+        const products = res.data;
 
         
         
-        render(productsTemplate(category.products), document.getElementById('products'));// render all products in sorting div
+        render(productsTemplate(products), document.getElementById('products'));// render all products in sorting div
     }
 
     const productsTemplate = (products) => html`
@@ -1027,8 +962,8 @@ export async function sortProductsPage() {
     const reorderDiv = () => html`
         ${backBtn}
 
-        <div class="mb-3">
-            <label for="categoryId" class="form-label">1. Избери категория</label>
+        <div class="mt-3 fs-4 text-center">
+            <label for="categoryId" class="form-label">Избери категория</label>
             <select @change=${getProducts} required type="text" class="form-control fs-4" name="categoryId" id="categoryId">
                 <option selected disabled>Избери</option>
                 ${categories.map((category) => {
@@ -1040,11 +975,11 @@ export async function sortProductsPage() {
             </select>
         </div>
 
-        <div id="listAndBtn" class="p-3 fs-3 text-center">
+        <div id="listAndBtn" class="mt-3 p-3 fs-3 text-center">
             <ul id="products" style="width: 80%" class="list-group fs-4 text-center mt-4">
                 
             </ul>
-            <button @click=${saveOrder} class="btn btn-primary mt-3 w-100 fs-3">Запази</button>
+            <button @click=${saveOrder} class="btn btn-primary mt-5 w-100 fs-3">Запази</button>
         </div>
     `;
 
@@ -1328,7 +1263,7 @@ export async function deleteCategoryPage() {
 }
 
 export async function editCategoryPage() {
-    const categories = await getAllCategories();
+    const categories = await getAllCategories(true);
     async function edCategory(e) {
         e.preventDefault();
         // Get selected category
@@ -1416,7 +1351,7 @@ export async function sortCategoriesPage() {
 }
 
 export async function inventoryPage() {
-    const categories = await getAllCategories();
+    const categories = await getAllCategories(true);
     const products = await getAllProductsWithoutIngredients();
     const ingredients = await getAllIngredients();
     const productsAndIngredients = ingredients.concat(products);
@@ -1535,72 +1470,143 @@ export async function inventoryPage() {
 }
 
 export async function reportsPage() {
+    //TODO REWORK ME
     let allReports = await getAllReports();
+
+    // Split reports by date
+    let splitReports = {};
+    for (let report of allReports) {
+        // Get date for report
+        let date = new Date(report.when);
+
+        // Convert to DD-MM-YYYY
+        date = `${date.getDate()}-${date.getMonth() + 1}-${date.getFullYear()}`;
+
+        // Check if date already created in splitReports
+        if (!splitReports.hasOwnProperty(date)) {
+            splitReports[date] = [];
+        }
+
+        // Add report to splitReports
+        splitReports[date].push(report);
+    }
+
+    // Get date of -1 day
+    let date = new Date();
+    date.setDate(date.getDate() - 1);
+    console.log(date)
+
     let total = 0,
         income = 0,
-        remaining = 0,
         scrapped = 0,
         consumed = 0;
 
-    const reportsRows = (reports) => html`
-        ${reports.map((report) => {
-            const date = new Date(report.when);
-            const dateString = `${date.getDate() > 9 ? date.getDate() : '0' + date.getDate()}.${(date.getMonth() + 1) > 9 ? date.getMonth() + 1 : '0' + (date.getMonth() + 1)}.${date.getFullYear()}`;
-            const timeString = `${date.getHours() > 9 ? date.getHours() : '0' + date.getHours()}:${date.getMinutes() > 9 ? date.getMinutes() : '0' + date.getMinutes()}`;
-            income += report.income;
-            remaining += report.remaining;
-            consumed += report.consumed;
-            scrapped += report.scrapped;            
-            total += report.income + report.remaining - report.consumed - report.scrapped;        
+    const reportTemplate = (report,dateString, timeString) => html`
+        <tr>
+            <td scope="row">${dateString}</td>
+            <td scope="row">${timeString}</td>
+            <td scope="row" class="text-capitalize">${report.user.name}</td>
+            <td scope="row">${fixPrice(report.income)}</td>
+            <td scope="row">${fixPrice(report.scrapped)}</td>
+            <td scope="row">${fixPrice(report.consumed)}</td>
+            <td scope="row">${fixPrice(report.total)}</td>
+        </tr>
+    `;
 
-            return html`
-                <tr>
-                    <td scope="row">${dateString}</td>
-                    <td scope="row">${timeString}</td>
-                    <td scope="row" class="text-capitalize">${report.user.name}</td>
-                    <td scope="row">${fixPrice(report.income)}</td>
-                    <td scope="row">${fixPrice(report.remaining)}</td>
-                    <td scope="row">${fixPrice(report.scrapped)}</td>
-                    <td scope="row">${fixPrice(report.consumed)}</td>
-                    <td scope="row">${fixPrice(report.total)}</td>
-                </tr>`
+    const reportsRows = (date) => html`
+        ${Object.values(date).map((dailyReports) => {
+            let combinedDailyReports = [];
+            let todayTotal = 0,
+                todayIncome = 0,
+                todayScrapped = 0,
+                todayConsumed = 0;
+
+                
+            for (let report of dailyReports) {
+                const date = new Date(report.when);
+                const dateString = `${date.getDate() > 9 ? date.getDate() : '0' + date.getDate()}.${(date.getMonth() + 1) > 9 ? date.getMonth() + 1 : '0' + (date.getMonth() + 1)}.${date.getFullYear()}`;
+                const timeString = `${date.getHours() > 9 ? date.getHours() : '0' + date.getHours()}:${date.getMinutes() > 9 ? date.getMinutes() : '0' + date.getMinutes()}`;
+                
+                todayIncome += report.income;
+                todayConsumed += report.consumed;
+                todayScrapped += report.scrapped;            
+                todayTotal += report.income - report.consumed - report.scrapped; 
+    
+                combinedDailyReports.push(reportTemplate(report, dateString, timeString));
+            }
+
+            // Add the total for the day row
+            combinedDailyReports.push(html`
+                <tr style="border-bottom: 3px solid white" class="table-primary fw-bold">
+                    <td scope="row" colspan="3">Общо:</td>
+                    <td scope="row">${fixPrice(todayIncome)}</td>
+                    <td scope="row">${fixPrice(todayScrapped)}</td>
+                    <td scope="row">${fixPrice(todayConsumed)}</td>
+                    <td scope="row">${fixPrice(todayTotal)}</td>
+                </tr>
+            `);
+
+            total += todayTotal;
+            income += todayIncome;
+            consumed += todayConsumed;
+            scrapped += todayScrapped;
+
+            return combinedDailyReports;
         })}
-
-        <tr class="table-primary fw-bold">
-            <td scope="row" colspan="3">Общо:</td>
-            <td scope="row">${fixPrice(income)}</td>
-            <td scope="row">${fixPrice(remaining)}</td>
-            <td scope="row">${fixPrice(scrapped)}</td>
-            <td scope="row">${fixPrice(consumed)}</td>
-            <td scope="row">${fixPrice(total)}</td>
+    `;
+    
+    const totalRowsH = () => html`
+        <tr class="table-success">
+            <td>Приход</td>
+            <td>${fixPrice(income)}</td>
+        </tr>
+        <tr class="table-danger">
+            <td>Брак</td>
+            <td>${fixPrice(scrapped)}</td>
+        </tr>
+        <tr class="table-secondary">
+            <td>Консумация</td>
+            <td>${fixPrice(consumed)}</td>
+        </tr>
+        <tr class="table-primary">
+            <td>Общ приход</td>
+            <td>${fixPrice(total)}</td>
         </tr>
     `;
     
     const reportsTemplate = () => html`
         ${backBtn}
-    
-        <table class="mt-3 table table-striped table-dark table-hover text-center">
+
+        <table id="totalAll" class="fw-bold mt-4 table fs-b table-dark text-center">
+            <thead>
+                <tr>
+                    <th scope="col" colspan="2">Общо за избран период</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+
+        <table id="selectedReports" class="mt-4 table table-striped table-dark table-hover text-center">
             <thead>
                 <tr>
                     <th scope="col">Дата</th>
                     <th scope="col">Час</th>
                     <th scope="col">Служител</th>
                     <th scope="col">Продажби</th>
-                    <th scope="col">Неплатени</th>
                     <th scope="col">Брак</th>
                     <th scope="col">Консумация</th>
                     <th scope="col">Общ приход</th>
                 </tr>
             </thead>
-            <tbody>
-            </tbody>
+            <tbody></tbody>
         </table>
     `;
 
     render(reportsTemplate(), container);
     
     // Render all scrapped products
-    render(reportsRows(allReports), document.querySelector('tbody'));
+    render(reportsRows(splitReports), document.querySelector('#selectedReports tbody'));
+    render(totalRowsH(), document.querySelector('#totalAll tbody'));
 }
 
 export async function scrappedPage() {
@@ -1614,7 +1620,6 @@ export async function scrappedPage() {
         if (res.status === 200) {
             // Rerender histories
             allScrapped = res.data;
-            console.log(allScrapped);
             render(historiesRows(allScrapped), document.querySelector('tbody'));
         } else {
             alert('Възникна грешка!');
@@ -1678,7 +1683,6 @@ export async function scrappedPage() {
 
 export async function expireProductsPage() {
     const products = await getAllRestockedProducts();
-    console.log(products);
     
     const expireTemplate = (products) => html`
         ${backBtn}
@@ -1743,8 +1747,8 @@ export function showAdminDashboard() {
             <div class="text-center mt-4">
                 <h1>Стока</h1>
                 <div class="d-inline-flex flex-row flex-wrap gap-3 justify-content-center">
-                    <button @click=${() => page('/admin/product/addQty') } class="btn btn-primary fs-4">Зареди</button>
-                    <button @click=${() => page('/admin/product/removeQty')} class="btn btn-danger fs-4">Бракувай</button>
+                    <button @click=${() => page('/admin/product/restock') } class="btn btn-primary fs-4">Зареди</button>
+                    <button @click=${() => page('/admin/product/scrap')} class="btn btn-danger fs-4">Бракувай</button>
                     <div class="d-inline-flex flex-row flex-wrap gap-3 justify-content-center">
                         <button @click=${() => page('/admin/product/create') } class="btn btn-success fs-4">Създай</button>
                         <button @click=${() => page('/admin/product/delete') } class="btn btn-danger fs-4">Изтрий</button>

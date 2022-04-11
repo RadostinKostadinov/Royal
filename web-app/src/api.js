@@ -156,8 +156,8 @@ export async function sellProducts(billToPay) {
     });
 }
 
-export async function changeQtyIngredient(_id, qty, action, expireDate) {
-    return await axios.post('/changeQtyIngredient', {
+export async function scrapRestockIngredient(_id, qty, action, expireDate) {
+    return await axios.post('/scrapRestockIngredient', {
         _id,
         qty,
         action,
@@ -269,8 +269,8 @@ export async function getBillById(_id) {
     });
 }
 
-export async function changeQtyProduct(_id, qty, action, expireDate) {
-    return await axios.post('/changeQtyProduct', {
+export async function scrapRestockProduct(_id, qty, action, expireDate) {
+    return await axios.post('/scrapRestockProduct', {
         _id,
         qty,
         action,
@@ -325,8 +325,16 @@ export async function sortProducts(products) {
     });
 }
 
-export async function getCategoryById(_id) {
-    return await axios.post('/getCategoryById', {
+export async function getProductsFromCategory(_id) {
+    return await axios.post('/getProductsFromCategory', {
+        _id
+    }).catch((err) => {
+        return err.response;
+    });
+}
+
+export async function getProductsIngredients(_id) {
+    return await axios.post('/getProductsIngredients', {
         _id
     }).catch((err) => {
         return err.response;
@@ -481,7 +489,15 @@ export async function generateBills(_id, numberOfBills) {
     });
 }
 
-export function logout() {
+export async function logout() {
+    // Update user's report before logging out
+    const res = await axios.get('/updateReport');
+
+    if (res.status !== 200) {
+        console.error(res);
+        alert('Възникна грешка!')
+    }
+
     user = undefined;
     sessionStorage.clear();
     closeFullscreen();

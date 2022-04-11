@@ -140,6 +140,7 @@ export function billsRoutes(app, auth) {
                             prodRef.qty -= product.qty;
                         } else {
                             for (let ingredient of prodRef.ingredients) {
+                                console.log(ingredient)
                                 const ingredientRef = await Ingredient.findById(ingredient.ingredient);
                                 ingredientRef.qty -= ingredient.qty;
                                 ingredientRef.save();
