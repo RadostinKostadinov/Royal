@@ -8,18 +8,7 @@ import { container } from "../app";
 import { html, render } from 'lit/html.js';
 import $ from "jquery";
 import 'bootstrap-icons/font/bootstrap-icons.css';
-import { socket, getAllPaidBills, getAddonsForCategory, getLastPaidBillByTableId, addProductToBill, generateBills, getAllCategories, getCategoryById, logout, getBillById, removeOneFromBill, sellProducts, scrapProducts, addProductsToHistory, getTables, getTableTotalById, createNewOrder, createReport } from '../api';
-
-export function stopAllSockets() {
-    socket.off('order:new');
-    socket.off('billChanged');
-    socket.off('pay-scrap-refresh');
-    socket.off('addToScrap/returnToBill');
-    socket.off('addToPay/returnToBill');
-    socket.off('wholeBillPaid');
-    socket.off('entered-payPartOfBillPage');
-    socket.off('entered-scrapProductsPage');
-}
+import { fixPrice, stopAllSockets, socket, getAllPaidBills, getAddonsForCategory, getLastPaidBillByTableId, addProductToBill, generateBills, getAllCategories, getCategoryById, logout, getBillById, removeOneFromBill, sellProducts, scrapProducts, addProductsToHistory, getTables, getTableTotalById, createNewOrder, getTodaysReport } from '../api';
 
 // Dashboard contains all the code for rendering the tables view (grid with tables)
 export async function waiterDashboardPage() {
@@ -103,8 +92,8 @@ export async function waiterDashboardPage() {
         return `${hours}:${minutes}`
     }
 
-    async function crtReport() {
-        const res = await createReport();
+    async function getTdsReport() {
+        const res = await getTodaysReport();
 
         if (res.status === 200) {
             const report = res.data;
@@ -121,23 +110,23 @@ export async function waiterDashboardPage() {
             <tbody>
                 <tr class="table-success">
                     <td>Продажби</td>
-                    <td>${report.income.toFixed(2) + ' лв.'}</td>
+                    <td>${fixPrice(report.income) + ' лв.'}</td>
                 </tr>
                 <tr class="table-warning">
                     <td>Неплатени</td>
-                    <td>${report.remaining.toFixed(2) +' лв.'}</td>
+                    <td>${fixPrice(report.remaining) + ' лв.'}</td>
                 </tr>
                 <tr class="table-danger">
                     <td>Брак</td>
-                    <td>${report.scrapped.toFixed(2) +' лв.'}</td>
+                    <td>${fixPrice(report.scrapped) + ' лв.'}</td>
                 </tr>
                 <tr class="table-secondary">
                     <td>Консумация</td>
-                    <td>${report.consumed.toFixed(2) +' лв.'}</td>
+                    <td>${fixPrice(report.consumed) + ' лв.'}</td>
                 </tr>
                 <tr class="table-primary">
                     <td>Общ приход</td>
-                    <td>${report.total.toFixed(2) +' лв.'}</td>
+                    <td>${fixPrice(report.total) + ' лв.'}</td>
                 </tr>
             </tbody>
         </table>
@@ -175,7 +164,7 @@ export async function waiterDashboardPage() {
                     </div>
                     <div class="d-flex flex-column text-center gap-3 w-100">
                         <!-- <button>Меню</button> -->
-                        <button @click=${crtReport} data-bs-toggle="modal" data-bs-target="#reportModal">Отчет</button>
+                        <button @click=${getTdsReport} data-bs-toggle="modal" data-bs-target="#reportModal">Отчет</button>
                         <button @click=${logout}>Изход</button>
                     </div>
                 </div>
@@ -301,7 +290,7 @@ export async function tableControlsPage(ctx) {
         
         if (Object.keys(newOrderProducts).length) {
             await createNewOrder(Object.values(newOrderProducts), ctx.params.tableId);
-            socket.emit('order:new'); // notify bartender of new order
+            socket.emit('order:change'); // notify bartender of new order
             newOrderProducts = {}; // Reset
         }
     }

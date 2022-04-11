@@ -154,12 +154,13 @@ async function auth(ctx, next) {
 }
 
 // If theres no activity for X minutes, show screensaver
-const screensaverTime = 5 * 60 * 1000; // 5 minutes
+const screensaverTime = 10 * 60 * 1000; // 10 minutes
 const blackscreenTime = 30 * 60 * 1000; // 30 minutes
 var screensaverTimeout = setTimeout(inActive, screensaverTime);
 var blackscreenTimeout = setTimeout(showBlackScreen, blackscreenTime);
 
-function resetActive() {
+function resetActive(e) {
+    e.preventDefault();
     // Hide screensaver
     $('#screensaver').hide();
     $('#blackscreen').hide();
@@ -181,5 +182,6 @@ function showBlackScreen() {
     $('#blackscreen').show();
 }
 
-$(document).bind('mousemove', function () { resetActive() });
-$(document).bind('click', function () { resetActive() });
+$(document).bind('mousemove', resetActive);
+$(document).bind('click', resetActive);
+$(document).bind('touch', resetActive);

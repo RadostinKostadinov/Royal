@@ -4,7 +4,7 @@ import { html, render } from 'lit/html.js';
 import $ from "jquery";
 import Sortable from 'sortablejs';
 import '../css/admin/admin.css';
-import { markHistoryAsScrapped, sortCategories, getProductById, getCategoryById, getAllUsers, editCategory, deleteCategory, deleteUser, createUser, editUser, createCategory, changeQtyProduct, createProduct, deleteProduct, editProduct, getAllCategories, getAllProducts, sortProducts, logout, getAllIngredients, createIngredient, deleteIngredient, getIngredientById, editIngredient, getAllProductsWithoutIngredients, getProductsWithoutIngredientsFromCategory, changeQtyIngredient, getAllScrapped, getAllRestockedProducts, getAllReports } from '../api';
+import { fixPrice, markHistoryAsScrapped, sortCategories, getProductById, getCategoryById, getAllUsers, editCategory, deleteCategory, deleteUser, createUser, editUser, createCategory, changeQtyProduct, createProduct, deleteProduct, editProduct, getAllCategories, getAllProducts, sortProducts, logout, getAllIngredients, createIngredient, deleteIngredient, getIngredientById, editIngredient, getAllProductsWithoutIngredients, getProductsWithoutIngredientsFromCategory, changeQtyIngredient, getAllScrapped, getAllRestockedProducts, getAllReports } from '../api';
 
 const backBtn = html`<button @click=${()=> page('/admin')} class="btn btn-secondary fs-3 mt-2 ms-2">Назад</button>`;
 let contentType; //  used in loadProducts to determine if we are loading/deleting a product or ingredient
@@ -698,8 +698,10 @@ export async function deleteProductPage() {
 export async function editProductPage() {
     const categories = await getAllCategories();
     const ingredients = await getAllIngredients();
+    console.log('here');
 
     async function getData(e) {
+        console.log('hi');
         e.preventDefault();
         // Get data from form
         const formData = new FormData(e.target);
@@ -710,6 +712,8 @@ export async function editProductPage() {
         const buyPrice = +formData.get('buyPrice');
         const sellPrice = +formData.get('sellPrice');
         let selectedIngredients;
+
+        return console.log({_id, name, unit, qty, buyPrice, sellPrice});
 
         let res;
         if (contentType === 'ingredient') {
@@ -886,8 +890,6 @@ export async function editProductPage() {
                 </div>
             </div>
         </div>
-
-        <input type="submit" class="btn btn-primary fs-3 w-100" value="Промени"/>
     `;
 
     const productFields = (product) => html`
@@ -930,8 +932,6 @@ export async function editProductPage() {
                 </div>
             </div>
         </div>
-
-        <input type="submit" class="btn btn-primary fs-3 w-100" value="Промени"/>
     `;
 
     const ingredientFields = (ingredient, unithtml) => html`
@@ -956,8 +956,6 @@ export async function editProductPage() {
             <label for="pr-sellPrice" class="form-label">Продажна цена</label>
             <input required type="text" title="пример: 5.20, 5.0, 5, 0.5, 0.50" value=${ingredient.sellPrice} pattern="^\\d{1,}(\\.\\d{1,2})?$" class="form-control fs-4" name="sellPrice" id="pr-sellPrice" placeholder="пример: 2">
         </div>
-
-        <input type="submit" class="btn btn-primary fs-3 w-100" value="Промени"/>
     `;
 
     const formTemplate = () => html`
@@ -979,8 +977,10 @@ export async function editProductPage() {
         </div>
         <div id="product-info" class="mb-3 d-none">
         </div>
+        <input type="submit">
+        <!-- <input type="submit" class="btn btn-primary fs-3 w-100" value="Промени"/> -->
     </form>
-`;
+    `;
 
     render(formTemplate(), container);
 }
@@ -1424,14 +1424,11 @@ export async function inventoryPage() {
     let totals = {
         buyPrice: 0,
         sellPrice: 0,
-        difference: 0
+        difference: 0,
     };
 
     const productRows = (products) => html`
         ${products.map((product) => {
-            totals.buyPrice += product.qty * product.buyPrice;
-            totals.sellPrice += product.qty * product.sellPrice;
-            totals.difference += product.qty * (product.sellPrice - product.buyPrice);
             let qty = product.qty,
                 name = product.name,
                 unit = 'бр';
@@ -1441,6 +1438,16 @@ export async function inventoryPage() {
                 unit = product.unit;
             }
 
+            
+            let buyTotal = qty * product.buyPrice,
+            sellTotal = qty * product.sellPrice,
+            difference = product.sellPrice - product.buyPrice,
+            differenceTotal = qty * difference;
+
+            totals.buyPrice += buyTotal;
+            totals.sellPrice += sellTotal;
+            totals.difference += differenceTotal;
+
             qty += ` ${unit}.`
             return html`
                 <tr class="${qty <= 0 ? 'table-danger' : ''}">
@@ -1448,16 +1455,21 @@ export async function inventoryPage() {
                     <td scope="row">${name}</td>
                     <td>${qty}</td>
                     <td>${product.buyPrice}</td>
+                    <td>${fixPrice(buyTotal)}</td>
                     <td>${product.sellPrice}</td>
-                    <td>${(product.sellPrice - product.buyPrice).toFixed(2) }</td>
+                    <td>${fixPrice(sellTotal)}</td>
+                    <td>${fixPrice(difference)}</td>
+                    <td>${fixPrice(differenceTotal)}</td>
                 </tr>
             `
         })}
         <tr class="table-primary">
-            <th colspan="3" class="text-center">Общо: </th>
-            <th>${totals.buyPrice.toFixed(2)}</th>
-            <th>${totals.sellPrice.toFixed(2)}</th>
-            <th>${totals.difference.toFixed(2)}</th>
+            <th colspan="4" class="text-center">Общо: </th>
+            <th>${fixPrice(totals.buyPrice)}</th>
+            <td></td>
+            <th>${fixPrice(totals.sellPrice)}</th>
+            <td></td>
+            <th>${fixPrice(totals.difference)}</th>
         </tr>
     `;
 
@@ -1504,8 +1516,11 @@ export async function inventoryPage() {
                     <th scope="col">Артикул</th>
                     <th scope="col">Количество</th>
                     <th scope="col">Доставна цена</th>
+                    <th scope="col">Доставна общо</th>
                     <th scope="col">Продажна цена</th>
-                    <th scope="col">Цена разлика</th>
+                    <th scope="col">Продажна общо</th>
+                    <th scope="col">Разлика цена</th>
+                    <th scope="col">Разлика общо</th>
                 </tr>
             </thead>
             <tbody>
@@ -1520,8 +1535,7 @@ export async function inventoryPage() {
 }
 
 export async function reportsPage() {
-    let allScrapped = await getAllReports();
-    let allProducts = [];
+    let allReports = await getAllReports();
     let total = 0,
         income = 0,
         remaining = 0,
@@ -1537,29 +1551,28 @@ export async function reportsPage() {
             remaining += report.remaining;
             consumed += report.consumed;
             scrapped += report.scrapped;            
-            total += report.income + report.remaining - report.consumed - report.scrapped;
-        
+            total += report.income + report.remaining - report.consumed - report.scrapped;        
 
             return html`
                 <tr>
                     <td scope="row">${dateString}</td>
                     <td scope="row">${timeString}</td>
                     <td scope="row" class="text-capitalize">${report.user.name}</td>
-                    <td scope="row">${report.income}</td>
-                    <td scope="row">${report.remaining}</td>
-                    <td scope="row">${report.scrapped}</td>
-                    <td scope="row">${report.consumed}</td>
-                    <td scope="row">${report.total}</td>
+                    <td scope="row">${fixPrice(report.income)}</td>
+                    <td scope="row">${fixPrice(report.remaining)}</td>
+                    <td scope="row">${fixPrice(report.scrapped)}</td>
+                    <td scope="row">${fixPrice(report.consumed)}</td>
+                    <td scope="row">${fixPrice(report.total)}</td>
                 </tr>`
         })}
 
         <tr class="table-primary fw-bold">
             <td scope="row" colspan="3">Общо:</td>
-            <td scope="row">${income.toFixed(2)}</td>
-            <td scope="row">${remaining.toFixed(2)}</td>
-            <td scope="row">${scrapped.toFixed(2)}</td>
-            <td scope="row">${consumed.toFixed(2)}</td>
-            <td scope="row">${total.toFixed(2)}</td>
+            <td scope="row">${fixPrice(income)}</td>
+            <td scope="row">${fixPrice(remaining)}</td>
+            <td scope="row">${fixPrice(scrapped)}</td>
+            <td scope="row">${fixPrice(consumed)}</td>
+            <td scope="row">${fixPrice(total)}</td>
         </tr>
     `;
     
@@ -1587,7 +1600,7 @@ export async function reportsPage() {
     render(reportsTemplate(), container);
     
     // Render all scrapped products
-    render(reportsRows(allScrapped), document.querySelector('tbody'));
+    render(reportsRows(allReports), document.querySelector('tbody'));
 }
 
 export async function scrappedPage() {

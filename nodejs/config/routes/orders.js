@@ -2,6 +2,16 @@ import { Product } from "../../model/product.js";
 import { Table } from "../../model/table.js";
 import { Order } from "../../model/order.js";
 
+export async function clearAllOrders() {
+    try {
+        await Order.deleteMany();
+        return { status: 200 };
+    } catch (err) {
+        console.error(err);
+        return { status: 500, message: 'Възникна грешка!', err };
+    }
+}
+
 export function ordersRoutes(app, auth) {
     app.post('/completeOrder', auth, async (req, res) => {
         try {

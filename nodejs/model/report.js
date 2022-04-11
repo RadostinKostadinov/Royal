@@ -18,10 +18,6 @@ const reportSchema = new Schema({
         type: Number,
         required: true
     },
-    remaining: { // Остатък (неплатени продукти, останали по масите)
-        type: Number,
-        required: true
-    },
     consumed: { // Консумация (продуктите които е консумирал служителя)
         type: Number,
         default: 0,
@@ -32,13 +28,18 @@ const reportSchema = new Schema({
         default: 0,
         required: true
     },
-    total: { // = Общ приход - консумация - брак - остатък
+    total: { // = Общ приход - консумация - брак
         type: Number,
         required: true
     },
     when: {
         type: Date,
         default: Date.now
+    },
+    finished: { // Дали служителя е натиснал "Приключи"
+        type: Boolean,
+        default: false,
+        required: true
     }
 });
 

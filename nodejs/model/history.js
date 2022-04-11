@@ -83,7 +83,7 @@ const productHistorySchema = new Schema({
         type: Number,
         immutable: true
     },
-    total: { // тотал на сметката (ако е плащане)
+    total: { // Обща сума при плащане, бракуване, консумиране
         type: Number,
         immutable: true
     },

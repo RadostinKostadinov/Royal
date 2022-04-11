@@ -1,12 +1,18 @@
-import { getAllOrders } from "./routes/orders.js";
+import { clearAllOrders, getAllOrders } from "./routes/orders.js";
 
 function socketsInitialize(io) {
     io.on('connection', (socket) => {
 
-        socket.on('order:new', async () => {
+        socket.on('order:clearAll', async () => {
+            const res = await clearAllOrders();
+            // Emit to everyone including the sender
+            io.emit('order:clearAll', res);
+        })
+
+        socket.on('order:change', async () => {
             const { orders, allProducts } = await getAllOrders();
 
-            socket.broadcast.emit('order:new', { orders, allProducts });
+            socket.broadcast.emit('order:change', { orders, allProducts });
         });
 
         socket.on('pay-scrap-refresh', ({ bill }) => {

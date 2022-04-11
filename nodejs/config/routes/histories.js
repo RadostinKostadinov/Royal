@@ -7,7 +7,15 @@ export function historiesRoutes(app, auth) {
 
     app.get('/getAllPaidBills', auth, async (req, res) => {
         try {
-            const allPaid = await ProductHistory.find({ action: 'paid' }).sort({ when: -1 }).populate('table');
+            let today = new Date();
+            today.setHours(0, 0, 0, 0);
+
+            const allPaid = await ProductHistory.find({
+                action: 'paid',
+                when: {
+                    $gte: today
+                }
+            }).sort({ when: -1 }).populate('table');
             res.json(allPaid);
         } catch (err) {
             console.error(err);

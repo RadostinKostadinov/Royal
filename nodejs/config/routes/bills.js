@@ -3,6 +3,7 @@ import { ProductHistory } from "../../model/history.js";
 import { Ingredient } from "../../model/ingredient.js";
 import { Product } from "../../model/product.js";
 import { Table } from "../../model/table.js";
+import { updateReport } from "./reports.js";
 
 export function billsRoutes(app, auth) {
     app.post('/getLastPaidBillByTableId', auth, async (req, res) => {
@@ -88,7 +89,7 @@ export function billsRoutes(app, auth) {
             res.json(originalBill);
 
             // Add action to history
-            ProductHistory.create({
+            await ProductHistory.create({
                 user: {
                     name: req.user.name,
                     userRef: req.user._id
@@ -100,6 +101,8 @@ export function billsRoutes(app, auth) {
                 products: historyProducts,
                 reviewed: false
             });
+
+            await updateReport(req, res);
         } catch (err) {
             console.error(err);
             res.status(500).send(err);
@@ -169,7 +172,7 @@ export function billsRoutes(app, auth) {
             res.json(originalBill);
 
             // Add action to history
-            ProductHistory.create({
+            await ProductHistory.create({
                 user: {
                     name: req.user.name,
                     userRef: req.user._id
@@ -180,6 +183,8 @@ export function billsRoutes(app, auth) {
                 total: historyTotal,
                 products: historyProducts
             });
+
+            await updateReport(req, res);
         } catch (err) {
             console.error(err);
             res.status(500).send(err);
@@ -262,7 +267,7 @@ export function billsRoutes(app, auth) {
 
             // Add actions to history
             for (let [action, products] of Object.entries(allActions)) {
-                ProductHistory.create({
+                await ProductHistory.create({
                     user: {
                         name: req.user.name,
                         userRef: req.user._id
@@ -273,13 +278,14 @@ export function billsRoutes(app, auth) {
                     products: products // all products that were added
                 });
             }
+
+            await updateReport(req, res);
         } catch (err) {
             console.error(err);
             res.status(500).send(err);
         }
     });
 
-    // Add product to bill (NEW: But dont save in history!)
     app.post('/addProductToBill', auth, async (req, res) => {
         try {
             const { _id, selectedX, selectedBillId } = req.body;

@@ -2,19 +2,27 @@ import page from 'page';
 import { html, render } from 'lit';
 import { container } from '../app.js';
 import '../css/bartender/bartender.css';
-import { getAllOrders, socket, logout, completeOne, completeAll, completeOrder } from '../api.js';
-import { stopAllSockets } from './waiter.js';
+import { stopAllSockets, getAllOrders, socket, logout, completeOne, completeAll, completeOrder, clearAllOrders } from '../api.js';
 
 export async function bartenderDashboardPage() {
     stopAllSockets();
     let { orders, allProducts } = await getAllOrders();
 
-    socket.on('order:new', async (data) => {
+    socket.on('order:change', async (data) => {
         orders = data.orders;
         allProducts = data.allProducts;
 
         rerender(orders, allProducts);
     });
+
+    socket.on('order:clearAll', async (res) => {
+        if (res.status === 200)
+            rerender([], []);
+        else {
+            console.error(res);
+            alert('Възникна грешка!');
+        }
+    })
 
     async function compltOne(prodRef, orderId) {
         // If orderId === undefined, then its clicked from the allOrders (combined qty) button
@@ -28,9 +36,10 @@ export async function bartenderDashboardPage() {
             orders = res.data.orders;
             allProducts = res.data.allProducts;
 
+            socket.emit('order:change');
+
             // Rerender
             rerender(orders, allProducts);
-            console.log(orders, allProducts);
         } else {
             console.error(res);
             alert('Възникна грешка!');
@@ -42,6 +51,8 @@ export async function bartenderDashboardPage() {
         if (res.status === 200) {
             orders = res.data.orders;
             allProducts = res.data.allProducts;
+
+            socket.emit('order:change');
 
             // Rerender
             rerender(orders, allProducts);
@@ -58,6 +69,8 @@ export async function bartenderDashboardPage() {
             orders = res.data.orders;
             allProducts = res.data.allProducts;
 
+            socket.emit('order:change');
+
             // Rerender
             rerender(orders, allProducts);
         } else {
@@ -70,8 +83,8 @@ export async function bartenderDashboardPage() {
         <tr>
             <td>${product.name}</td>
             <td>${product.qty} бр.</td>
-            <td><button @click=${() => compltOne(product.prodRef, orderId)} class="removeOne text-uppercase">Едно</button></td>
-            <td><button @click=${() => cmpltAll(product.prodRef, orderId)} class="removeAll text-uppercase">Всички</button>
+            <td><button @click=${()=> compltOne(product.prodRef, orderId)} class="removeOne text-uppercase">Едно</button></td>
+            <td><button @click=${()=> cmpltAll(product.prodRef, orderId)} class="removeAll text-uppercase">Всички</button>
             </td>
         </tr>
     `;
@@ -92,16 +105,21 @@ export async function bartenderDashboardPage() {
                     ${order.products.map((product) => productTemplate(product, order._id))}
                 </tbody>
             </table>
-            <button @click=${()=> cmpltOrder(order._id)} class="finish text-uppercase">Завърши</button>
+            <button @click=${() => cmpltOrder(order._id)} class="finish text-uppercase">Завърши</button>
         </div>
     `};
 
     const dashboard = () => html`
         <div id="bartenderDashboard">
             <div id="orders" class="p-3"></div>
-            <div id="menu" class="d-flex flex-column justify-content-end gap-3 p-3">
-                <button @click=${()=> page('/waiter')}>Маси</button>
-                <button @click=${logout}>Изход</button>
+            <div id="menu" class="d-flex flex-column justify-content-between gap-3 p-3">
+                <div class="d-flex h-50 flex-column gap-3">
+                    <button @click=${()=> socket.emit('order:clearAll')}>Изчисти всички</button>
+                </div>
+                <div class="d-flex h-50 flex-column justify-content-end gap-3">
+                    <button @click=${()=> page('/waiter')}>Маси</button>
+                    <button @click=${logout}>Изход</button>
+                </div>
             </div>
             <div class="overflow-auto">
                 <table id="allOrders">

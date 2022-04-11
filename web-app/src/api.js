@@ -19,6 +19,10 @@ export var socket = io(nodeURL);
 var elem = document.documentElement;
 
 function openFullscreen() {
+    // Check if current url is localhost
+    if (location.hostname === "localhost")
+        return;
+
     if (elem.requestFullscreen) {
         elem.requestFullscreen();
     } else if (elem.webkitRequestFullscreen) { /* Safari */
@@ -38,8 +42,27 @@ function closeFullscreen() {
     }
 }
 
-export async function createReport() {
-    return await axios.post('/createReport').catch((err) => {
+export function fixPrice(price) {
+    // Convert to xx xxx.xx
+    price = price.toFixed(2);
+    price = price.toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ");
+    return price;
+}
+
+export function stopAllSockets() {
+    socket.off('order:clearAll');
+    socket.off('order:change');
+    socket.off('billChanged');
+    socket.off('pay-scrap-refresh');
+    socket.off('addToScrap/returnToBill');
+    socket.off('addToPay/returnToBill');
+    socket.off('wholeBillPaid');
+    socket.off('entered-payPartOfBillPage');
+    socket.off('entered-scrapProductsPage');
+}
+
+export async function getTodaysReport() {
+    return await axios.get('/getTodaysReport').catch((err) => {
         return err.response;
     });
 }
@@ -380,7 +403,7 @@ export async function login(id, pin) {
             axios.defaults.headers.common['authorization'] = user.token;
 
             // Activate full screen
-            // openFullscreen();
+            openFullscreen();
 
             return 'success';
         })
@@ -461,6 +484,6 @@ export async function generateBills(_id, numberOfBills) {
 export function logout() {
     user = undefined;
     sessionStorage.clear();
-    //closeFullscreen();
+    closeFullscreen();
     page('/');
 }
