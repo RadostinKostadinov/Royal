@@ -14,17 +14,26 @@ export async function updateReport(req, res) {
 
         const user = await User.findById(_id);
 
-        // Get start of day
-        const today = new Date();
-        //TODO Check if here should be 00:00 (start of new day) or 04:00 (after system reset, because they may be working to 01:00 o'clock for example) 
-        // today.setHours(0, 0, 0, 0);
-        today.setHours(4, 0, 0, 0);
+        //FIXME I KNOW WHY THIS DOESNT WORK
+        /* 
+            Because it check if time now is 00:10, it check if we have payed products after 04:00
+            but actually this time didnt come yet.
+            So we have to check if right now is before 04:00, and then get everything
+            from 04:00 THE PREVIOUS DAY, not this day 
 
-        // Get all actions for this user for today
+            ALso check if user report from yesterday 04:00
+        */
+
+        // Get yesterday 04:00
+        const yesterday = new Date();
+        yesterday.setDate(yesterday.getDate() - 1);
+        yesterday.setHours(4, 0, 0, 0);
+
+        // Get all actions for this user for yesterday 04:00
         const actions = await ProductHistory.find({
             'user.userRef': _id,
             when: {
-                $gte: today
+                $gte: yesterday
             },
             action: ['paid', 'scrapped', 'consumed']
         });
@@ -56,7 +65,7 @@ export async function updateReport(req, res) {
         let report = await Report.findOne({
             'user.userRef': _id,
             when: {
-                $gte: today
+                $gte: yesterday
             }
         });
 
@@ -215,6 +224,9 @@ export function reportsRoutes(app, auth) {
             //TODO Check if here should be 00:00 (start of new day) or 04:00 (after system reset, because they may be working to 01:00 o'clock for example) 
             // today.setHours(0, 0, 0, 0);
             today.setHours(4, 0, 0, 0);
+
+            //FIXME I KNOW WHY THIS DOESNT WORK
+            // SAME THING HERE AS IN UPDATEREPORT (ABOVE FUNCTION BUT THINK ABOUT IT I GO TO SLEEP NOW)
 
             // Get all users reports from today (except systems, because they are done in 04:00 so it counts them for today)
             const reports = await Report.find({
