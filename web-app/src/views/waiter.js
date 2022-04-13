@@ -96,37 +96,51 @@ export async function waiterDashboardPage() {
         const res = await getTodaysReport();
 
         if (res.status === 200) {
-            const report = res.data;
+            const { combinedReport, personalReport } = res.data;
 
-            render(reportTemplate(report), document.querySelector('#reportModal .modal-body'))
+            console.log(res.data);
+
+            render(reportTemplate(combinedReport, personalReport), document.querySelector('#reportModal .modal-body'))
         } else {
             console.error(res);
             alert('Възникна грешка');
         }
     }
 
-    const reportTemplate = (report) => html`
-        <table class="table fw-bold">
+    const reportTemplate = (combinedReport, personalReport) => html`
+        <table class="table table-striped table-dark table-hover fw-bold">
+            <thead>
+                <tr>
+                    <th scope="col"></th>
+                    <th scope="col">Личен</th>
+                    <th scope="col">Общ</th>
+                </tr>
+            </thead>
             <tbody>
                 <tr class="table-success">
                     <td>Продажби</td>
-                    <td>${fixPrice(report.income) + ' лв.'}</td>
+                    <td>${fixPrice(personalReport.income) + ' лв.'}</td>
+                    <td>${fixPrice(combinedReport.income) + ' лв.'}</td>
                 </tr>
                 <tr class="table-warning">
                     <td>Неплатени</td>
-                    <td>${fixPrice(report.remaining) + ' лв.'}</td>
+                    <td>${fixPrice(personalReport.remaining) + ' лв.'}</td>
+                    <td>${fixPrice(combinedReport.remaining) + ' лв.'}</td>
                 </tr>
                 <tr class="table-danger">
                     <td>Брак</td>
-                    <td>${fixPrice(report.scrapped) + ' лв.'}</td>
+                    <td>${fixPrice(personalReport.scrapped) + ' лв.'}</td>
+                    <td>${fixPrice(combinedReport.scrapped) + ' лв.'}</td>
                 </tr>
                 <tr class="table-secondary">
                     <td>Консумация</td>
-                    <td>${fixPrice(report.consumed) + ' лв.'}</td>
+                    <td>${fixPrice(personalReport.consumed) + ' лв.'}</td>
+                    <td>${fixPrice(combinedReport.consumed) + ' лв.'}</td>
                 </tr>
                 <tr class="table-primary">
                     <td>Общ приход</td>
-                    <td>${fixPrice(report.total) + ' лв.'}</td>
+                    <td>${fixPrice(personalReport.total) + ' лв.'}</td>
+                    <td>${fixPrice(combinedReport.total) + ' лв.'}</td>
                 </tr>
             </tbody>
         </table>

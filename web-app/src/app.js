@@ -71,7 +71,7 @@ async function checkIfUserLoggedIn() {
         `;
 
         const numpadTemplate = () => html`
-        <button @click=${()=> render(usersTemplate(), container)}
+        <button @click=${() => render(usersTemplate(), container)}
             class="btn btn-secondary fs-1 mt-3 ms-3">Назад</button>
         
         <div id="numpad-wrapper">
@@ -154,8 +154,8 @@ async function auth(ctx, next) {
 }
 
 // If theres no activity for X minutes, show screensaver
-const screensaverTime = 10 * 60 * 1000; // 10 minutes
-const blackscreenTime = 30 * 60 * 1000; // 30 minutes
+const screensaverTime = 30 * 60 * 1000; // 30 minutes
+const blackscreenTime = 60 * 60 * 1000; // 60 minutes
 var screensaverTimeout = setTimeout(inActive, screensaverTime);
 var blackscreenTimeout = setTimeout(showBlackScreen, blackscreenTime);
 

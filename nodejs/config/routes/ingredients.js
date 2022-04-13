@@ -6,9 +6,8 @@ export function ingredientsRoutes(app, auth) {
     app.post('/scrapRestockIngredient', auth, async (req, res) => {
         try {
             // Check if user is admin
-            console.log(req.user);
-            // if (req.user.role !== 'admin')
-            // return res.status(401).send('Нямате достъп!')
+            if (req.user.role !== 'admin')
+                return res.status(401).send('Нямате достъп!')
 
             // Get user input
             let { _id, qty, action, expireDate } = req.body;
@@ -158,10 +157,6 @@ export function ingredientsRoutes(app, auth) {
             const pricesRegex = new RegExp(/^\d{1,}(\.\d{1,2})?$/);
             if (!pricesRegex.test(buyPrice) || !pricesRegex.test(sellPrice))
                 return res.status(400).send('Цената трябва да е: пример 5.0, 3, 1.20!');
-
-            // Check if qty is integer
-            if (qty % 1 !== 0)
-                return res.status(400).send('Бройката трябва да е цяло число (примерно 10, 500)!');
 
             // Get references to ingredient
             const ingredient = await Ingredient.findById(_id);

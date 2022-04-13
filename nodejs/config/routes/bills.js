@@ -121,6 +121,7 @@ export function billsRoutes(app, auth) {
 
             const originalBill = await Bill.findById(billToPay._id);
             const table = await Table.findById(originalBill.table);
+
             for (let product of billToPay.products) { // for every product to pay
                 for (let [index, prd] of Object.entries(originalBill.products)) { // check against every product in original bill
                     if (product.product._id.toString() === prd.product.toString()) {
@@ -140,10 +141,11 @@ export function billsRoutes(app, auth) {
                             prodRef.qty -= product.qty;
                         } else {
                             for (let ingredient of prodRef.ingredients) {
-                                console.log(ingredient)
                                 const ingredientRef = await Ingredient.findById(ingredient.ingredient);
+
                                 ingredientRef.qty -= ingredient.qty;
-                                ingredientRef.save();
+                                await ingredientRef.save();
+
                                 ingredientsArray.push({
                                     name: ingredientRef.name,
                                     qty: ingredient.qty,
@@ -153,7 +155,7 @@ export function billsRoutes(app, auth) {
                             }
                         }
 
-                        prodRef.save();
+                        await prodRef.save();
 
                         historyProducts.push({
                             name: product.product.name,
@@ -162,14 +164,15 @@ export function billsRoutes(app, auth) {
                             productRef: product.product._id,
                             ingredients: ingredientsArray
                         });
+
                         historyTotal += product.product.sellPrice * product.qty;
                         break; // start searching for next product
                     }
                 }
             }
 
-            table.save();
-            originalBill.save();
+            await table.save();
+            await originalBill.save();
             res.json(originalBill);
 
             // Add action to history

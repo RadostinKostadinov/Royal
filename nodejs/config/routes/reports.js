@@ -3,6 +3,8 @@ import { Report } from "../../model/report.js";
 import { Table } from "../../model/table.js";
 import { User } from "../../model/user.js"
 import { Bill } from "../../model/bill.js"
+import { Product } from "../../model/product.js";
+import { Ingredient } from "../../model/ingredient.js";
 
 export async function updateReport(req, res) {
     // Updates a users report when they add, sell, scraps or removes a product from bill
@@ -11,9 +13,12 @@ export async function updateReport(req, res) {
         const { _id } = req.user;
 
         const user = await User.findById(_id);
+
         // Get start of day
         const today = new Date();
-        today.setHours(0, 0, 0, 0);
+        //TODO Check if here should be 00:00 (start of new day) or 04:00 (after system reset, because they may be working to 01:00 o'clock for example) 
+        // today.setHours(0, 0, 0, 0);
+        today.setHours(4, 0, 0, 0);
 
         // Get all actions for this user for today
         const actions = await ProductHistory.find({
@@ -42,6 +47,10 @@ export async function updateReport(req, res) {
         }
 
         total = income - consumed - scrapped;
+
+        // Otherwise it creates an empty report 
+        if (total === 0)
+            return;
 
         // Check if report already exists
         let report = await Report.findOne({
@@ -81,21 +90,81 @@ export async function updateReport(req, res) {
 
 export async function createSystemReport() {
     try {
-        // Find tables with leftover totals
-        const tables = await Table.find({
+        //TODO  Maybe create an emit in case somebody is working??
+
+        // Find bills with leftover totals or products in them
+        const bills = await Bill.find({
             total: {
                 $gt: 0
+            },
+            products: {
+                $not: {
+                    $size: 0
+                }
             }
         });
 
-        if (tables.length) {
+        // If any bills with leftover products
+        if (bills.length) {
             let income = 0;
 
+            // Calculate system report income
+            for (let bill of bills) {
+                // Add total to income
+                income += bill.total;
 
-            for (let table of tables) {
-                income += table.total;
-                table.total = 0;
-                await table.save();
+                let historyProducts = [];
+                let historyTotal = 0;
+
+                for (let product of bill.products) {
+                    // Remove product qty from inventory
+                    // But first check if from ingredients
+                    let ingredientsArray = [];
+
+                    const prodRef = await Product.findById(product.product);
+
+                    if (prodRef.ingredients.length === 0)
+                        prodRef.qty -= product.qty;
+                    else {
+                        for (let ingredient of prodRef.ingredients) {
+                            const ingredientRef = await Ingredient.findById(ingredient.ingredient);
+
+                            ingredientRef.qty -= ingredient.qty;
+                            await ingredientRef.save();
+
+                            ingredientsArray.push({
+                                name: ingredientRef.name,
+                                qty: ingredient.qty,
+                                price: ingredientRef.sellPrice,
+                                ingredientRef: ingredientRef._id
+                            });
+                        }
+                    }
+
+                    await prodRef.save();
+
+                    historyProducts.push({
+                        name: prodRef.name,
+                        qty: product.qty,
+                        price: prodRef.sellPrice,
+                        productRef: product.product,
+                        ingredients: ingredientsArray
+                    });
+
+                    historyTotal += prodRef.sellPrice * product.qty;
+                }
+
+                // Add action to history
+                await ProductHistory.create({
+                    user: {
+                        name: 'Система'
+                    },
+                    action: 'paid',
+                    table: bill.table,
+                    billNumber: bill.number,
+                    total: historyTotal,
+                    products: historyProducts
+                });
             }
 
             // Create system report
@@ -112,6 +181,11 @@ export async function createSystemReport() {
             console.log('System report created from leftovers!');
         }
 
+        // Set all table totals to 0
+        await Table.updateMany({}, { total: 0 });
+        console.log('All tables totals set to 0!')
+
+        // Delete all bills
         await Bill.deleteMany();
         console.log('All bills deleted!')
     } catch (err) {
@@ -125,7 +199,7 @@ export function reportsRoutes(app, auth) {
 
             const rs = await updateReport(req, res);
 
-            if (rs.hasOwnProperty('status') && rs.status === 500)
+            if (rs && rs.hasOwnProperty('status') && rs.status === 500)
                 return res.status(500).json(rs);
 
             res.send('ok');
@@ -138,17 +212,22 @@ export function reportsRoutes(app, auth) {
     app.get('/getTodaysReport', auth, async (req, res) => {
         try {
             const today = new Date();
-            today.setHours(0, 0, 0, 0);
+            //TODO Check if here should be 00:00 (start of new day) or 04:00 (after system reset, because they may be working to 01:00 o'clock for example) 
+            // today.setHours(0, 0, 0, 0);
+            today.setHours(4, 0, 0, 0);
 
-            // Get all users reports from today
+            // Get all users reports from today (except systems, because they are done in 04:00 so it counts them for today)
             const reports = await Report.find({
+                'user.name': {
+                    $ne: 'Система'
+                },
                 when: {
                     $gte: today
                 }
-            }, 'income remaining consumed scrapped total');
+            });
 
             // Combine all values
-            const finalReport = {
+            const combinedReport = {
                 income: 0,
                 remaining: 0,
                 consumed: 0,
@@ -156,22 +235,39 @@ export function reportsRoutes(app, auth) {
                 total: 0
             }
 
+            const personalReport = {
+                income: 0,
+                remaining: 0,
+                consumed: 0,
+                scrapped: 0,
+                total: 0
+            };
+
             // Get all tables totals
             const tables = await Table.find({}, 'total');
 
             // Get sum of all tables.total
             for (let table of tables) {
-                finalReport.remaining += table.total;
+                combinedReport.remaining += table.total;
+                personalReport.remaining += table.total;
             }
 
             for (let report of reports) {
-                finalReport.income += report.income;
-                finalReport.consumed += report.consumed;
-                finalReport.scrapped += report.scrapped;
-                finalReport.total += report.total;
+                console.log(report.when);
+                combinedReport.income += report.income;
+                combinedReport.consumed += report.consumed;
+                combinedReport.scrapped += report.scrapped;
+                combinedReport.total += report.total;
+
+                if (report.user.userRef.toString() === req.user._id) {
+                    personalReport.income += report.income;
+                    personalReport.consumed += report.consumed;
+                    personalReport.scrapped += report.scrapped;
+                    personalReport.total += report.total;
+                }
             }
 
-            res.json(finalReport);
+            res.json({ combinedReport, personalReport });
         } catch (err) {
             console.log(err);
             res.status(500).send(err);
