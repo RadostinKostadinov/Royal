@@ -43,17 +43,4 @@ export function tablesRoutes(app, auth) {
             res.status(500).send(err);
         }
     });
-
-    app.get('/getAllTables', auth, async (req, res) => {
-        try {
-            const middleTables = await Table.find({ location: 'middle' });
-            const insideTables = await Table.find({ location: 'inside' });
-            const outsideTables = await Table.find({ location: 'outside' });
-
-            res.json({ middleTables, insideTables, outsideTables });
-        } catch (err) {
-            console.error(err);
-            res.status(500).send(err);
-        }
-    });
 }

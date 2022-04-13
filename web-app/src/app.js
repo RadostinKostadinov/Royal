@@ -19,6 +19,9 @@ page('/bartender', auth, bartenderDashboardPage);
 // Waiter pages
 page('/waiter', auth, waiterDashboardPage);
 page('/waiter/showPaidBills', auth, showPaidBillsPage);
+/* page('/waiter/table/:location/:tableId', auth, tableControlsPage);
+page('/waiter/table/:location/:tableId/bill/:billId/pay', auth, payPartOfBillPage);
+page('/waiter/table/:location/:tableId/bill/:billId/scrap', auth, scrapProductsPage); */
 page('/waiter/table/:tableId', auth, tableControlsPage);
 page('/waiter/table/:tableId/bill/:billId/pay', auth, payPartOfBillPage);
 page('/waiter/table/:tableId/bill/:billId/scrap', auth, scrapProductsPage);

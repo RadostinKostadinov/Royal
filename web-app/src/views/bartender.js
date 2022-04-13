@@ -97,7 +97,7 @@ export async function bartenderDashboardPage() {
             <table>
                 <thead class="text-uppercase">
                     <tr>
-                        <td colspan="3">[${i + 1}] - МАСА ${order.tableNumber}</td>
+                        <td colspan="3">[${i + 1}] - ${order.tableName}</td>
                         <td>${time}</td>
                     </tr>
                 </thead>

@@ -3,6 +3,16 @@
 	width: 100%;
 	height: 100%;
 	padding: 1% 0% 1% 1.5%;
+
+	/* Prevent INSIDE tables view from overflowing */
+	min-height: 0;
+	min-width: 0;
+	overflow: auto;
+}
+
+.tablesGrid .wall {
+	opacity: 0.7;
+	background-color: var(--bg-wall);
 }
 
 .tablesGrid .table {

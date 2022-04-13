@@ -138,7 +138,7 @@ export function ordersRoutes(app, auth) {
             const table = await Table.findById(tableId);
 
             await Order.create({
-                tableNumber: table.number,
+                tableName: table.name,
                 products: orderProducts,
             });
 

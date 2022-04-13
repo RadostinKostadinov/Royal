@@ -72,97 +72,97 @@ function routesConfig(app) {
             const middleTables = [
                 {
                     type: 'table',
-                    number: '1',
+                    class: 'table1',
                     name: 'Маса 1',
                     location: 'middle',
                 },
                 {
                     type: 'table',
-                    number: '2',
+                    class: 'table2',
                     name: 'Маса 2',
                     location: 'middle',
                 },
                 {
                     type: 'table',
-                    number: '3',
+                    class: 'table3',
                     name: 'Маса 3',
                     location: 'middle',
                 },
                 {
                     type: 'table',
-                    number: '4',
+                    class: 'table4',
                     name: 'Маса 4',
                     location: 'middle',
                 },
                 {
                     type: 'table',
-                    number: '5',
+                    class: 'table5',
                     name: 'Маса 5',
                     location: 'middle',
                 },
                 {
                     type: 'table',
-                    number: '6',
+                    class: 'table6',
                     name: 'Маса 6',
                     location: 'middle',
                 },
                 {
                     type: 'table',
-                    number: '7',
+                    class: 'table7',
                     name: 'Маса 7',
                     location: 'middle',
                 },
                 {
                     type: 'table',
-                    number: '8',
+                    class: 'table8',
                     name: 'Маса 8',
                     location: 'middle',
                 },
                 {
                     type: 'table',
-                    number: '9',
+                    class: 'table9',
                     name: 'Маса 9',
                     location: 'middle',
                 },
                 {
                     type: 'table',
-                    number: '10',
+                    class: 'table10',
                     name: 'Маса 10',
                     location: 'middle',
                 },
                 {
                     type: 'table',
-                    number: '11',
+                    class: 'table11',
                     name: 'Маса 11',
                     location: 'middle',
                 },
                 {
                     type: 'table',
-                    number: '12',
+                    class: 'table12',
                     name: 'Маса 12',
                     location: 'middle',
                 },
                 {
                     type: 'table',
-                    number: '13',
+                    class: 'table13',
                     name: 'Маса 13',
                     location: 'middle',
                 },
                 {
                     type: 'table',
-                    number: '14',
+                    class: 'table14',
                     name: 'Маса 14',
                     location: 'middle',
                 },
                 {
                     type: 'table',
-                    number: '15',
+                    class: 'table15',
                     name: 'Маса 15',
                     location: 'middle',
                 },
                 {
                     type: 'table',
-                    number: '16',
+                    class: 'table16',
                     name: 'Маса 16',
                     location: 'middle',
                 },
@@ -170,122 +170,162 @@ function routesConfig(app) {
 
             const insideTables = [
                 {
-                    type: 'bar',
+                    type: 'text',
+                    class: 'text-outside',
+                    name: 'Навън',
+                    location: 'inside'
+                },
+                {
+                    type: 'text',
+                    class: 'text-zala',
+                    name: 'Зала',
+                    location: 'inside'
+                },
+                {
+                    type: 'wall',
+                    class: 'wall1',
+                    location: 'inside'
+                },
+                {
+                    type: 'wall',
+                    class: 'wall2',
+                    location: 'inside'
+                },
+                {
+                    type: 'wall',
+                    class: 'wall3',
+                    location: 'inside'
+                },
+                {
+                    type: 'wall',
+                    class: 'wall4',
+                    location: 'inside'
+                },
+                {
+                    type: 'table',
+                    class: 'bar',
                     name: 'Бар',
                     location: 'inside'
                 },
                 {
                     type: 'table',
-                    number: 'v1',
+                    class: 'tablev1',
                     name: 'Маса В1',
                     location: 'inside',
                 },
                 {
                     type: 'table',
-                    number: 'v2',
+                    class: 'tablev2',
                     name: 'Маса В2',
                     location: 'inside',
                 },
                 {
                     type: 'table',
-                    number: 'vbar',
-                    name: 'Маса Бар',
+                    class: 'tablev3',
+                    name: 'Маса В3',
                     location: 'inside',
                 },
                 {
                     type: 'table',
-                    number: 'v4',
+                    class: 'tablev4',
                     name: 'Маса В4',
                     location: 'inside',
                 },
                 {
                     type: 'table',
-                    number: 'v5',
+                    class: 'tablev5',
                     name: 'Маса В5',
                     location: 'inside',
                 },
                 {
                     type: 'table',
-                    number: 'v6',
+                    class: 'tablev6',
                     name: 'Маса В6',
                     location: 'inside',
                 },
                 {
                     type: 'table',
-                    number: 'v7',
+                    class: 'tablev7',
                     name: 'Маса В7',
                     location: 'inside',
                 },
                 {
                     type: 'table',
-                    number: 'v8',
+                    class: 'tablev8',
                     name: 'Маса В8',
                     location: 'inside',
                 },
                 {
                     type: 'table',
-                    number: 'v9',
+                    class: 'tablev9',
                     name: 'Маса В9',
                     location: 'inside',
                 },
                 {
                     type: 'table',
-                    number: 'v10',
+                    class: 'tablev10',
                     name: 'Маса В10',
                     location: 'inside',
                 },
                 {
                     type: 'table',
-                    number: 'v11',
+                    class: 'tablev11',
                     name: 'Маса В11',
                     location: 'inside',
                 },
                 {
                     type: 'table',
-                    number: 'z1',
+                    class: 'tablez1',
                     name: 'Маса Z1',
                     location: 'inside',
                 },
                 {
                     type: 'table',
-                    number: 'z2',
+                    class: 'tablez2',
                     name: 'Маса Z2',
                     location: 'inside',
                 },
-            ]
-
-            const outsideTables = [
                 {
                     type: 'table',
-                    number: 'n1',
+                    class: 'tablez3',
+                    name: 'Маса Z3',
+                    location: 'inside',
+                },
+                {
+                    type: 'table',
+                    class: 'tablez4',
+                    name: 'Маса Z4',
+                    location: 'inside',
+                },
+                {
+                    type: 'table',
+                    class: 'tablez5',
+                    name: 'Маса Z5',
+                    location: 'inside',
+                },
+                {
+                    type: 'table',
+                    class: 'tablen1',
                     name: 'Маса Н1',
-                    location: 'outside',
+                    location: 'inside',
                 },
                 {
                     type: 'table',
-                    number: 'n2',
+                    class: 'tablen2',
                     name: 'Маса Н2',
-                    location: 'outside',
+                    location: 'inside',
                 },
                 {
                     type: 'table',
-                    number: 'n3',
+                    class: 'tablen3',
                     name: 'Маса Н3',
-                    location: 'outside',
+                    location: 'inside',
                 },
-                {
-                    type: 'table',
-                    number: 'n4',
-                    name: 'Маса Н4',
-                    location: 'outside',
-                },
-            ]
+            ];
 
-            await Bill.deleteMany();
             await Table.deleteMany();
             await Table.insertMany(middleTables);
             await Table.insertMany(insideTables);
-            await Table.insertMany(outsideTables);
 
             console.log('Created default tables');
         }
@@ -1877,13 +1917,13 @@ function routesConfig(app) {
 
         // await createDefaultUsers();
         await createDefaultTables();
-        await createDefaultCategories();
+        /* await createDefaultCategories();
         await createDefaultIngredients();
         await createDefaultProducts();
         await deleteAllBills();
         await deleteHistory();
         await deleteReports();
-        await deleteOrders();
+        await deleteOrders(); */
     }
     // createDefaults();
 }

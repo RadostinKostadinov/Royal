@@ -3,6 +3,21 @@
 	height: 100%;
 }
 
+#topMenuAndGrid {
+	display: grid;
+	grid-template-columns: 1fr;
+	grid-template-rows: 72fr 696fr;
+	width: 100%;
+	height: 100%;
+}
+
+#topMenu {
+	background-color: var(--bg-menu);
+	display: flex;
+	justify-content: space-between;
+	padding: 0.5rem 2rem;
+}
+
 #waiterMenu {
 	width: 11.76%;
 	color: var(--color-sidemenu);
@@ -33,14 +48,7 @@
 	font-size: 0.9rem;
 }
 
-#topMenu {
-	height: 10.16%;
-	background-color: var(--bg-menu);
-	display: flex;
-	justify-content: space-between;
-	padding: 0.5rem 2rem;
-}
-
 #topMenu button {
 	padding: 0.5rem;
+	/* padding: 0px 0.5rem; */
 }

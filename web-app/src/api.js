@@ -4,7 +4,8 @@ import { io } from "socket.io-client";
 
 export let user = JSON.parse(sessionStorage.getItem('user'));
 // Set base url so you dont type ${url} in every request
-let nodeURL = 'http://localhost:3000';
+let nodeURL = 'http://localhost:3000'; // NO-SSL
+// let nodeURL = 'https://localhost:3443'; // TODO SSL
 
 if (location.hostname !== "localhost" && location.hostname !== "127.0.0.1")
     nodeURL = 'http://barroyal.eu:3000'; // LIVE

@@ -1,0 +1,167 @@
+/* grid.layoutit.com?id=Jqki3pM */
+/* grid.layoutit.com?id=8YxCPe6 */
+
+.tablesGrid#inside {
+	padding: 0px;
+	display: grid;
+	grid-template-columns: 54fr 118fr 25fr 35fr 32fr 35fr 23fr 11fr 17fr 56fr 10fr 92fr 45fr 27fr 11fr 34fr 11fr 18fr 60fr 38fr 12fr 48fr 11fr 28fr 30fr 11fr 56fr 56fr 5fr 11fr 117fr 62fr;
+	grid-template-rows: 12fr 65fr 21fr 8fr 63fr 23fr 14fr 10fr 56fr 51fr 8fr 29fr 13fr 6fr 28fr 60fr 76fr 43fr 50fr 52fr;
+	gap: 0px 0px;
+	grid-auto-flow: row;
+	grid-template-areas:
+		". . . . . . . . . . wall2 . text-zala text-zala text-zala text-zala text-zala text-zala text-zala text-zala text-zala text-zala text-zala text-zala text-zala text-zala text-zala text-zala text-zala text-zala text-zala ."
+		". tablen1 text-outside text-outside tablen3 tablen3 tablen3 tablen3 tablen3 . wall2 . text-zala text-zala text-zala text-zala text-zala text-zala text-zala text-zala text-zala text-zala text-zala text-zala text-zala text-zala text-zala text-zala text-zala text-zala text-zala ."
+		". tablen1 text-outside text-outside tablen3 tablen3 tablen3 tablen3 tablen3 . wall2 . tablez1 tablez1 tablez1 tablez1 . tablez2 tablez2 tablez2 . tablez3 tablez3 tablez3 tablez3 . tablez4 tablez4 tablez4 . tablez5 ."
+		". . text-outside text-outside tablen3 tablen3 tablen3 tablen3 tablen3 . wall2 . tablez1 tablez1 tablez1 tablez1 . tablez2 tablez2 tablez2 . tablez3 tablez3 tablez3 tablez3 . tablez4 tablez4 tablez4 . tablez5 ."
+		". tablen2 text-outside text-outside tablen3 tablen3 tablen3 tablen3 tablen3 . wall2 . tablez1 tablez1 tablez1 tablez1 . tablez2 tablez2 tablez2 . tablez3 tablez3 tablez3 tablez3 . tablez4 tablez4 tablez4 . tablez5 ."
+		". tablen2 text-outside text-outside tablen3 tablen3 tablen3 tablen3 tablen3 . wall2 . . . . . . . . . . . . . . . . . . . . ."
+		". . . . . . . . . . wall2 . . . . . . . . . . . . . . . . . . . . ."
+		"wall1 wall1 wall1 wall1 wall1 wall1 wall1 wall1 wall1 wall1 wall1 wall1 wall1 wall1 wall1 wall1 wall1 wall1 wall1 wall1 wall1 wall1 wall1 wall1 . . . . wall4 wall4 wall4 wall4"
+		"bar bar bar bar bar . . . . . wall3 tablev8 tablev8 tablev8 tablev8 tablev8 . . tablev9 tablev9 tablev9 tablev9 tablev9 tablev9 . . . . tablev10 tablev10 tablev10 tablev10"
+		"bar bar bar bar bar . . . . . wall3 tablev8 tablev8 tablev8 tablev8 tablev8 . . tablev9 tablev9 tablev9 tablev9 tablev9 tablev9 . . . . tablev10 tablev10 tablev10 tablev10"
+		"bar bar bar bar bar . . . . . wall3 . . . . . . . . . . . . . . . . . tablev10 tablev10 tablev10 tablev10"
+		"bar bar bar bar bar . tablev5 tablev5 tablev5 tablev5 wall3 . . . . . . . . . . . . . . . . . tablev10 tablev10 tablev10 tablev10"
+		"bar bar bar bar bar . tablev5 tablev5 tablev5 tablev5 wall3 tablev6 tablev6 . . . . . . tablev7 tablev7 tablev7 tablev7 tablev7 . . . . tablev10 tablev10 tablev10 tablev10"
+		". . . . . . tablev5 tablev5 tablev5 tablev5 wall3 tablev6 tablev6 . . . . . . tablev7 tablev7 tablev7 tablev7 tablev7 . . . . tablev10 tablev10 tablev10 tablev10"
+		". . . . . . tablev5 tablev5 tablev5 tablev5 wall3 tablev6 tablev6 . . . . . . tablev7 tablev7 tablev7 tablev7 tablev7 . . . . . . . ."
+		". . . . . . tablev5 tablev5 tablev5 tablev5 wall3 tablev6 tablev6 . . . . . . tablev7 tablev7 tablev7 tablev7 tablev7 . . . . tablev11 tablev11 tablev11 tablev11"
+		". . . . . . . . . . . . . . . . . . . . . . . . . . . . tablev11 tablev11 tablev11 tablev11"
+		". . . tablev1 tablev1 tablev1 tablev1 . tablev2 tablev2 tablev2 tablev2 tablev2 tablev2 . . . . . . . . . tablev4 tablev4 tablev4 tablev4 . tablev11 tablev11 tablev11 tablev11"
+		". . . tablev1 tablev1 tablev1 tablev1 . tablev2 tablev2 tablev2 tablev2 tablev2 tablev2 . tablev3 tablev3 tablev3 tablev3 tablev3 tablev3 tablev3 . tablev4 tablev4 tablev4 tablev4 . . . . ."
+		". . . tablev1 tablev1 tablev1 tablev1 . tablev2 tablev2 tablev2 tablev2 tablev2 tablev2 . tablev3 tablev3 tablev3 tablev3 tablev3 tablev3 tablev3 . tablev4 tablev4 tablev4 tablev4 . . . . .";
+}
+
+.tablesGrid .table.bar {
+	background-color: var(--bg-wall);
+	color: white;
+}
+
+.tablesGrid .table.bar .name {
+	font-size: 1.8rem;
+}
+
+.tablesGrid .text {
+	color: white;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	font-weight: 600;
+	text-transform: uppercase;
+}
+
+.tablesGrid .text-outside {
+	font-size: 2rem;
+	writing-mode: vertical-lr;
+	transform: rotate(-180deg);
+	-webkit-transform: rotate(-180deg);
+	-moz-transform: rotate(-180deg);
+}
+
+.tablesGrid .text-zala {
+	font-size: 2.5rem;
+	line-height: 5rem;
+}
+
+.tablen1 {
+	grid-area: tablen1;
+}
+
+.tablen2 {
+	grid-area: tablen2;
+}
+
+.wall2 {
+	grid-area: wall2;
+}
+
+.wall1 {
+	grid-area: wall1;
+}
+
+.tablen3 {
+	grid-area: tablen3;
+}
+
+.text-outside {
+	grid-area: text-outside;
+}
+
+.bar {
+	grid-area: bar;
+}
+
+.tablev5 {
+	grid-area: tablev5;
+}
+
+.tablev1 {
+	grid-area: tablev1;
+}
+
+.wall3 {
+	grid-area: wall3;
+}
+
+.tablev6 {
+	grid-area: tablev6;
+}
+
+.tablev2 {
+	grid-area: tablev2;
+}
+
+.tablez1 {
+	grid-area: tablez1;
+}
+
+.tablev8 {
+	grid-area: tablev8;
+}
+
+.tablez2 {
+	grid-area: tablez2;
+}
+
+.tablev3 {
+	grid-area: tablev3;
+}
+
+.tablev9 {
+	grid-area: tablev9;
+}
+
+.tablev7 {
+	grid-area: tablev7;
+}
+
+.tablez3 {
+	grid-area: tablez3;
+}
+
+.tablev4 {
+	grid-area: tablev4;
+}
+
+.tablez4 {
+	grid-area: tablez4;
+}
+
+.tablez5 {
+	grid-area: tablez5;
+}
+
+.wall4 {
+	grid-area: wall4;
+}
+
+.tablev10 {
+	grid-area: tablev10;
+}
+
+.tablev11 {
+	grid-area: tablev11;
+}
+
+.text-zala {
+	grid-area: text-zala;
+}

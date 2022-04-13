@@ -7,6 +7,7 @@
 	--orange-2: #e4582e;
 	--blue: #0067d2;
 	--dark-grey: #19192c;
+	--bg-wall: #858383;
 	--scroll-width: 16px;
 	--bg-scroll: var(--dark-grey);
 	--bg-dark: #0c0c1d; /* Dark - background */
@@ -45,7 +46,8 @@
 body {
 	padding: 0px;
 	margin: 0px;
-	width: 100vw;
+	/* width: 100vw; */
+	width: 100%;
 	height: 100vh;
 	font-family: "Montserrat", sans-serif;
 	font-weight: 400;

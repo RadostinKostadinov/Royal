@@ -16,6 +16,7 @@ export function historiesRoutes(app, auth) {
                     $gte: today
                 }
             }).sort({ when: -1 }).populate('table');
+
             res.json(allPaid);
         } catch (err) {
             console.error(err);

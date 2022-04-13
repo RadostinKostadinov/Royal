@@ -2,6 +2,7 @@ import page from 'page';
 import '../css/waiter/menu.css';
 import '../css/waiter/tables/tables.css';
 import '../css/waiter/tables/middle.css';
+import '../css/waiter/tables/inside.css';
 import '../css/waiter/tableControls.css';
 import '../css/waiter/payPartOfBill.css';
 import { container } from "../app";
@@ -10,19 +11,15 @@ import $ from "jquery";
 import 'bootstrap-icons/font/bootstrap-icons.css';
 import { fixPrice, stopAllSockets, socket, getAllPaidBills, getAddonsForCategory, getLastPaidBillByTableId, addProductToBill, generateBills, getAllCategories, getProductsFromCategory, logout, getBillById, removeOneFromBill, sellProducts, scrapProducts, addProductsToHistory, getTables, getTableTotalById, createNewOrder, getTodaysReport } from '../api';
 
+let lastRenderedLocation = 'middle'; // remembers the last rendered location, so when the user clicks "Back", take them there
+
 // Dashboard contains all the code for rendering the tables view (grid with tables)
 export async function waiterDashboardPage() {
     // Stop listening on old sockets
     stopAllSockets();
-    
-    let selectedLocation = 'middle';
-    let middleTables = await getTables('middle'); // for default view
-    if (middleTables.status === 200)
-        middleTables = middleTables.data;
-    else {
-        console.error(middleTables);
-        return alert('Възникна грешка');
-    }
+    console.log(lastRenderedLocation);
+
+    renderTablesView(undefined, lastRenderedLocation);
 
     // Rerender table total when someone adds/removes/scraps.. product from the bill
     socket.on('billChanged', async (bill) => {
@@ -147,7 +144,7 @@ export async function waiterDashboardPage() {
     `;
 
     const dashboardTemplate = (grid) => html`
-        <div class="modal fade" id="reportModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+        <div class="modal fade" id="reportModal" tabindex="-1" aria-labelledby="reportModalLabel" aria-hidden="true">
             <div class="modal-dialog modal-dialog-centered">
                 <div class="modal-content">
                 <div class="modal-header">
@@ -172,9 +169,8 @@ export async function waiterDashboardPage() {
                 </div>
                 <div class="d-flex flex-column align-items-center mt-5 mb-5 justify-content-between h-100 w-100 ps-2 pe-2">
                     <div id="changeTablesViewButtons" class="d-flex flex-column text-center gap-3 w-100">
-                        <button id="insideTablesBtn" @click=${(clickedBtn) => changeTablesView(clickedBtn, 'inside')}>Вътре</button>
-                        <button class="active" id="middleTablesBtn" @click=${(clickedBtn) => changeTablesView(clickedBtn, 'middle')}>Градина</button>
-                        <button id="outsideTablesBtn" @click=${(clickedBtn) => changeTablesView(clickedBtn, 'outside')}>Навън</button>
+                        <button class=${lastRenderedLocation === 'inside' ? 'active' : ''} id="insideTablesBtn" @click=${(clickedBtn) => renderTablesView(clickedBtn, 'inside')}>Вътре</button>
+                        <button class=${lastRenderedLocation === 'middle' ? 'active' : ''} id="middleTablesBtn" @click=${(clickedBtn) => renderTablesView(clickedBtn, 'middle')}>Градина</button>
                     </div>
                     <div class="d-flex flex-column text-center gap-3 w-100">
                         <!-- <button>Меню</button> -->
@@ -184,7 +180,7 @@ export async function waiterDashboardPage() {
                 </div>
             </div>
             
-            <div class="d-flex flex-column w-100">
+            <div id="topMenuAndGrid">
                 <div id="topMenu">
                     <button @click=${() => page('/bartender')}>Поръчки</button>
                     <button @click=${() => page('/waiter/showPaidBills')}>Плащания</button>
@@ -199,24 +195,34 @@ export async function waiterDashboardPage() {
         <div id=${gridId} class="tablesGrid">
             ${elements.map((element) => {
                 const taken = element.total > 0 ? 'taken' : '';
-                const allClasses = `${element.type} ${element.type + element.number} ${taken}`;
-                //element.type = [table, bar]
-                //element.number = 1,2,3... || v1,v2,v3... || n1,n2,n3...
+                const allClasses = `${element.type} ${element.class} ${taken}`;
+                //element.type = [table, text, wall]
+                //element.class = 1,2,3... || v1,v2,v3... || n1,n2,n3...
                 //element.name = Маса 1, Маса В1, Маса Н1..
                 //element.total = undefined (if != table) || number (ex. 12.50) (if == table)
-                const btn = html`
-                    <button @click=${(e)=> page(`/waiter/table/${$(e.target).attr('_id')}`)} class=${allClasses} _id=${element._id}>
+                if (element.type === 'wall')
+                    return html`
+                        <div class=${allClasses}></div>
+                    `;
+                    
+                if (element.type === 'text')
+                    return html`
+                        <div class=${allClasses}>${element.name}</div>
+                    `;
+
+                return html`
+                    <!-- <button @click=${() => page(`/waiter/table/${element.location}/${element._id}`)} class=${allClasses} _id=${element._id}> -->
+                    <button @click=${() => page(`/waiter/table/${element._id}`)} class=${allClasses} _id=${element._id}>
                         <span class="name pe-none">${element.name}</span>
                         <span class="total pe-none">${element.total ? (element.total).toFixed(2) : ''}</span>
                     </button>`;
-                return btn;
             })}
         </div>
     `;
 
     // This functions changes the table's view (shows the inside, outside or garden tables grid)
-    async function changeTablesView(clickedBtnEvent, viewName) {
-        if (clickedBtnEvent !== null) { // if not coming from socket
+    async function renderTablesView(clickedBtnEvent, viewName) {
+        if (clickedBtnEvent) { // if not coming from socket
             const clickedBtn = clickedBtnEvent.target;
             // Remove active class from any button that has it
             $('#changeTablesViewButtons button.active').removeClass('active');
@@ -225,24 +231,21 @@ export async function waiterDashboardPage() {
             $(clickedBtn).addClass('active');
         }
 
-        let viewToRender;
+        let elements;
 
-        selectedLocation = viewName;
-        const res = await getTables(selectedLocation);
+        lastRenderedLocation = viewName;
+        const res = await getTables(lastRenderedLocation);
 
         if (res.status === 200)
-            viewToRender = res.data;
+            elements = res.data; // elements includes tables, walls, bar ..
         else {
             console.error(res);
             alert('Възникна грешка!');
         }
         
-        selectedLocation = viewName;
-        render(dashboardTemplate(gridTemplate(selectedLocation, viewToRender)), container);
+        lastRenderedLocation = viewName;
+        render(dashboardTemplate(gridTemplate(lastRenderedLocation, elements)), container);
     }
-
-    // Render default view (dashboard + middle tables)
-    render(dashboardTemplate(gridTemplate(selectedLocation, middleTables)), container);
 }
 
 export async function tableControlsPage(ctx) {
