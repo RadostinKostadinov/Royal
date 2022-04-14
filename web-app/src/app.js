@@ -7,11 +7,10 @@ import './css/global.css';
 import { html, render } from 'lit/html.js';
 import { getAllUsers, login, user } from './api';
 import { showAdminDashboard, createCategoryPage, deleteCategoryPage, editCategoryPage, sortCategoriesPage, createEmployeePage, deleteEmployeePage, editEmployeePage, scrapRestockProductPage, createProductPage, deleteProductPage, editProductPage, removeQtyProductPage, inventoryPage, sortProductsPage, scrappedPage, expireProductsPage, reportsPage } from './views/admin';
-import { payPartOfBillPage, scrapProductsPage, showPaidBillsPage, tableControlsPage, waiterDashboardPage } from './views/waiter.js';
+import { moveProductsPage, payPartOfBillPage, scrapProductsPage, showPaidBillsPage, tableControlsPage, waiterDashboardPage } from './views/waiter.js';
 import { bartenderDashboardPage } from './views/bartender';
 
 export const container = document.querySelector('body'); // where to render everything
-
 
 // Bartender pages
 page('/bartender', auth, bartenderDashboardPage);
@@ -19,12 +18,10 @@ page('/bartender', auth, bartenderDashboardPage);
 // Waiter pages
 page('/waiter', auth, waiterDashboardPage);
 page('/waiter/showPaidBills', auth, showPaidBillsPage);
-/* page('/waiter/table/:location/:tableId', auth, tableControlsPage);
-page('/waiter/table/:location/:tableId/bill/:billId/pay', auth, payPartOfBillPage);
-page('/waiter/table/:location/:tableId/bill/:billId/scrap', auth, scrapProductsPage); */
 page('/waiter/table/:tableId', auth, tableControlsPage);
 page('/waiter/table/:tableId/bill/:billId/pay', auth, payPartOfBillPage);
 page('/waiter/table/:tableId/bill/:billId/scrap', auth, scrapProductsPage);
+page('/waiter/table/:tableId/bill/:billId/move', auth, moveProductsPage);
 
 // Admin pages
 page('/admin', auth, showAdminDashboard);
@@ -46,24 +43,21 @@ page('/admin/employee/create', auth, createEmployeePage);
 page('/admin/employee/delete', auth, deleteEmployeePage);
 page('/admin/employee/edit', auth, editEmployeePage);
 page('/', checkIfUserLoggedIn);
+
+// Everything else, redirect to home page
 page('*', () => page('/'));
 page();
 
 async function checkIfUserLoggedIn() {
-    if (user) {
-        if (user.role === 'admin') {
-            page.redirect('/admin');
-        } else if (user.role === 'waiter') {
-            page.redirect('/waiter');
-        } else if (user.role === 'bartender') {
-            page.redirect('/bartender')
-        }
-    } else {
+    if (user)
+        page.redirect(`/${user.role}`);
+    else {
         let selectedUser,
             pinCode = '';
 
         // Get all employees
         let users = await getAllUsers();
+
         // Show login
         const usersTemplate = () => html`
             <div style="height: 100vh"
@@ -148,10 +142,8 @@ async function checkIfUserLoggedIn() {
 }
 
 async function auth(ctx, next) {
-    //AUTHENTICATE
-    if (!user || (ctx.path.includes('/admin') && user.role !== "admin")) {
+    if (!user || (ctx.path.includes('/admin') && user.role !== "admin"))
         page('/'); // wrong permissions, go back go dashboard
-    }
 
     next(); // else continue work
 }

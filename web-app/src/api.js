@@ -51,13 +51,13 @@ export function fixPrice(price) {
 }
 
 export function stopAllSockets() {
+    socket.off('addToMove/returnToBill');
+    socket.off('entered-moveProductsPage');
     socket.off('order:clearAll');
     socket.off('order:change');
     socket.off('billChanged');
-    socket.off('pay-scrap-refresh');
     socket.off('addToScrap/returnToBill');
     socket.off('addToPay/returnToBill');
-    socket.off('wholeBillPaid');
     socket.off('entered-payPartOfBillPage');
     socket.off('entered-scrapProductsPage');
 }
@@ -144,6 +144,14 @@ export async function markHistoryAsScrapped(_id) {
 export async function scrapProducts(billToScrap) {
     return await axios.post('/scrapProducts', {
         billToScrap
+    }).catch((err) => {
+        return err.response;
+    });
+}
+
+export async function moveProducts(billToMove) {
+    return await axios.post('/moveProducts', {
+        billToMove
     }).catch((err) => {
         return err.response;
     });

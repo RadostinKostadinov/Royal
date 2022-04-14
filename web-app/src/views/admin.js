@@ -431,7 +431,8 @@ export async function scrapRestockProductPage(ctx) {
 }
 
 export async function createProductPage() {
-    const categories = await getAllCategories();
+    //TODO To be able to create addons (add the field for which category to appear in)
+    const categories = await getAllCategories(); // CHANGE TO TRUE WHEN READY FOR ADDONS
     const ingredients = await getAllIngredients();
     addedIngredients = [];
 
@@ -693,6 +694,7 @@ export async function deleteProductPage() {
 }
 
 export async function editProductPage(ctx) {
+    //TODO To be able to edit addons (add the field for which category to appear in)
     const categories = await getAllCategories(true);
     const allProducts = await getAllProducts();
     const allIngredients = await getAllIngredients();

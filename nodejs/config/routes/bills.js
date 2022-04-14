@@ -46,6 +46,7 @@ export function billsRoutes(app, auth) {
             const originalBill = await Bill.findById(billToScrap._id);
             const table = await Table.findById(originalBill.table);
             for (let product of billToScrap.products) { // for every product to pay
+                //FIXME Rework this with same as sellProducts
                 for (let [index, prd] of Object.entries(originalBill.products)) { // check against every product in original bill
                     if (product.product._id.toString() === prd.product.toString()) {
                         // remove qty from original bill
@@ -111,7 +112,7 @@ export function billsRoutes(app, auth) {
 
     app.post('/sellProducts', auth, async (req, res) => {
         try {
-            const { billToPay } = req.body;
+            const { billToPay } = req.body; // the products we are going to pay from that bill
 
             if (billToPay.products.length === 0)
                 return res.status(404).send('Няма продукти в сметката');
@@ -119,60 +120,66 @@ export function billsRoutes(app, auth) {
             let historyProducts = [];
             let historyTotal = 0;
 
-            const originalBill = await Bill.findById(billToPay._id);
+            const originalBill = await Bill.findById(billToPay._id); // the whole bill
             const table = await Table.findById(originalBill.table);
 
             for (let product of billToPay.products) { // for every product to pay
-                for (let [index, prd] of Object.entries(originalBill.products)) { // check against every product in original bill
-                    if (product.product._id.toString() === prd.product.toString()) {
-                        // remove qty from original bill
-                        originalBill.total = +originalBill.total.toFixed(2) - product.product.sellPrice * product.qty;
-                        table.total = +table.total.toFixed(2) - product.product.sellPrice * product.qty;
+                // Find index of product in actuall bill
+                const index = originalBill.products.findIndex(prd => prd.product._id.toString() === product.product._id.toString());
 
-                        prd.qty -= product.qty;
-                        if (prd.qty === 0)
-                            originalBill.products.splice(index, 1);
+                // Recalculate total price
+                originalBill.total -= product.product.sellPrice * product.qty;
+                table.total -= product.product.sellPrice * product.qty;
 
-                        // remove product qty from inventory
-                        // first check if from ingredients
-                        let ingredientsArray = [];
-                        const prodRef = await Product.findById(product.product._id);
-                        if (prodRef.ingredients.length === 0) {
-                            prodRef.qty -= product.qty;
-                        } else {
-                            for (let ingredient of prodRef.ingredients) {
-                                const ingredientRef = await Ingredient.findById(ingredient.ingredient);
+                // Remove qty from originalBill
+                originalBill.products[index].qty -= product.qty;
 
-                                ingredientRef.qty -= ingredient.qty;
-                                await ingredientRef.save();
+                // Check if qty === 0, remove product from bill
+                if (originalBill.products[index].qty === 0)
+                    originalBill.products.splice(index, 1);
 
-                                ingredientsArray.push({
-                                    name: ingredientRef.name,
-                                    qty: ingredient.qty,
-                                    price: ingredientRef.sellPrice,
-                                    ingredientRef: ingredientRef._id
-                                });
-                            }
-                        }
+                // await originalBill.save();
+                // await table.save();
 
-                        await prodRef.save();
+                // Remove qty from inventory
+                let ingredientsArray = [];
+                const prodRef = await Product.findById(product.product._id);
 
-                        historyProducts.push({
-                            name: product.product.name,
-                            qty: product.qty,
-                            price: product.product.sellPrice,
-                            productRef: product.product._id,
-                            ingredients: ingredientsArray
+                // Check if product has ingredients
+                if (prodRef.ingredients.length === 0) {
+                    prodRef.qty -= product.qty;
+                    await prodRef.save();
+                }
+                else {
+                    for (let ingredient of prodRef.ingredients) {
+                        const ingredientRef = await Ingredient.findById(ingredient.ingredient);
+
+                        ingredientRef.qty -= ingredient.qty;
+                        await ingredientRef.save();
+
+                        ingredientsArray.push({
+                            name: ingredientRef.name,
+                            qty: ingredient.qty,
+                            price: ingredientRef.sellPrice,
+                            ingredientRef: ingredientRef._id
                         });
-
-                        historyTotal += product.product.sellPrice * product.qty;
-                        break; // start searching for next product
                     }
                 }
+
+                historyProducts.push({
+                    name: product.product.name,
+                    qty: product.qty,
+                    price: product.product.sellPrice,
+                    productRef: product.product._id,
+                    ingredients: ingredientsArray
+                });
+
+                historyTotal += product.product.sellPrice * product.qty;
             }
 
-            await table.save();
             await originalBill.save();
+            await table.save();
+
             res.json(originalBill);
 
             // Add action to history

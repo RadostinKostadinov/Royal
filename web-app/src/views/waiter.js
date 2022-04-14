@@ -4,12 +4,12 @@ import '../css/waiter/tables/tables.css';
 import '../css/waiter/tables/middle.css';
 import '../css/waiter/tables/inside.css';
 import '../css/waiter/tableControls.css';
-import '../css/waiter/payPartOfBill.css';
+import '../css/waiter/payMoveScrap.css';
 import { container } from "../app";
 import { html, render } from 'lit/html.js';
 import $ from "jquery";
 import 'bootstrap-icons/font/bootstrap-icons.css';
-import { fixPrice, stopAllSockets, socket, getAllPaidBills, getAddonsForCategory, getLastPaidBillByTableId, addProductToBill, generateBills, getAllCategories, getProductsFromCategory, logout, getBillById, removeOneFromBill, sellProducts, scrapProducts, addProductsToHistory, getTables, getTableTotalById, createNewOrder, getTodaysReport } from '../api';
+import { fixPrice, stopAllSockets, socket, getAllPaidBills, getAddonsForCategory, getLastPaidBillByTableId, addProductToBill, generateBills, getAllCategories, getProductsFromCategory, logout, getBillById, removeOneFromBill, sellProducts, scrapProducts, addProductsToHistory, getTables, getTableTotalById, createNewOrder, getTodaysReport, moveProducts } from '../api';
 
 let lastRenderedLocation = 'middle'; // remembers the last rendered location, so when the user clicks "Back", take them there
 
@@ -17,7 +17,6 @@ let lastRenderedLocation = 'middle'; // remembers the last rendered location, so
 export async function waiterDashboardPage() {
     // Stop listening on old sockets
     stopAllSockets();
-    console.log(lastRenderedLocation);
 
     renderTablesView(undefined, lastRenderedLocation);
 
@@ -95,8 +94,6 @@ export async function waiterDashboardPage() {
         if (res.status === 200) {
             const { combinedReport, personalReport } = res.data;
 
-            console.log(res.data);
-
             render(reportTemplate(combinedReport, personalReport), document.querySelector('#reportModal .modal-body'))
         } else {
             console.error(res);
@@ -173,7 +170,6 @@ export async function waiterDashboardPage() {
                         <button class=${lastRenderedLocation === 'middle' ? 'active' : ''} id="middleTablesBtn" @click=${(clickedBtn) => renderTablesView(clickedBtn, 'middle')}>Градина</button>
                     </div>
                     <div class="d-flex flex-column text-center gap-3 w-100">
-                        <!-- <button>Меню</button> -->
                         <button @click=${getTdsReport} data-bs-toggle="modal" data-bs-target="#reportModal">Отчет</button>
                         <button @click=${logout}>Изход</button>
                     </div>
@@ -265,7 +261,7 @@ export async function tableControlsPage(ctx) {
         }
     }
 
-    // Rerender products in bill when someone scraps a product from the bill
+    // Rerender products in bill when someone pays/scraps/removes/moves a product from the bill
     socket.on('billChanged', (bill) => {
         // First check if this user is on the same table
         if (bill.table !== selectedTable)
@@ -537,7 +533,6 @@ export async function tableControlsPage(ctx) {
 
         if (res.status === 200) {
             billData = res.data;
-            socket.emit('wholeBillPaid'); // used in the "Извади" screen, to remove all products from there
             socket.emit('billChanged', billData); // send new bill to server to rerender for anyone in same view
             page(`/waiter`);
         } else {
@@ -622,6 +617,14 @@ export async function tableControlsPage(ctx) {
         page(`${ctx.path}/bill/${selectedBillId}/scrap`)
     }
 
+    async function goToMove() {
+        clearTimeout(awayTimeout);
+        if (addedProducts.length)
+            await addToHistoryAndCreateNewOrder();
+
+        page(`${ctx.path}/bill/${selectedBillId}/move`)
+    }
+
     const controlsTemplate = () => html`
         <div id="tableControls">
             <div class="categories">
@@ -645,6 +648,7 @@ export async function tableControlsPage(ctx) {
                     <button style="opacity: 0.2">Приключи с принт</button>
                     <button @click=${payWholeBill}>Приключи</button>
                     <button @click=${goToScrap}>Брак</button>
+                    <!-- TODO ENABLE ME WHEN DONE WITH MOVE <button @click=${goToMove}>Премести</button> -->
                     <button @click=${goBack}>Назад</button>
                 </div>
             </div>
@@ -656,6 +660,231 @@ export async function tableControlsPage(ctx) {
     loadProductsFromCategory(categories[0]._id);
     initializeBills();
     render(controlsTemplate(), container);
+}
+
+export async function moveProductsPage(ctx) {
+    //TODO Everything in this function is done, need to do the backend
+    //Also need to show a screen with all tables to choose where to move, instead of
+    //Before calling moveProducts
+
+
+
+    // Stop listening on old sockets
+    stopAllSockets();
+    
+    const selectedTable = ctx.params.tableId;
+    let bill = (await getBillById(ctx.params.billId)).data;
+    let productsToMove = {
+        _id: bill._id, // bill id
+        number: bill.number, // bill number
+        table: bill.table, // table id
+        products: [],
+        total: 0,
+    };
+
+    socket.on('billChanged', (billData) => {
+        // First check if this user is on the same bill
+        if (billData._id !== bill._id)
+            return;
+
+        // // Bill changed, rerender empty (default) view
+        productsToMove.products = [];
+        productsToMove.total = 0;
+        bill.products = [];
+        bill.total = 0;
+        rerender(bill, productsToMove);
+    });
+
+    socket.on('addToMove/returnToBill', (data) => {
+        // First check if we are on same bill
+        if (bill._id !== data.bill._id)
+            return;
+
+        bill = data.bill;
+        productsToMove = data.productsToMove;
+
+        rerender(bill, productsToMove)
+    });
+
+    // Check if someone just entered, and if so - send them this user's bill and productsToPay
+    socket.on('entered-moveProductsPage', () => {
+        socket.emit('addToMove/returnToBill', { bill, productsToMove });
+    });
+
+    // Emit first time entering the page, to notify the user that is already editing (if any) to send their info
+    socket.emit('entered-moveProductsPage');
+
+    function rerender(bill, productsToMove) {
+        render(productsInBillTemplate(bill), document.getElementById('productsInBill'));
+        render(productsToMoveTemplate(productsToMove), document.getElementById('productsToPay'));
+        render(html`${bill.total.toFixed(2)}`, document.querySelector('#totalOnTable .price'))
+        render(html`${productsToMove.total.toFixed(2)}`, document.querySelector('#totalToPay .price'))
+    }
+
+    function addToMove(index, product) {
+        // Transfer 1 qty of this product
+        // index in bill.products array
+        product.qty--; // this is referencing directly the object in bill
+        bill.total -= product.product.sellPrice;
+
+        if (product.qty === 0)
+            bill.products.splice(index, 1); // remove from array if qty = 0
+
+        let foundProduct = false;
+        for (let pr of productsToMove.products) {
+            if (pr.product._id === product.product._id) {
+                pr.qty++;
+                foundProduct = true;
+                break;
+            }
+        }
+
+        // if product not found, create it
+        if (foundProduct === false) {
+            productsToMove.products.push({
+                product: product.product,
+                qty: 1
+            });
+        }
+
+        productsToMove.total += product.product.sellPrice;
+
+        socket.emit('addToMove/returnToBill', { bill, productsToMove});
+
+        // Rerender both bill and toPay
+        rerender(bill, productsToMove);
+    }
+
+    function returnToBill(index, product) {
+        // Transfer 1 qty of this product BACK to bill
+
+        product.qty--;
+        productsToMove.total = productsToMove.total - product.product.sellPrice;
+
+        if (product.qty === 0)
+            productsToMove.products.splice(index, 1);
+
+        let foundProduct = false;
+        for (let pr of bill.products) {
+            if (pr.product._id === product.product._id) {
+                pr.qty++;
+                foundProduct = true;
+                break;
+            }
+        }
+
+        if (foundProduct === false) {
+            bill.products.push({
+                product: product.product,
+                qty: 1
+            });
+        }
+        bill.total += product.product.sellPrice;
+
+        socket.emit('addToMove/returnToBill', { bill, productsToMove });
+
+        // Rerender both bill and toPay
+        rerender(bill, productsToMove);
+    }
+
+    const productsInBillTemplate = (bill) => html`
+        <table class="text-center">
+            <thead>
+                <tr>
+                    <th width="50%">Артикул</th>
+                    <th width="15%">Брой</th>
+                    <th width="15%">Сума</th>
+                    <th width="20%"></th>
+                </tr>
+            </thead>
+            <tbody>
+                ${bill.products.map((product, index) => {
+                    return html`
+                    <tr>
+                        <td width="50%">${product.product.name}</td>
+                        <td width="15%">${product.qty}</td>
+                        <td width="15%">${(product.product.sellPrice * product.qty).toFixed(2)}</td>
+                        <td @click=${() => addToMove(index, product)} width="20%" class="text-uppercase remove cursor-pointer">Премести</td>
+                    </tr>`
+                })}
+            </tbody>
+        </table>
+    `;
+
+    const productsToMoveTemplate = (bill) => html`
+        <table class="text-center">
+            <thead>
+                <tr>
+                    <th width="50%">Артикул</th>
+                    <th width="15%">Брой</th>
+                    <th width="15%">Сума</th>
+                    <th width="20%"></th>
+                </tr>
+            </thead>
+            <tbody>
+                ${bill.products.map((product, index) => {
+                    return html`
+                    <tr>
+                        <td width="50%">${product.product.name}</td>
+                        <td width="15%">${product.qty}</td>
+                        <td width="15%">${(product.product.sellPrice * product.qty).toFixed(2)}</td>
+                        <td @click=${() => returnToBill(index, product)} width="20%" class="cursor-pointer text-uppercase back">Върни</td>
+                    </tr>`
+                })}
+            </tbody>
+        </table>
+    `;
+
+    async function movePrdcts() {
+        if (productsToMove.products.length === 0) return;
+
+        const res = await moveProducts(productsToMove);
+
+        if (res.status === 200) {
+            // Notify anyone that is already in this screen
+            productsToMove.products = [];
+            productsToMove.total = 0;
+
+            // Notify anyone still paying products
+            socket.emit('addToMove/returnToBill', { bill, productsToMove });
+
+            // Notify that bill changed, rerender wherever needed
+            socket.emit('billChanged', bill); // send new bill to server to rerender for anyone in same view
+            page(`/waiter/table/${selectedTable}`);
+        } else {
+            console.error(res);
+            alert('Възникна грешка!');
+        }
+    }
+
+    const template = () => html`
+        <div id="payPartOfBill">
+            <div id="productsInBill" class="productsTables"></div>
+            <div id="controlsAndTotals" class="d-flex gap-3 flex-column justify-content-between">
+                <div class="totals d-flex flex-column justify-content-between text-center">
+                    <div id="totalOnTable" class="totalBlock">
+                        <span>Оставаща сума на масата</span>
+                        <div class="price"></div>
+                    </div>
+                    <div id="totalToPay" class="totalBlock">
+                        <span>Извадена сума от масата</span>
+                        <div class="price"></div>
+                    </div>
+                </div>
+                <div class="controls d-flex flex-column justify-content-between">
+                    <div class="d-flex gap-3 flex-column justify-content-evenly">
+                        <button>Извади с принт</button>
+                        <button @click=${movePrdcts}>Извади</button>
+                    </div>
+                    <button @click=${() => page(`/waiter/table/${selectedTable}`)}>Отказ</button>
+                </div>
+            </div>
+            <div id="productsToPay" class="productsTables"></div>
+        </div>
+    `;
+
+    render(template(), container);
+    rerender(bill, productsToMove);
 }
 
 export async function payPartOfBillPage(ctx) {
@@ -672,8 +901,12 @@ export async function payPartOfBillPage(ctx) {
         total: 0,
     };
 
-    socket.on('wholeBillPaid', () => {
-        // Whole bill is paid, remove all products from here
+    socket.on('billChanged', (billData) => {
+        // First check if this user is on the same bill
+        if (billData._id !== bill._id)
+            return;
+
+        // // Bill changed, rerender empty (default) view
         productsToPay.products = [];
         productsToPay.total = 0;
         bill.products = [];
@@ -688,21 +921,6 @@ export async function payPartOfBillPage(ctx) {
 
         bill = data.bill;
         productsToPay = data.productsToPay;
-
-        rerender(bill, productsToPay)
-    });
-
-    socket.on('pay-scrap-refresh', (data) => {
-        // If one user used sellProducts or scrapProducts, make every other user refresh their content
-        // Otherwise, one user can pay some products and the other can still scrap them at the same time
-
-        // First check if we are on same bill
-        if (bill._id !== data.bill._id)
-            return;
-
-        bill = data.bill;
-        productsToPay.total = 0;
-        productsToPay.products = [];
 
         rerender(bill, productsToPay)
     });
@@ -845,9 +1063,6 @@ export async function payPartOfBillPage(ctx) {
             productsToPay.products = [];
             productsToPay.total = 0;
 
-            // Notify anyone that is scrapping products
-            socket.emit('pay-scrap-refresh', { bill });
-
             // Notify anyone still paying products
             socket.emit('addToPay/returnToBill', { bill, productsToPay });
 
@@ -905,8 +1120,12 @@ export async function scrapProductsPage(ctx) {
         total: 0,
     };
 
-    socket.on('wholeBillPaid', () => {
-        // Whole bill is paid, remove all products from here
+    socket.on('billChanged', (billData) => {
+        // First check if this user is on the bill
+        if (billData._id !== bill._id)
+            return;
+
+        // Bill changed, rerender empty (default) view
         productsToScrap.products = [];
         productsToScrap.total = 0;
         bill.products = [];
@@ -921,21 +1140,6 @@ export async function scrapProductsPage(ctx) {
 
         bill = data.bill;
         productsToScrap = data.productsToScrap;
-
-        rerender(bill, productsToScrap)
-    });
-    
-    socket.on('pay-scrap-refresh', (data) => {
-        // If one user used sellProducts or scrapProducts, make every other user refresh their content
-        // Otherwise, one user can pay some products and the other can still scrap them at the same time
-        
-        // First check if we are on same bill
-        if (bill._id !== data.bill._id)
-            return;
-
-        bill = data.bill;
-        productsToScrap.total = 0;
-        productsToScrap.products = [];
 
         rerender(bill, productsToScrap)
     });
@@ -1077,9 +1281,6 @@ export async function scrapProductsPage(ctx) {
             // Notify anyone that is already in this screen
             productsToScrap.products = [];
             productsToScrap.total = 0;
-
-            // Notify anyone that is paying products
-            socket.emit('pay-scrap-refresh', { bill });
 
             // Notify anyone still scrapping products
             socket.emit('addToScrap/returnToBill', { bill, productsToScrap });

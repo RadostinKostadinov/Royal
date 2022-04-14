@@ -5,10 +5,10 @@
 		"axios": "^0.26.1",
 		"bootstrap-icons": "^1.8.1",
 		"jquery": "^3.6.0",
-		"lit": "^2.2.0",
+		"lit": "^2.2.2",
 		"page": "^1.11.6",
 		"socket.io-client": "^4.4.1",
-		"sortablejs": "^1.14.0"
+		"sortablejs": "^1.15.0"
 	},
 	"scripts": {
 		"Build DEV": "webpack --config webpack.dev.config.js --mode=development",
@@ -21,7 +21,7 @@
 		"mini-css-extract-plugin": "^2.6.0",
 		"sass-loader": "^12.6.0",
 		"style-loader": "^3.3.1",
-		"webpack": "^5.70.0",
+		"webpack": "^5.72.0",
 		"webpack-cli": "^4.9.2",
 		"webpack-obfuscator": "^3.5.1"
 	}

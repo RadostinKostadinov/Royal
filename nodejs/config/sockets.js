@@ -19,11 +19,6 @@ function socketsInitialize(io) {
             socket.broadcast.emit('order:change', { orders, allProducts });
         });
 
-        socket.on('pay-scrap-refresh', ({ bill }) => {
-            // send to all except sender
-            socket.broadcast.emit('pay-scrap-refresh', { bill });
-        });
-
         socket.on('entered-scrapProductsPage', () => {
             // send to all except sender
             socket.broadcast.emit('entered-scrapProductsPage');
@@ -44,9 +39,9 @@ function socketsInitialize(io) {
             socket.broadcast.emit('addToPay/returnToBill', { bill, productsToPay });
         });
 
-        socket.on('wholeBillPaid', () => {
+        socket.on('addToMove/returnToBill', ({ bill, productsToMove }) => {
             // send to all except sender
-            socket.broadcast.emit('wholeBillPaid');
+            socket.broadcast.emit('addToMove/returnToBill', { bill, productsToMove });
         });
 
         socket.on('billChanged', (bill) => {

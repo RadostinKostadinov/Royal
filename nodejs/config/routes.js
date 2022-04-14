@@ -429,7 +429,7 @@ function routesConfig(app) {
                     name: 'Сухо мляко',
                     unit: 'кг',
                     qty: 1000,
-                    buyPrice: 23.50,
+                    buyPrice: 23.5,
                     sellPrice: 40
                 },
                 {
@@ -990,8 +990,8 @@ function routesConfig(app) {
                         },
                         {
                             name: "Кафе без кофейн",
-                            buyPrice: 0,
-                            sellPrice: 1.7,
+                            buyPrice: 0.45,
+                            sellPrice: 2,
                             ingredients: [
                                 {
                                     ingredient: "Безкофейново Или",
@@ -1022,19 +1022,21 @@ function routesConfig(app) {
                             qty: 50,
                             buyPrice: 0,
                             sellPrice: 1.5,
-                            forBartender: true
+                            forBartender: true,
+                            position: 1
                         },
                         {
                             name: "Чай каничка",
                             qty: 50,
                             buyPrice: 0,
                             sellPrice: 1.8,
-                            forBartender: true
+                            forBartender: true,
+                            position: 2
                         },
                         {
                             name: "Капучино",
-                            buyPrice: 0,
-                            sellPrice: 2.2,
+                            buyPrice: 1.05,
+                            sellPrice: 2.5,
                             ingredients: [
                                 {
                                     ingredient: "Нескафе",
@@ -1042,15 +1044,16 @@ function routesConfig(app) {
                                 },
                                 {
                                     ingredient: "Сухо мляко",
-                                    qty: 30
+                                    qty: 27
                                 }
                             ],
-                            forBartender: true
+                            forBartender: true,
+                            position: 7
                         },
                         {
                             name: "Мляко с нес",
-                            buyPrice: 0,
-                            sellPrice: 2.2,
+                            buyPrice: 0.98,
+                            sellPrice: 2.5,
                             ingredients: [
                                 {
                                     ingredient: "Нескафе",
@@ -1061,12 +1064,13 @@ function routesConfig(app) {
                                     qty: 30
                                 }
                             ],
-                            forBartender: true
+                            forBartender: true,
+                            position: 18
                         },
                         {
                             name: "Мокачино",
-                            buyPrice: 0,
-                            sellPrice: 2.8,
+                            buyPrice: 1.21,
+                            sellPrice: 3,
                             ingredients: [
                                 {
                                     ingredient: "Нескафе",
@@ -1081,7 +1085,8 @@ function routesConfig(app) {
                                     qty: 16
                                 }
                             ],
-                            forBartender: true
+                            forBartender: true,
+                            position: 19
                         },
                         {
                             name: "Виенско кафе",
@@ -1097,12 +1102,13 @@ function routesConfig(app) {
                                     qty: 1
                                 }
                             ],
-                            forBartender: true
+                            forBartender: true,
+                            position: 3
                         },
                         {
                             name: "Горещ шоколад",
-                            buyPrice: 0,
-                            sellPrice: 2.2,
+                            buyPrice: 0.84,
+                            sellPrice: 2.5,
                             ingredients: [
                                 {
                                     ingredient: "Сухо мляко",
@@ -1113,24 +1119,26 @@ function routesConfig(app) {
                                     qty: 33
                                 }
                             ],
-                            forBartender: true
+                            forBartender: true,
+                            position: 20
                         },
                         {
                             name: "Мляко",
-                            buyPrice: 0,
-                            sellPrice: 1.8,
+                            buyPrice: 0.8,
+                            sellPrice: 2,
                             ingredients: [
                                 {
                                     ingredient: "Сухо мляко",
                                     qty: 35
                                 }
                             ],
-                            forBartender: true
+                            forBartender: true,
+                            position: 23
                         },
                         {
                             name: "Мляко с какао",
-                            buyPrice: 0,
-                            sellPrice: 2.2,
+                            buyPrice: 0.96,
+                            sellPrice: 2.5,
                             ingredients: [
                                 {
                                     ingredient: "Сухо мляко",
@@ -1141,7 +1149,8 @@ function routesConfig(app) {
                                     qty: 23
                                 },
                             ],
-                            forBartender: true
+                            forBartender: true,
+                            position: 21
                         },
                         {
                             name: "Лате",
@@ -1157,7 +1166,8 @@ function routesConfig(app) {
                                     qty: 35
                                 },
                             ],
-                            forBartender: true
+                            forBartender: true,
+                            position: 12
                         },
                         {
                             name: "3в1",
@@ -1169,7 +1179,8 @@ function routesConfig(app) {
                                     qty: 19
                                 },
                             ],
-                            forBartender: true
+                            forBartender: true,
+                            position: 5
                         },
                         {
                             name: "Студено мляко с какао",
@@ -1185,14 +1196,16 @@ function routesConfig(app) {
                                     qty: 220
                                 },
                             ],
-                            forBartender: true
+                            forBartender: true,
+                            position: 16
                         },
                         {
                             name: "3в1 пакетче",
                             qty: 50,
                             buyPrice: 0,
                             sellPrice: 1.5,
-                            forBartender: true
+                            forBartender: true,
+                            position: 6
                         },
                         {
                             name: "Мляко с нес ръчно",
@@ -1208,7 +1221,8 @@ function routesConfig(app) {
                                     qty: 220
                                 },
                             ],
-                            forBartender: true
+                            forBartender: true,
+                            position: 14
                         },
                         {
                             name: "Лате ръчно",
@@ -1224,7 +1238,8 @@ function routesConfig(app) {
                                     qty: 200
                                 },
                             ],
-                            forBartender: true
+                            forBartender: true,
+                            position: 13
                         },
                         {
                             name: "Мляко с какао ръчно",
@@ -1240,14 +1255,16 @@ function routesConfig(app) {
                                     qty: 220
                                 },
                             ],
-                            forBartender: true
+                            forBartender: true,
+                            position: 15
                         },
                         {
                             name: "Горещ шоколад италиански",
                             qty: 50,
                             buyPrice: 0,
                             sellPrice: 3.9,
-                            forBartender: true
+                            forBartender: true,
+                            position: 17
                         },
                     ]
                 },
@@ -1730,28 +1747,28 @@ function routesConfig(app) {
                         {
                             name: "Бадем",
                             qty: 50,
-                            buyPrice: 0,
+                            buyPrice: 3,
                             sellPrice: 5,
                             forBartender: true
                         },
                         {
                             name: "Лешник",
                             qty: 50,
-                            buyPrice: 0,
+                            buyPrice: 3,
                             sellPrice: 5,
                             forBartender: true
                         },
                         {
                             name: "Шам фъстък",
                             qty: 50,
-                            buyPrice: 0,
+                            buyPrice: 3,
                             sellPrice: 5,
                             forBartender: true
                         },
                         {
                             name: "Кашу",
                             qty: 50,
-                            buyPrice: 0,
+                            buyPrice: 3,
                             sellPrice: 5,
                             forBartender: true
                         },
@@ -1763,32 +1780,32 @@ function routesConfig(app) {
                         {
                             name: "Каменица",
                             qty: 50,
-                            buyPrice: 0,
-                            sellPrice: 2.3,
+                            buyPrice: 1,
+                            sellPrice: 2.5,
                         },
                         {
                             name: "Бургаско",
                             qty: 50,
-                            buyPrice: 0,
-                            sellPrice: 2.3,
+                            buyPrice: 1,
+                            sellPrice: 2.5,
                         },
                         {
                             name: "Стела Артоа",
                             qty: 50,
-                            buyPrice: 0,
-                            sellPrice: 2.8,
+                            buyPrice: 1.3,
+                            sellPrice: 3,
                         },
                         {
                             name: "Бекс",
                             qty: 50,
-                            buyPrice: 0,
-                            sellPrice: 2.6,
+                            buyPrice: 1.2,
+                            sellPrice: 2.8,
                         },
                         {
                             name: "Старопрамен",
                             qty: 50,
-                            buyPrice: 0,
-                            sellPrice: 2.6,
+                            buyPrice: 1.2,
+                            sellPrice: 2.8,
                         },
                         {
                             name: "Корона",
@@ -1835,13 +1852,13 @@ function routesConfig(app) {
                         {
                             name: "Наргиле",
                             qty: 50,
-                            buyPrice: 0,
+                            buyPrice: 7,
                             sellPrice: 20,
                             forBartender: true
                         },
                         {
                             name: "Шот",
-                            buyPrice: 0,
+                            buyPrice: 10,
                             sellPrice: 20,
                             ingredients: [
                                 {
@@ -1881,7 +1898,7 @@ function routesConfig(app) {
                         }
                     }
 
-                    const pr = await Product.create(product);
+                    await Product.create(product);
                 }
                 cat.save(); // save references
             }
@@ -1917,13 +1934,13 @@ function routesConfig(app) {
 
         // await createDefaultUsers();
         await createDefaultTables();
-        /* await createDefaultCategories();
+        await createDefaultCategories();
         await createDefaultIngredients();
         await createDefaultProducts();
         await deleteAllBills();
         await deleteHistory();
         await deleteReports();
-        await deleteOrders(); */
+        await deleteOrders();
     }
     // createDefaults();
 }
