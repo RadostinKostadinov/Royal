@@ -11,8 +11,7 @@ async function recalculateTablesTotals() {
         else
             table.total += bill.total;
 
-        table.total = table.total.toFixed(2);
-        table.save();
+        await table.save();
     }
 }
 

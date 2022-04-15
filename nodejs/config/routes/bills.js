@@ -50,8 +50,8 @@ export function billsRoutes(app, auth) {
                 for (let [index, prd] of Object.entries(originalBill.products)) { // check against every product in original bill
                     if (product.product._id.toString() === prd.product.toString()) {
                         // remove qty from original bill
-                        originalBill.total = +originalBill.total.toFixed(2) - product.product.sellPrice * product.qty;
-                        table.total = +table.total.toFixed(2) - product.product.sellPrice * product.qty;
+                        originalBill.total -= product.product.sellPrice * product.qty;
+                        table.total -= product.product.sellPrice * product.qty;
 
                         prd.qty -= product.qty;
                         if (prd.qty === 0)
@@ -85,8 +85,8 @@ export function billsRoutes(app, auth) {
                 }
             }
 
-            originalBill.save();
-            table.save();
+            await originalBill.save();
+            await table.save();
             res.json(originalBill);
 
             // Add action to history
@@ -137,9 +137,6 @@ export function billsRoutes(app, auth) {
                 // Check if qty === 0, remove product from bill
                 if (originalBill.products[index].qty === 0)
                     originalBill.products.splice(index, 1);
-
-                // await originalBill.save();
-                // await table.save();
 
                 // Remove qty from inventory
                 let ingredientsArray = [];
