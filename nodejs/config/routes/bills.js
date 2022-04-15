@@ -127,7 +127,7 @@ export function billsRoutes(app, auth) {
                 // Find index of product in actuall bill
                 const index = originalBill.products.findIndex(prd => prd.product._id.toString() === product.product._id.toString());
 
-                // Recalculate total price
+                // OLD Recalculate total price
                 originalBill.total -= product.product.sellPrice * product.qty;
                 table.total -= product.product.sellPrice * product.qty;
 
@@ -218,8 +218,8 @@ export function billsRoutes(app, auth) {
                     if (product.qty === 0)
                         bill.products.splice(index, 1); // remove product entirely from bill
 
-                    bill.total = (bill.total - product.product.sellPrice).toFixed(2); // Remove price from total
-                    table.total = (table.total - product.product.sellPrice).toFixed(2); // Remove price from total
+                    bill.total -= product.product.sellPrice; // Remove price from total
+                    table.total -= product.product.sellPrice; // Remove price from total
                     bill.save();
                     table.save();
 
@@ -346,11 +346,11 @@ export function billsRoutes(app, auth) {
                 bill.products.push({ product: product._id, qty: selectedX }); // Add reference of product and qty (selectedX) to bill
 
             // Update bill total
-            bill.total = (bill.total + product.sellPrice * selectedX).toFixed(2);
+            bill.total = bill.total + product.sellPrice * selectedX;
             bill.save(); // Save (because we are editing)
 
             // Update table total
-            table.total = (table.total + product.sellPrice * selectedX).toFixed(2);
+            table.total = table.total + product.sellPrice * selectedX;
             table.save(); // Save (because we are editing)
 
             await bill.populate('products.product'); // populate products (+ the one we created)

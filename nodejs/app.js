@@ -10,7 +10,7 @@ import http from 'http';
 import fs from 'fs'; */
 import { Server } from 'socket.io';
 
-export const inDevMode = process.env.NODE_ENV.trim() === 'development';
+export const inDevMode = process.env.NODE_ENV ? process.env.NODE_ENV.trim() === 'development' : false;
 
 const app = express();
 

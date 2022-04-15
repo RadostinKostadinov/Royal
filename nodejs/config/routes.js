@@ -47,7 +47,7 @@ function routesConfig(app) {
             const users = [
                 {
                     name: "Анатоли",
-                    pin: await bcrypt.hash("1976", 10),
+                    pin: await bcrypt.hash("8612", 10),
                     role: "admin"
                 },
                 {

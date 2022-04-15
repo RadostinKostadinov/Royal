@@ -4,7 +4,8 @@
 	"main": "app.js",
 	"type": "module",
 	"scripts": {
-		"Start Node": "SET NODE_ENV=development && nodemon app.js"
+		"Start Node Win": "SET NODE_ENV=development && nodemon app.js",
+		"Start Node Mac": "export NODE_ENV=development && nodemon app.js"
 	},
 	"author": "",
 	"license": "ISC",
