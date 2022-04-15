@@ -50,9 +50,6 @@ export function billsRoutes(app, auth) {
                 for (let [index, prd] of Object.entries(originalBill.products)) { // check against every product in original bill
                     if (product.product._id.toString() === prd.product.toString()) {
                         // remove qty from original bill
-                        originalBill.total -= product.product.sellPrice * product.qty;
-                        table.total -= product.product.sellPrice * product.qty;
-
                         prd.qty -= product.qty;
                         if (prd.qty === 0)
                             originalBill.products.splice(index, 1);
@@ -85,8 +82,17 @@ export function billsRoutes(app, auth) {
                 }
             }
 
+            // Recalculate totals
+            originalBill.total = 0;
+            table.total = 0;
+            for (let product of originalBill.products) {
+                originalBill.total += product.product.sellPrice * product.qty;
+                table.total += product.product.sellPrice * product.qty;
+            }
+
             await originalBill.save();
             await table.save();
+
             res.json(originalBill);
 
             // Add action to history
@@ -120,7 +126,7 @@ export function billsRoutes(app, auth) {
             let historyProducts = [];
             let historyTotal = 0;
 
-            const originalBill = await Bill.findById(billToPay._id); // the whole bill
+            const originalBill = await Bill.findById(billToPay._id).populate('products.product'); // the whole bill
             const table = await Table.findById(originalBill.table);
 
             for (let product of billToPay.products) { // for every product to pay
@@ -174,6 +180,14 @@ export function billsRoutes(app, auth) {
                 historyTotal += product.product.sellPrice * product.qty;
             }
 
+            // Recalculate totals
+            originalBill.total = 0;
+            table.total = 0;
+            for (let product of originalBill.products) {
+                originalBill.total += product.product.sellPrice * product.qty;
+                table.total += product.product.sellPrice * product.qty;
+            }
+
             await originalBill.save();
             await table.save();
 
@@ -215,10 +229,17 @@ export function billsRoutes(app, auth) {
                     if (product.qty === 0)
                         bill.products.splice(index, 1); // remove product entirely from bill
 
-                    bill.total -= product.product.sellPrice; // Remove price from total
-                    table.total -= product.product.sellPrice; // Remove price from total
-                    bill.save();
-                    table.save();
+
+                    // Recalculate totals
+                    bill.total = 0;
+                    table.total = 0;
+                    for (let product of bill.products) {
+                        bill.total += product.product.sellPrice * product.qty;
+                        table.total += product.product.sellPrice * product.qty;
+                    }
+
+                    await bill.save();
+                    await table.save();
 
 
                     if (!table)
@@ -343,12 +364,12 @@ export function billsRoutes(app, auth) {
                 bill.products.push({ product: product._id, qty: selectedX }); // Add reference of product and qty (selectedX) to bill
 
             // Update bill total
-            bill.total = bill.total + product.sellPrice * selectedX;
-            bill.save(); // Save (because we are editing)
+            bill.total += product.sellPrice * selectedX;
+            await bill.save(); // Save (because we are editing)
 
             // Update table total
-            table.total = table.total + product.sellPrice * selectedX;
-            table.save(); // Save (because we are editing)
+            table.total += product.sellPrice * selectedX;
+            await table.save(); // Save (because we are editing)
 
             await bill.populate('products.product'); // populate products (+ the one we created)
 
