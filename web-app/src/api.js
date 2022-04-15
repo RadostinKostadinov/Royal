@@ -498,6 +498,14 @@ export async function generateBills(_id, numberOfBills) {
     });
 }
 
+export async function checkSitePass(pass) {
+    return await axios.post('/checkSitePass', {
+        pass
+    }).catch((err) => {
+        return err.response;
+    });
+}
+
 export async function logout() {
     // Update user's report before logging out
     const res = await axios.get('/updateReport');

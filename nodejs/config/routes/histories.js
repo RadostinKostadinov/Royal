@@ -7,6 +7,7 @@ export function historiesRoutes(app, auth) {
 
     app.get('/getAllPaidBills', auth, async (req, res) => {
         try {
+            //TODO Check if should be yesterday also here
             let today = new Date();
             today.setHours(0, 0, 0, 0);
 

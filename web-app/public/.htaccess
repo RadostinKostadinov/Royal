@@ -1,7 +1,16 @@
 <ifModule mod_rewrite.c>
+    # Redirect all links to main html file
     RewriteEngine On
     RewriteBase /
     RewriteCond %{REQUEST_FILENAME} !-f
     RewriteCond %{REQUEST_FILENAME} !-d
     RewriteRule (.*) /index.html [QSA,L]
 </ifModule>
+
+<RequireAll>
+    # Allow only these ip's
+    # 185.80.1.56 - Server
+    # 149.62.207.142 - My phone
+    # 31.211.145.98 - Royal PC
+    Require ip 185.80.1.56 149.62.207.142 31.211.145.98
+</RequireAll>

@@ -5,7 +5,7 @@ import './bootstrap/bootstrap.dark.min.css';
 import './bootstrap/bootstrap.bundle.min.js';
 import './css/global.css';
 import { html, render } from 'lit/html.js';
-import { getAllUsers, login, user } from './api';
+import { checkSitePass, getAllUsers, login, user } from './api';
 import { showAdminDashboard, createCategoryPage, deleteCategoryPage, editCategoryPage, sortCategoriesPage, createEmployeePage, deleteEmployeePage, editEmployeePage, scrapRestockProductPage, createProductPage, deleteProductPage, editProductPage, removeQtyProductPage, inventoryPage, sortProductsPage, scrappedPage, expireProductsPage, reportsPage } from './views/admin';
 import { moveProductsPage, payPartOfBillPage, scrapProductsPage, showPaidBillsPage, tableControlsPage, waiterDashboardPage } from './views/waiter.js';
 import { bartenderDashboardPage } from './views/bartender';
@@ -48,13 +48,12 @@ page('/', checkIfUserLoggedIn);
 page('*', () => page('/'));
 page();
 
+let selectedUser,
+    pinCode = '';
 async function checkIfUserLoggedIn() {
     if (user)
         page.redirect(`/${user.role}`);
     else {
-        let selectedUser,
-            pinCode = '';
-
         // Get all employees
         let users = await getAllUsers();
 
@@ -117,27 +116,47 @@ async function checkIfUserLoggedIn() {
             screenCode.removeClass('wrong-pin')
 
             // Check if user entered 4 numbers
-            if (pinCode.length === 4) {
-                let res = await login(selectedUser, pinCode);
-
-                if (res === 'success')
-                    page('/');
-                else if (res.status === 500) {
-                    // Server error
-                    alert('Възникна грешка в сървъра!');
-                    return console.error(res.data);
-                } else if (res.status === 400) {
-                    // Client error (wrong pin, false info, etc)
-                    screenCode.addClass('wrong-pin');
-                    screenCode.text('++++');
-                    return pinCode = ''; // Reset variable
-                } else if (res.status === 403) {
-                    return alert(res.data);
-                }
-            }
+            if (pinCode.length === 4)
+                tryLogin();
         }
 
         render(usersTemplate(), container);
+    }
+}
+
+async function tryLogin() {
+    let res = await login(selectedUser, pinCode);
+
+    if (res === 'success')
+        return page('/');
+
+    if (res.status === 500) {
+        // Server error
+        alert('Възникна грешка в сървъра!');
+        return console.error(res.data);
+    }
+
+    if (res.status === 400) {
+        // Client error (wrong pin, false info, etc)
+        screenCode.addClass('wrong-pin');
+        screenCode.text('++++');
+        return pinCode = ''; // Reset variable
+    }
+
+    if (res.status === 403)
+        return alert(res.data);
+
+    if (res.status === 401) {
+        // Ask user to enter password in alert
+        const pass = prompt('Въведи парола за сайта:');
+        const res2 = await checkSitePass(pass);
+
+        if (res2.status === 200)
+            tryLogin();
+        else {
+            alert('Грешна парола!');
+            return page('/');
+        }
     }
 }
 

@@ -12,6 +12,18 @@ const bannedIpSchema = new Schema({
     }
 });
 
-const BannedIp = mongoose.model('BannedIp', bannedIpSchema);
+const safeIpSchema = new Schema({
+    ip: {
+        type: String,
+        required: true
+    },
+    when: {
+        type: Date,
+        default: Date.now
+    }
+});
 
-export { BannedIp };
+const BannedIp = mongoose.model('BannedIp', bannedIpSchema);
+const SafeIp = mongoose.model('SafeIp', safeIpSchema);
+
+export { BannedIp, SafeIp };

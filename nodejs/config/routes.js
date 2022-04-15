@@ -712,7 +712,7 @@ function routesConfig(app) {
                     categoryName: 'Добавки',
                     products: [
                         {
-                            addonForCategories: ["Кафе"],
+                            addonForCategories: ["Кафе", "Топли напитки"],
                             name: "К. мляко",
                             buyPrice: 0,
                             sellPrice: 0.5,
@@ -725,7 +725,7 @@ function routesConfig(app) {
                             forBartender: true
                         },
                         {
-                            addonForCategories: ["Кафе"],
+                            addonForCategories: ["Кафе", "Топли напитки"],
                             name: "К. студ. мляко",
                             buyPrice: 0,
                             sellPrice: 0.5,
@@ -738,35 +738,35 @@ function routesConfig(app) {
                             forBartender: true
                         },
                         {
-                            addonForCategories: ["Кафе"],
+                            addonForCategories: ["Кафе", "Топли напитки"],
                             name: "Мед",
                             qty: 50,
                             buyPrice: 0,
                             sellPrice: 0.5
                         },
                         {
-                            addonForCategories: ["Кафе"],
+                            addonForCategories: ["Кафе", "Топли напитки"],
                             name: "Лъж. мед",
                             qty: 50,
                             buyPrice: 0,
                             sellPrice: 0.7
                         },
                         {
-                            addonForCategories: ["Кафе"],
+                            addonForCategories: ["Кафе", "Топли напитки"],
                             name: "Конд. мляко",
                             qty: 50,
                             buyPrice: 0,
                             sellPrice: 0.2
                         },
                         {
-                            addonForCategories: ["Кафе"],
+                            addonForCategories: ["Кафе", "Топли напитки"],
                             name: "Суха сметана",
                             qty: 50,
                             buyPrice: 0,
                             sellPrice: 0.2
                         },
                         {
-                            addonForCategories: ["Кафе"],
+                            addonForCategories: ["Кафе", "Топли напитки"],
                             name: "Сметана спрей",
                             buyPrice: 0,
                             sellPrice: 0.8,

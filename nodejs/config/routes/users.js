@@ -1,11 +1,27 @@
 import { User } from "../../model/user.js";
 import jwt from 'jsonwebtoken';
 import bcrypt from "bcryptjs";
-import { BannedIp } from "../../model/banned-ip.js";
+import { BannedIp, SafeIp } from "../../model/ip.js";
 
-let wrongLogins = []
+let wrongLogins = []; // wrong pin or site pass
+const safePass = '123456royal654321'
 
 export function usersRoutes(app, auth) {
+    app.post('/checkSitePass', async (req, res) => {
+        const { pass } = req.body;
+
+        if (pass === safePass) {
+            // Add user to safe Ip's
+            await SafeIp.create({
+                ip: req.ip
+            });
+            return res.send();
+        }
+
+        wrongLogins.push(req.ip); // add ip to wrong attempts
+        res.status(401).send();
+    });
+
     app.post('/login', async (req, res) => {
         try {
             const bannedIps = await BannedIp.find({}, 'ip'); //returns only the ips
@@ -13,6 +29,11 @@ export function usersRoutes(app, auth) {
             // Check if req.ip is in any object inbannedIps
             if (bannedIps.some(obj => obj.ip === req.ip))
                 return res.status(403).send('Прекалено много грешни опити!\nСвържи се с админитратор за да отстрани проблема!')
+
+            // Check if IP is not in the safe IP's list
+            const safeIps = await SafeIp.find();
+            if (!safeIps.some(obj => obj.ip === req.ip))
+                return res.status(401).send('Неразпознато IP адрес!');
 
             // Get user input
             const { id, pin } = req.body;
