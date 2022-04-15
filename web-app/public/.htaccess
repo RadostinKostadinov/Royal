@@ -7,10 +7,10 @@
     RewriteRule (.*) /index.html [QSA,L]
 </ifModule>
 
-<RequireAll>
+#<RequireAll>
     # Allow only these ip's
     # 185.80.1.56 - Server
     # 149.62.207.142 - My phone
     # 31.211.145.98 - Royal PC
-    Require ip 185.80.1.56 149.62.207.142 31.211.145.98
-</RequireAll>
+    #Require ip 185.80.1.56 149.62.207.142 31.211.145.98
+#</RequireAll>
