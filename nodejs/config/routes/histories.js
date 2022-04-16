@@ -7,14 +7,22 @@ export function historiesRoutes(app, auth) {
 
     app.get('/getAllPaidBills', auth, async (req, res) => {
         try {
-            //TODO Check if should be yesterday also here
-            let today = new Date();
-            today.setHours(0, 0, 0, 0);
+            let date = new Date();
+
+            // Check if date is between 00:00 and 04:00 hours
+            if (date.getHours() >= 0 && date.getHours() < 4) {
+                // Set date to yesterday at 04:00
+                date.setDate(date.getDate() - 1);
+                date.setHours(4);
+            } else {
+                // Set date to today at 04:00
+                date.setHours(4);
+            }
 
             const allPaid = await ProductHistory.find({
                 action: 'paid',
                 when: {
-                    $gte: today
+                    $gte: date
                 }
             }).sort({ when: -1 }).populate('table');
 

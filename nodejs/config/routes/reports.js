@@ -14,16 +14,23 @@ export async function updateReport(req, res) {
 
         const user = await User.findById(_id);
 
-        // Get yesterday 04:00
-        const yesterday = new Date();
-        yesterday.setDate(yesterday.getDate() - 1);
-        yesterday.setHours(4, 0, 0, 0);
+        let date = new Date();
+
+        // Check if date is between 00:00 and 04:00 hours
+        if (date.getHours() >= 0 && date.getHours() < 4) {
+            // Set date to yesterday at 04:00
+            date.setDate(date.getDate() - 1);
+            date.setHours(4);
+        } else {
+            // Set date to today at 04:00
+            date.setHours(4);
+        }
 
         // Get all actions for this user for yesterday 04:00
         const actions = await ProductHistory.find({
             'user.userRef': _id,
             when: {
-                $gte: yesterday
+                $gte: date
             },
             action: ['paid', 'scrapped', 'consumed']
         });
@@ -55,7 +62,7 @@ export async function updateReport(req, res) {
         let report = await Report.findOne({
             'user.userRef': _id,
             when: {
-                $gte: yesterday
+                $gte: date
             }
         });
 
@@ -195,7 +202,6 @@ export async function createSystemReport() {
 export function reportsRoutes(app, auth) {
     app.get('/updateReport', auth, async (req, res) => {
         try {
-
             const rs = await updateReport(req, res);
 
             if (rs && rs.hasOwnProperty('status') && rs.status === 500)
@@ -210,10 +216,17 @@ export function reportsRoutes(app, auth) {
 
     app.get('/getTodaysReport', auth, async (req, res) => {
         try {
-            // Get yesterday 04:00
-            const yesterday = new Date();
-            yesterday.setDate(yesterday.getDate() - 1);
-            yesterday.setHours(4, 0, 0, 0);
+            let date = new Date();
+
+            // Check if date is between 00:00 and 04:00 hours
+            if (date.getHours() >= 0 && date.getHours() < 4) {
+                // Set date to yesterday at 04:00
+                date.setDate(date.getDate() - 1);
+                date.setHours(4);
+            } else {
+                // Set date to today at 04:00
+                date.setHours(4);
+            }
 
             // Get all users reports from today (except systems, because they are done in 04:00 so it counts them for today)
             const reports = await Report.find({
