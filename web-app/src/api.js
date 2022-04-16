@@ -149,9 +149,10 @@ export async function scrapProducts(billToScrap) {
     });
 }
 
-export async function moveProducts(billToMove) {
+export async function moveProducts(_id, productsToMove) {
     return await axios.post('/moveProducts', {
-        billToMove
+        _id,
+        productsToMove
     }).catch((err) => {
         return err.response;
     });
@@ -489,10 +490,9 @@ export async function sortCategories(categories) {
     });
 }
 
-export async function generateBills(_id, numberOfBills) {
+export async function generateBills(_id) {
     return await axios.post('/generateBills', {
-        _id,
-        numberOfBills
+        _id
     }).catch((err) => {
         return err.response;
     });

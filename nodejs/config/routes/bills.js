@@ -33,6 +33,85 @@ export function billsRoutes(app, auth) {
         }
     });
 
+    app.post('/moveProducts', auth, async (req, res) => {
+        try {
+            const { _id, productsToMove } = req.body;
+
+            // Get reference to current bill and table
+            const currentBill = await Bill.findById(productsToMove._id).populate('products.product');
+            const currentTable = await Table.findById(productsToMove.table);
+
+            // Get reference to new table (that we will move the products to)
+            const newTable = await Table.findById(_id);
+
+            // Check if newTable has bills
+            let newBill = await Bill.findOne({
+                table: _id,
+                number: 1
+            });
+
+            if (!newBill) {
+                // Generate bills for this table
+                const bills = await generateBills(_id);
+
+                // Find the bill with number: 1
+                newBill = bills.find(bill => bill.number === 1);
+            }
+
+            // Move products from oldBill to newBill
+            for (let product of productsToMove.products) { // for every product to pay
+                // Find index of product in actual bill
+                const index = currentBill.products.findIndex(prd => prd.product._id.toString() === product.product._id.toString());
+
+                // Remove qty from originalBill
+                currentBill.products[index].qty -= product.qty;
+
+                // Check if qty === 0, remove product from bill
+                if (currentBill.products[index].qty === 0)
+                    currentBill.products.splice(index, 1);
+
+                // Find index in newBill
+                const index2 = newBill.products.findIndex(prd => prd.product.toString() === product.product._id.toString())
+
+                if (index2 !== -1) {
+                    // Product is in newBill, add qty
+                    newBill.products[index2].qty += product.qty;
+                } else {
+                    // Push product to new bill
+                    newBill.products.push({
+                        product: product.product._id,
+                        qty: product.qty
+                    });
+                }
+            }
+
+            await newBill.populate('products.product');
+
+            const data = await recalculateTotal(currentBill, currentTable);
+            const data2 = await recalculateTotal(newBill, newTable);
+
+            res.json(data2.bill);
+        } catch (err) {
+            console.error(err);
+            res.status(500).send(err);
+        }
+    });
+
+    async function recalculateTotal(bill, table) {
+        bill.total = 0;
+        table.total = 0;
+
+        for (let product of bill.products) {
+            bill.total += product.product.sellPrice * product.qty;
+            table.total += product.product.sellPrice * product.qty;
+        }
+
+        await bill.save();
+        await table.save();
+
+        return { bill, table };
+    }
+
     app.post('/scrapProducts', auth, async (req, res) => {
         try {
             const { billToScrap } = req.body;
@@ -82,18 +161,9 @@ export function billsRoutes(app, auth) {
                 }
             }
 
-            // Recalculate totals
-            originalBill.total = 0;
-            table.total = 0;
-            for (let product of originalBill.products) {
-                originalBill.total += product.product.sellPrice * product.qty;
-                table.total += product.product.sellPrice * product.qty;
-            }
+            const data = await recalculateTotal(originalBill, table);
 
-            await originalBill.save();
-            await table.save();
-
-            res.json(originalBill);
+            res.json(data.bill);
 
             // Add action to history
             await ProductHistory.create({
@@ -132,10 +202,6 @@ export function billsRoutes(app, auth) {
             for (let product of billToPay.products) { // for every product to pay
                 // Find index of product in actuall bill
                 const index = originalBill.products.findIndex(prd => prd.product._id.toString() === product.product._id.toString());
-
-                // OLD Recalculate total price
-                originalBill.total -= product.product.sellPrice * product.qty;
-                table.total -= product.product.sellPrice * product.qty;
 
                 // Remove qty from originalBill
                 originalBill.products[index].qty -= product.qty;
@@ -180,18 +246,9 @@ export function billsRoutes(app, auth) {
                 historyTotal += product.product.sellPrice * product.qty;
             }
 
-            // Recalculate totals
-            originalBill.total = 0;
-            table.total = 0;
-            for (let product of originalBill.products) {
-                originalBill.total += product.product.sellPrice * product.qty;
-                table.total += product.product.sellPrice * product.qty;
-            }
+            const data = await recalculateTotal(originalBill, table);
 
-            await originalBill.save();
-            await table.save();
-
-            res.json(originalBill);
+            res.json(data.bill);
 
             // Add action to history
             await ProductHistory.create({
@@ -397,16 +454,10 @@ export function billsRoutes(app, auth) {
     app.post('/generateBills', auth, async (req, res) => {
         try {
             // Get selected table id
-            const { _id, numberOfBills } = req.body;
+            const { _id } = req.body;
 
-            if (!(_id && numberOfBills))
-                return res.status(400).send('Трябва _id на маса и брой на сметки!');
-
-            if (typeof numberOfBills !== 'number')
-                return res.status(400).send('Брой на сметки трябва да е число!');
-
-            if (numberOfBills < 0)
-                return res.status(400).send('Брой на сметки трябва да е по-голямо от 0!');
+            if (!(_id))
+                return res.status(400).send('Трябва _id на маса!');
 
             // Check if table exists
             const table = await Table.findById({ _id });
@@ -419,12 +470,7 @@ export function billsRoutes(app, auth) {
             if (bills.length > 0)
                 return res.json(bills); // return bills IDS only
 
-            // Create bills in database
-            let emptyArray = [];
-            for (let i = 1; i < numberOfBills + 1; i++)
-                emptyArray.push({ number: i, table: table._id }); // generate empty bills with the table ID inside
-
-            bills = await Bill.create(emptyArray);
+            bills = await generateBills(table._id);
 
             // Done
             res.status(201).json(bills);
@@ -433,4 +479,16 @@ export function billsRoutes(app, auth) {
             res.status(500).send(err);
         }
     });
+
+    async function generateBills(_id) {
+        const numberOfBills = 6;
+        // Create bills in database
+        let emptyArray = [],
+            bills;
+        for (let i = 1; i < numberOfBills + 1; i++)
+            emptyArray.push({ number: i, table: _id }); // generate empty bills with the table ID inside
+
+        bills = await Bill.create(emptyArray);
+        return bills;
+    }
 }

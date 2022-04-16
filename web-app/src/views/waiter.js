@@ -170,7 +170,7 @@ export async function waiterDashboardPage() {
                         <button class=${lastRenderedLocation === 'middle' ? 'active' : ''} id="middleTablesBtn" @click=${(clickedBtn) => renderTablesView(clickedBtn, 'middle')}>Градина</button>
                     </div>
                     <div class="d-flex flex-column text-center gap-3 w-100">
-                        <button @click=${getTdsReport} data-bs-toggle="modal" data-bs-target="#reportModal">Отчет</button>
+                        <button id="reportButton" @click=${getTdsReport} data-bs-toggle="modal" data-bs-target="#reportModal">Отчет</button>
                         <button @click=${logout}>Изход</button>
                     </div>
                 </div>
@@ -232,12 +232,12 @@ export async function waiterDashboardPage() {
         lastRenderedLocation = viewName;
         const res = await getTables(lastRenderedLocation);
 
-        if (res.status === 200)
-            elements = res.data; // elements includes tables, walls, bar ..
-        else {
+        if (res.status !== 200) {
             console.error(res);
-            alert('Възникна грешка!');
+            return alert('Възникна грешка!');
         }
+
+        elements = res.data; // elements includes tables, walls, bar ..
         
         lastRenderedLocation = viewName;
         render(dashboardTemplate(gridTemplate(lastRenderedLocation, elements)), container);
@@ -438,8 +438,7 @@ export async function tableControlsPage(ctx) {
 
     // Create X bills in the tables database so we can get ID's of bills to place in buttons, then render
     async function initializeBills() {
-        const numberOfBills = 6; // How many bills to generate inside table
-        const res = await generateBills(selectedTable, numberOfBills);
+        const res = await generateBills(selectedTable);
 
         if (res.status === 201 || res.status === 200) {
             // 201 == created, 200 == already created (no problem)
@@ -648,7 +647,7 @@ export async function tableControlsPage(ctx) {
                     <button style="opacity: 0.2">Приключи с принт</button>
                     <button @click=${payWholeBill}>Приключи</button>
                     <button @click=${goToScrap}>Брак</button>
-                    <!-- TODO ENABLE ME WHEN DONE WITH MOVE <button @click=${goToMove}>Премести</button> -->
+                    <button @click=${goToMove}>Премести</button>
                     <button @click=${goBack}>Назад</button>
                 </div>
             </div>
@@ -663,12 +662,6 @@ export async function tableControlsPage(ctx) {
 }
 
 export async function moveProductsPage(ctx) {
-    //TODO Everything in this function is done, need to do the backend
-    //Also need to show a screen with all tables to choose where to move, instead of
-    //Before calling moveProducts
-
-
-
     // Stop listening on old sockets
     stopAllSockets();
     
@@ -835,12 +828,17 @@ export async function moveProductsPage(ctx) {
         </table>
     `;
 
-    async function movePrdcts() {
+    async function movePrdcts(e) {
+        // Get selected table _id
+        const _id = $(e.target).attr('_id');
         if (productsToMove.products.length === 0) return;
 
-        const res = await moveProducts(productsToMove);
+        if (bill.table === _id) return;
+
+        const res = await moveProducts(_id, productsToMove);
 
         if (res.status === 200) {
+            const newBill = res.data; // new bill (that we moved the items to), used for rerendering table view in dashboard page
             // Notify anyone that is already in this screen
             productsToMove.products = [];
             productsToMove.total = 0;
@@ -849,7 +847,9 @@ export async function moveProductsPage(ctx) {
             socket.emit('addToMove/returnToBill', { bill, productsToMove });
 
             // Notify that bill changed, rerender wherever needed
-            socket.emit('billChanged', bill); // send new bill to server to rerender for anyone in same view
+            // Call it twice with new and current bill here, so if anyone in any of them, rerender
+            socket.emit('billChanged', bill); // send CURRENT bill to server to rerender for anyone in same view
+            socket.emit('billChanged', newBill); // send NEW bill to server to rerender for anyone in same view
             page(`/waiter/table/${selectedTable}`);
         } else {
             console.error(res);
@@ -857,7 +857,68 @@ export async function moveProductsPage(ctx) {
         }
     }
 
+    async function renderTables(viewname) {
+        // Get tables for inside or middle
+        let elements;
+        const res = await getTables(viewname);
+
+        if (res.status !== 200) {
+            console.error(res);
+            return alert('Възникна грешка!');
+        }
+
+        elements = res.data; // elements includes tables, walls, bar ..
+        
+        render(gridTemplate(viewname, elements), document.getElementById('modal-tables'));
+    }
+
+    const gridTemplate = (gridId, elements) => html`
+        <div id=${gridId} class="tablesGrid">
+            ${elements.map((element) => {
+                const taken = element.total > 0 ? 'taken' : '';
+                const allClasses = `${element.type} ${element.class} ${taken}`;
+                //element.type = [table, text, wall]
+                //element.class = 1,2,3... || v1,v2,v3... || n1,n2,n3...
+                //element.name = Маса 1, Маса В1, Маса Н1..
+                //element.total = undefined (if != table) || number (ex. 12.50) (if == table)
+                if (element.type === 'wall')
+                    return html`
+                        <div class=${allClasses}></div>
+                    `;
+                    
+                if (element.type === 'text')
+                    return html`
+                        <div class=${allClasses}>${element.name}</div>
+                    `;
+
+                return html`
+                    <button @click=${movePrdcts} class=${allClasses} _id=${element._id}>
+                        <span class="name pe-none">${element.name}</span>
+                        <span class="total pe-none">${element.total ? (element.total).toFixed(2) : ''}</span>
+                    </button>`;
+            })}
+        </div>
+    `;
+
     const template = () => html`
+        <div class="modal fade" id="tablesModal" tabindex="-1" aria-labelledby="tablesModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered modal-fullscreen">
+                <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="tablesModalLabel">Избери маса</h5>
+                </div>
+                <div class="modal-body">
+                    <div id="modal-tables"></div>
+                </div>
+                <div class="modal-footer">
+                    <button @click=${() => renderTables('inside')} type="button" class="gray-btn">Вътре</button>
+                    <button @click=${() => renderTables('middle')} type="button" class="gray-btn">Градина</button>
+                    <button type="button" class="gray-btn" data-bs-dismiss="modal">Затвори</button>
+                </div>
+                </div>
+            </div>
+        </div>
+
         <div id="payPartOfBill">
             <div id="productsInBill" class="productsTables"></div>
             <div id="controlsAndTotals" class="d-flex gap-3 flex-column justify-content-between">
@@ -867,14 +928,13 @@ export async function moveProductsPage(ctx) {
                         <div class="price"></div>
                     </div>
                     <div id="totalToPay" class="totalBlock">
-                        <span>Извадена сума от масата</span>
+                        <span>Сума за местене</span>
                         <div class="price"></div>
                     </div>
                 </div>
                 <div class="controls d-flex flex-column justify-content-between">
                     <div class="d-flex gap-3 flex-column justify-content-evenly">
-                        <button>Извади с принт</button>
-                        <button @click=${movePrdcts}>Извади</button>
+                        <button data-bs-toggle="modal" data-bs-target="#tablesModal">Премести</button>
                     </div>
                     <button @click=${() => page(`/waiter/table/${selectedTable}`)}>Отказ</button>
                 </div>
@@ -882,6 +942,9 @@ export async function moveProductsPage(ctx) {
             <div id="productsToPay" class="productsTables"></div>
         </div>
     `;
+
+    // Load default table in modal
+    renderTables('middle');
 
     render(template(), container);
     rerender(bill, productsToMove);

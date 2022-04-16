@@ -234,7 +234,7 @@ export function reportsRoutes(app, auth) {
                     $ne: 'Система'
                 },
                 when: {
-                    $gte: yesterday
+                    $gte: date
                 }
             });
 
