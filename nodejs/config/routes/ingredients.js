@@ -40,18 +40,17 @@ export function ingredientsRoutes(app, auth) {
 
             // Add action to history
             expireDate = new Date(expireDate).toJSON();
-            RestockHistory.create({
-                action,
-                product: {
-                    type: 'ingredient',
-                    unit: ingredient.unit,
-                    name: ingredient.name,
-                    qty,
-                    expireDate,
-                    ingredientRef: ingredient._id
-                }
-            });
-
+            if (action === 'restock')
+                await RestockHistory.create({
+                    product: {
+                        type: 'ingredient',
+                        unit: ingredient.unit,
+                        name: ingredient.name,
+                        qty,
+                        expireDate,
+                        ingredientRef: ingredient._id
+                    }
+                });
         } catch (err) {
             console.error(err);
             res.status(500).send(err);

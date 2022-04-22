@@ -106,17 +106,17 @@ export function productsRoutes(app, auth) {
 
             // Add action to history
             expireDate = new Date(expireDate).toJSON();
-            await RestockHistory.create({
-                action,
-                product: {
-                    type: 'product',
-                    name: product.name,
-                    qty,
-                    expireDate,
-                    productRef: product._id
-                }
-            });
-
+            if (action === 'restock')
+                await RestockHistory.create({
+                    action,
+                    product: {
+                        type: 'product',
+                        name: product.name,
+                        qty,
+                        expireDate,
+                        productRef: product._id
+                    }
+                });
         } catch (err) {
             console.error(err);
             res.status(500).send(err);

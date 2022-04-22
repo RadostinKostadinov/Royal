@@ -32,7 +32,6 @@ export function historiesRoutes(app, auth) {
                 'product.expireDate': {
                     $lt: new Date()
                 },
-                'action': 'restock',
                 'reviewed': false
             });
 
@@ -51,9 +50,7 @@ export function historiesRoutes(app, auth) {
 
             const { fromDate, toDate, _id, type } = req.body;
 
-            let criteria = {
-                'action': 'restock'
-            };
+            let criteria = {};
 
             if (_id)
                 type === 'product' ? criteria['product.productRef'] = _id : criteria['product.ingredientRef'] = _id;
