@@ -149,7 +149,7 @@ export function billsRoutes(app, auth) {
                     for (let ingredient of prodRef.ingredients) {
                         const ingredientRef = await Ingredient.findById(ingredient.ingredient);
 
-                        ingredientRef.qty -= ingredient.qty;
+                        ingredientRef.qty -= ingredient.qty * product.qty;
                         await ingredientRef.save();
 
                         ingredientsArray.push({
@@ -191,67 +191,6 @@ export function billsRoutes(app, auth) {
 
             await updateReport(req, res);
 
-            /* let historyProducts = [];
-            let historyTotal = 0;
-
-            const originalBill = await Bill.findById(billToScrap._id);
-            const table = await Table.findById(originalBill.table);
-            for (let product of billToScrap.products) { // for every product to pay
-                //FIXME Rework this with same as sellProducts
-                for (let [index, prd] of Object.entries(originalBill.products)) { // check against every product in original bill
-                    if (product.product._id.toString() === prd.product.toString()) {
-                        // remove qty from original bill
-                        prd.qty -= product.qty;
-                        if (prd.qty === 0)
-                            originalBill.products.splice(index, 1);
-
-                        // first check if from ingredients
-                        let ingredientsArray = [];
-                        const prodRef = await Product.findById(product.product._id);
-                        if (prodRef.ingredients.length !== 0) {
-                            for (let ingredient of prodRef.ingredients) {
-                                const ingredientRef = await Ingredient.findById(ingredient.ingredient);
-                                ingredientsArray.push({
-                                    name: ingredientRef.name,
-                                    qty: ingredient.qty,
-                                    price: ingredientRef.sellPrice,
-                                    ingredientRef: ingredientRef._id
-                                });
-                            }
-                        }
-
-                        historyProducts.push({
-                            name: product.product.name,
-                            qty: product.qty,
-                            price: product.product.sellPrice,
-                            productRef: product.product._id,
-                            ingredients: ingredientsArray
-                        });
-                        historyTotal += product.product.sellPrice * product.qty;
-                        break; // start searching for next product
-                    }
-                }
-            }
-
-            const data = await recalculateTotal(originalBill, table);
-
-            res.json(data.bill);
-
-            // Add action to history
-            await ProductHistory.create({
-                user: {
-                    name: req.user.name,
-                    userRef: req.user._id
-                },
-                action: 'scrapped',
-                table: originalBill.table,
-                billNumber: originalBill.number,
-                total: historyTotal,
-                products: historyProducts,
-                reviewed: false
-            });
-
-            await updateReport(req, res); */
         } catch (err) {
             console.error(err);
             res.status(500).send(err);
@@ -295,7 +234,7 @@ export function billsRoutes(app, auth) {
                     for (let ingredient of prodRef.ingredients) {
                         const ingredientRef = await Ingredient.findById(ingredient.ingredient);
 
-                        ingredientRef.qty -= ingredient.qty;
+                        ingredientRef.qty -= ingredient.qty * product.qty;
                         await ingredientRef.save();
 
                         ingredientsArray.push({
