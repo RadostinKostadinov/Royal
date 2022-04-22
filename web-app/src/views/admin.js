@@ -4,12 +4,14 @@ import { html, render } from 'lit/html.js';
 import $ from "jquery";
 import Sortable from 'sortablejs';
 import '../css/admin/admin.css';
-import { fixPrice, markProductAsScrapped, sortCategories, getProductById, getProductsFromCategory, getAllUsers, editCategory, deleteCategory, deleteUser, createUser, editUser, createCategory, scrapRestockProduct, createProduct, deleteProduct, editProduct, getAllCategories, getAllProducts, sortProducts, logout, getAllIngredients, createIngredient, deleteIngredient, getIngredientById, editIngredient, getAllProductsWithoutIngredients, getProductsWithoutIngredientsFromCategory, scrapRestockIngredient, getAllScrapped, getAllRestockedProducts, getAllReports, getProductsIngredients, getProductSells, getRestockHistory } from '../api';
+import { fixPrice, markProductAsScrapped, sortCategories, getProductById, getProductsFromCategory, getAllUsers, editCategory, deleteCategory, deleteUser, createUser, editUser, createCategory, scrapRestockProduct, createProduct, deleteProduct, editProduct, getAllCategories, getAllProducts, sortProducts, logout, getAllIngredients, createIngredient, deleteIngredient, getIngredientById, editIngredient, getAllProductsWithoutIngredients, getProductsWithoutIngredientsFromCategory, scrapRestockIngredient, getAllScrapped, getAllRestockedProducts, getAllReports, getProductsIngredients, getProductSells, getRestockHistory, getNumberOfExpiredProducts, markExpiredAsReviewed } from '../api';
 
 const backBtn = html`<button @click=${()=> page('/admin')} class="btn btn-secondary fs-3 mt-2 ms-2">Назад</button>`;
 let contentType; //  used in loadProducts to determine if we are loading/deleting a product or ingredient
 let selectedProductFromSearch,
     selectedIngredientFromSearch;
+
+let numberOfExpiredProducts;
 
 async function loadProducts(e, showProductsFromIngredients) {
     selectedProductFromSearch = undefined;
@@ -1670,6 +1672,21 @@ export async function scrappedPage() {
 
 export async function expireProductsPage() {
     const products = await getAllRestockedProducts();
+
+    async function markAsReviewed(_id) {
+        const res = await markExpiredAsReviewed(_id);
+
+        if (res.status === 200) {
+            // Successfuly marked as reviewed
+            numberOfExpiredProducts--;
+
+            $(`#${_id} .expiredBtnCell`).html('');
+            $(`#${_id} .expiredDateCell`).removeClass('table-danger');
+        } else {
+            console.error(res);
+            alert('Възникна грешка!');
+        }
+    }
     
     const expireTemplate = (products) => html`
         ${backBtn}
@@ -1681,6 +1698,7 @@ export async function expireProductsPage() {
                     <th scope="col">Артикул</th>
                     <th scope="col">Количество</th>
                     <th scope="col">Срок на годност</th>
+                    <th></th>
                 </tr>
             </thead>
             <tbody>
@@ -1688,14 +1706,16 @@ export async function expireProductsPage() {
                         let qty = product.product.qty,
                             name = product.product.name,
                             restockDate = new Date(product.when),
-                            expireDate,
-                            unit = 'бр';
+                            expireDate = new Date(product.product.expireDate),
+                            unit = 'бр',
+                            today = new Date(),
+                            expired = false;
 
-                        if (product.product.expireDate) {
-                            expireDate = new Date(product.product.expireDate);
-                            expireDate = `${expireDate.getDate() < 10 ? '0' + expireDate.getDate() : expireDate.getDate()}.${(expireDate.getMonth() + 1) < 10 ? '0' + (expireDate.getMonth() + 1) : (expireDate.getMonth() + 1)}.${expireDate.getFullYear()}`;
-                        }
+                        expireDate = `${expireDate.getDate() < 10 ? '0' + expireDate.getDate() : expireDate.getDate()}.${(expireDate.getMonth() + 1) < 10 ? '0' + (expireDate.getMonth() + 1) : (expireDate.getMonth() + 1)}.${expireDate.getFullYear()}`;
                         restockDate = `${restockDate.getDate() < 10 ? '0' + restockDate.getDate() : restockDate.getDate()}.${(restockDate.getMonth() + 1) < 10 ? '0' + (restockDate.getMonth() + 1) : (restockDate.getMonth() + 1)}.${restockDate.getFullYear()}`;
+                    
+                        if (today > new Date(product.product.expireDate) && product.reviewed === false)
+                            expired = true;
                         
                         if (product.product.hasOwnProperty('unit') && (product.product.unit === 'кг' || product.product.unit === 'л')) {
                             qty /= 1000;
@@ -1704,11 +1724,13 @@ export async function expireProductsPage() {
 
                         qty += ` ${unit}.`
                         return html`
-                            <tr>
+                            <tr id=${product._id} valign="middle">
                                 <td>${restockDate}</td>
                                 <td>${name}</td>
                                 <td>${qty}</td>
-                                <td>${expireDate}</td>
+                                <td class="expiredDateCell ${expired && 'table-danger'}">${expireDate}</td>
+                                <td class="expiredBtnCell">${expired ?
+                                    html`<button @click=${() => markAsReviewed(product._id)} class="btn btn-info fs-5">OK</button>` : ''}</td>
                             </tr>
                         `
                 })}
@@ -1826,6 +1848,7 @@ export async function soldProductsPage() {
 }
 
 export async function restockHistoryPage() {
+    const ingredients = await getAllIngredients();
     const products = await getAllProductsWithoutIngredients();
     
     async function search(e) {
@@ -1889,6 +1912,9 @@ export async function restockHistoryPage() {
                 <label for="productSearch" class="form-label">Търси</label>
                 <input @change=${search} class="form-control fs-4" type="text" list="allproducts" name="productSearch" id="productSearch">
                 <datalist id="allproducts">
+                    ${ingredients.map(el => {
+                        return html`<option type="ingredients" unit=${el.unit} _id=${el._id} value=${el.name + ` (${el.unit})`} />`
+                    })}
                     ${products.map(el => {
                         return html`<option type="product" _id=${el._id} value=${el.name}/>`
                     })}
@@ -1912,7 +1938,11 @@ export async function restockHistoryPage() {
     search();
 }
 
-export function showAdminDashboard() {
+export async function showAdminDashboard() {
+    if (numberOfExpiredProducts === undefined)
+        numberOfExpiredProducts = await getNumberOfExpiredProducts()
+
+
     selectedProductFromSearch = undefined;
     selectedIngredientFromSearch = undefined;
     const dashboard = () => html`
@@ -1923,7 +1953,10 @@ export function showAdminDashboard() {
                     <button @click=${() => page('/admin/products/sold') } class="btn btn-success fs-4">Продажби</button>
                     <button @click=${() => page('/admin/restockHistory') } class="btn btn-info fs-4">История на зареждане</button>
                     <button @click=${() => page('/admin/inventory/scrapped') } class="btn btn-danger fs-4">Бракувана стока</button>
-                    <button @click=${() => page('/admin/expireProducts') } class="btn btn-primary fs-4">Срок на годност</button>
+                    <button @click=${() => page('/admin/expireProducts') } class="btn btn-primary fs-4 position-relative">
+                        Срок на годност
+                        <span id="numberOfExpiredProducts" class="${numberOfExpiredProducts === 0 && 'd-none'} position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">${numberOfExpiredProducts}</span>
+                    </button>
                     <button @click=${() => page('/admin/inventory') } class="btn btn-secondary fs-4">Склад</button>
                     <button @click=${() => page('/admin/reports') } class="btn btn-secondary fs-4">Отчети</button>
                 </div>

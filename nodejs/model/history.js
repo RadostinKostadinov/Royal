@@ -16,6 +16,11 @@ const restockHistorySchema = new Schema({
         enum: ['restock', 'scrap'],
         required: true
     },
+    reviewed: { // Анатоли го е видял, и го маркира като прочетен (да спре да свети в червено)
+        type: Boolean,
+        default: false,
+        required: true
+    },
     product: {
         type: {
             type: String,

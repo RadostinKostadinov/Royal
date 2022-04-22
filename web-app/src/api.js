@@ -62,8 +62,21 @@ export function stopAllSockets() {
     socket.off('entered-scrapProductsPage');
 }
 
+export async function getNumberOfExpiredProducts() {
+    const res = await axios.get('/getNumberOfExpiredProducts');
+    return res.data;
+}
+
 export async function getTodaysReport() {
     return await axios.get('/getTodaysReport').catch((err) => {
+        return err.response;
+    });
+}
+
+export async function markExpiredAsReviewed(_id) {
+    return await axios.post('/markExpiredAsReviewed', {
+        _id
+    }).catch((err) => {
         return err.response;
     });
 }

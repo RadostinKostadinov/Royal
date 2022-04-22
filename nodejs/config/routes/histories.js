@@ -5,6 +5,44 @@ import { Ingredient } from "../../model/ingredient.js";
 
 export function historiesRoutes(app, auth) {
 
+    app.post('/markExpiredAsReviewed', auth, async (req, res) => {
+        try {
+            // Check if user admin
+            if (req.user.role !== 'admin')
+                return res.status(403).send('Нямате права!');
+
+            const { _id } = req.body;
+
+            await RestockHistory.findByIdAndUpdate(_id, { 'reviewed': true });
+
+            res.status(200).send('');
+        } catch (err) {
+            console.log(err);
+            res.status(500).send(err);
+        }
+    });
+
+    app.get('/getNumberOfExpiredProducts', auth, async (req, res) => {
+        try {
+            // Check if user admin
+            if (req.user.role !== 'admin')
+                return res.status(403).send('Нямате права!');
+
+            const number = await RestockHistory.count({
+                'product.expireDate': {
+                    $lt: new Date()
+                },
+                'action': 'restock',
+                'reviewed': false
+            });
+
+            return res.json(number);
+        } catch (err) {
+            console.error(err);
+            res.status(500).send(err);
+        }
+    });
+
     app.post('/getRestockHistory', auth, async (req, res) => {
         try {
             // Check if user admin
@@ -18,7 +56,7 @@ export function historiesRoutes(app, auth) {
             };
 
             if (_id)
-                criteria['product.productRef'] = _id;
+                type === 'product' ? criteria['product.productRef'] = _id : criteria['product.ingredientRef'] = _id;
 
             if (fromDate) {
                 if (!criteria.hasOwnProperty('when'))
