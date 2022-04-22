@@ -292,7 +292,7 @@ export function reportsRoutes(app, auth) {
                 return res.status(401).send('Нямате админски достъп!')
 
             // Get all users reports from today
-            const reports = await Report.find();
+            const reports = await Report.find().sort({ when: -1 });
 
             res.json(reports);
         } catch (err) {

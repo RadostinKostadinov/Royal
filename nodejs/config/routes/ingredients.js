@@ -41,8 +41,8 @@ export function ingredientsRoutes(app, auth) {
             // Add action to history
             expireDate = new Date(expireDate).toJSON();
             RestockHistory.create({
+                action,
                 product: {
-                    action,
                     type: 'ingredient',
                     unit: ingredient.unit,
                     name: ingredient.name,

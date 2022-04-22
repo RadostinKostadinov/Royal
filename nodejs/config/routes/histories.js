@@ -1,9 +1,46 @@
-import { ProductHistory } from "../../model/history.js";
+import { ProductHistory, RestockHistory } from "../../model/history.js";
 import { Product } from "../../model/product.js";
 import { Ingredient } from "../../model/ingredient.js";
 
 
 export function historiesRoutes(app, auth) {
+
+    app.post('/getRestockHistory', auth, async (req, res) => {
+        try {
+            // Check if user admin
+            if (req.user.role !== 'admin')
+                return res.status(403).send('Нямате права!');
+
+            const { fromDate, toDate, _id, type } = req.body;
+
+            let criteria = {
+                'action': 'restock'
+            };
+
+            if (_id)
+                criteria['product.productRef'] = _id;
+
+            if (fromDate) {
+                if (!criteria.hasOwnProperty('when'))
+                    criteria.when = {};
+                criteria.when.$gte = new Date(fromDate);
+            }
+
+            if (toDate) {
+                if (!criteria.hasOwnProperty('when'))
+                    criteria.when = {};
+                criteria.when.$lte = new Date(toDate).setHours(23, 59, 59);
+            }
+
+            const history = await RestockHistory.find(criteria).sort({ when: -1 });
+
+
+            res.json(history);
+        } catch (err) {
+            console.error(err);
+            res.status(500).send(err);
+        }
+    });
 
     app.post('/getProductSells', auth, async (req, res) => {
         try {
@@ -11,9 +48,26 @@ export function historiesRoutes(app, auth) {
             if (req.user.role !== 'admin')
                 return res.status(403).send('Нямате права!');
 
-            const { _id } = req.body;
+            const { fromDate, toDate, _id } = req.body;
 
-            const sells = await ProductHistory.find({ 'products.productRef': _id, action: 'paid' });
+            let criteria = {
+                action: 'paid',
+                'products.productRef': _id
+            };
+
+            if (fromDate) {
+                if (!criteria.hasOwnProperty('when'))
+                    criteria.when = {};
+                criteria.when.$gte = new Date(fromDate);
+            }
+
+            if (toDate) {
+                if (!criteria.hasOwnProperty('when'))
+                    criteria.when = {};
+                criteria.when.$lte = new Date(toDate).setHours(23, 59, 59);
+            }
+
+            const sells = await ProductHistory.find(criteria).sort({ when: -1 });
 
             let productSells = [];
             // Extract only this product from every sell
@@ -77,7 +131,7 @@ export function historiesRoutes(app, auth) {
         }
     });
 
-    app.post('/markHistoryAsScrapped', auth, async (req, res) => {
+    app.post('/markProductAsScrapped', auth, async (req, res) => {
         try {
             // Check if user admin
             if (req.user.role !== 'admin')
@@ -85,23 +139,6 @@ export function historiesRoutes(app, auth) {
 
             const { _id } = req.body; // get history id
             const historyRef = await ProductHistory.findById(_id).populate('products');
-
-            for (let product of historyRef.products) { // for every product to scrap
-                const prodRef = await Product.findById(product.productRef);
-
-                // Check if product from ingredients
-                if (prodRef.ingredients.length === 0) {
-                    prodRef.qty -= product.qty;
-                    prodRef.save();
-                } else {
-                    for (let ingredient of prodRef.ingredients) {
-                        // Remove qty from ingredient
-                        const ingredientRef = await Ingredient.findById(ingredient.ingredient);
-                        ingredientRef.qty -= ingredient.qty;
-                        ingredientRef.save();
-                    }
-                }
-            }
 
             historyRef.reviewed = true;
             historyRef.reviewedDate = Date.now();

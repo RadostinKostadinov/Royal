@@ -11,12 +11,12 @@ const possibleActions = [
 ];
 
 const restockHistorySchema = new Schema({
+    action: {
+        type: String,
+        enum: ['restock', 'scrap'],
+        required: true
+    },
     product: {
-        action: {
-            type: String,
-            enum: ['restock', 'scrap'],
-            required: true
-        },
         type: {
             type: String,
             enum: ['product', 'ingredient'],
@@ -133,12 +133,11 @@ const productHistorySchema = new Schema({
             ],
         }
     ],
-    addedToReport: { // дали е добавено към отчета (използва го системата, която прави проверка в 4:00 дали има останали)
+    reviewed: { // дали анатоли го е видял
         type: Boolean,
         default: false,
         required: true
     },
-    reviewed: Boolean, // дали анатоли го е видял 
     reviewedDate: Date,
     when: { // дата на събитие
         type: Date,

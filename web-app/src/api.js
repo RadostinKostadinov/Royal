@@ -68,6 +68,17 @@ export async function getTodaysReport() {
     });
 }
 
+export async function getRestockHistory(fromDate, toDate, _id, type) {
+    return await axios.post('/getRestockHistory', {
+        fromDate,
+        toDate,
+        _id,
+        type
+    }).catch((err) => {
+        return err.response;
+    });
+}
+
 export async function completeAll(prodRef, orderId) {
     return await axios.post('/completeAll', {
         prodRef,
@@ -133,8 +144,8 @@ export async function getLastPaidBillByTableId(_id, billId) {
     });
 }
 
-export async function markHistoryAsScrapped(_id) {
-    return await axios.post('/markHistoryAsScrapped', {
+export async function markProductAsScrapped(_id) {
+    return await axios.post('/markProductAsScrapped', {
         _id
     }).catch((err) => {
         return err.response;
@@ -380,8 +391,10 @@ export async function getProductsWithoutIngredientsFromCategory(_id) {
     return res.data;
 }
 
-export async function getProductSells(_id) {
+export async function getProductSells(fromDate, toDate, _id) {
     return await axios.post('/getProductSells', {
+        fromDate,
+        toDate,
         _id
     }).catch((err) => {
         return err.response;

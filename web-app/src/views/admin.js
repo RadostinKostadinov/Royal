@@ -4,7 +4,7 @@ import { html, render } from 'lit/html.js';
 import $ from "jquery";
 import Sortable from 'sortablejs';
 import '../css/admin/admin.css';
-import { fixPrice, markHistoryAsScrapped, sortCategories, getProductById, getProductsFromCategory, getAllUsers, editCategory, deleteCategory, deleteUser, createUser, editUser, createCategory, scrapRestockProduct, createProduct, deleteProduct, editProduct, getAllCategories, getAllProducts, sortProducts, logout, getAllIngredients, createIngredient, deleteIngredient, getIngredientById, editIngredient, getAllProductsWithoutIngredients, getProductsWithoutIngredientsFromCategory, scrapRestockIngredient, getAllScrapped, getAllRestockedProducts, getAllReports, getProductsIngredients, getProductSells } from '../api';
+import { fixPrice, markProductAsScrapped, sortCategories, getProductById, getProductsFromCategory, getAllUsers, editCategory, deleteCategory, deleteUser, createUser, editUser, createCategory, scrapRestockProduct, createProduct, deleteProduct, editProduct, getAllCategories, getAllProducts, sortProducts, logout, getAllIngredients, createIngredient, deleteIngredient, getIngredientById, editIngredient, getAllProductsWithoutIngredients, getProductsWithoutIngredientsFromCategory, scrapRestockIngredient, getAllScrapped, getAllRestockedProducts, getAllReports, getProductsIngredients, getProductSells, getRestockHistory } from '../api';
 
 const backBtn = html`<button @click=${()=> page('/admin')} class="btn btn-secondary fs-3 mt-2 ms-2">Назад</button>`;
 let contentType; //  used in loadProducts to determine if we are loading/deleting a product or ingredient
@@ -1599,10 +1599,10 @@ export async function reportsPage() {
 export async function scrappedPage() {
     let allScrapped = await getAllScrapped();
 
-    async function markAsScrapedHstr(e) {
+    async function markPrdAsScrapped(e) {
         const _id = e.target.getAttribute('_id'); // history id
 
-        const res = await markHistoryAsScrapped(_id);
+        const res = await markProductAsScrapped(_id);
 
         if (res.status === 200) {
             // Rerender histories
@@ -1636,7 +1636,7 @@ export async function scrappedPage() {
                 <td class="text-capitalize">${history.user.name}</td>
                 <td>${allProducts}</td>
                 <td>${total.toFixed(2)}</td>
-                <td><button @click=${markAsScrapedHstr} class="btn btn-danger" _id=${history._id}>Бракувай</button></td>
+                <td><button @click=${markPrdAsScrapped} class="btn btn-danger" _id=${history._id}>Бракувай</button></td>
             </tr>`
         })}
     `;
@@ -1732,7 +1732,10 @@ export async function soldProductsPage() {
         
         await selectProductFromSearch(e);
 
-        const res = await getProductSells(selectedProductFromSearch._id);
+        const fromDate = $('#fromDate').val();
+        const toDate = $('#toDate').val();
+
+        const res = await getProductSells(fromDate, toDate, selectedProductFromSearch._id);
 
         if (res.status === 200) {
             const sells = res.data;
@@ -1752,7 +1755,7 @@ export async function soldProductsPage() {
         <tr class="table-primary">
             <td colspan="2"></td>
             <td>Общо:</td>
-            <td>${totals.qty}</td>
+            <td>${totals.qty} бр.</td>
             <td>${fixPrice(totals.price)}</td>
         </tr>`
         : ''
@@ -1772,7 +1775,7 @@ export async function soldProductsPage() {
                 <td>${dateString}</td>
                 <td>${timeString}</td>
                 <td>${fixPrice(sell.price)}</td>
-                <td>${sell.qty}</td>
+                <td>${sell.qty} бр.</td>
                 <td>${fixPrice(sell.total)}</td>
             </tr>`
         })}
@@ -1781,7 +1784,19 @@ export async function soldProductsPage() {
     const soldTemplate = () => html`
         ${backBtn}
 
-        <div class="mb-3 p-3">
+        <div class="d-flex w-100 gap-3 p-3 fs-4">
+            <div class="w-50">
+                <label for="fromDate" class="form-label">От</label>
+                <input @change=${loadSells} name="fromDate" class="form-control fs-4" id="fromDate" type="date"/>
+            </div>
+    
+            <div class="w-50">
+                <label for="toDate" class="form-label">До</label>
+                <input @change=${loadSells} name="toDate" class="form-control fs-4" id="toDate" type="date"/>
+            </div>
+        </div>
+
+        <div class="mb-3 p-3 fs-4">
                 <label for="productSearch" class="form-label">Търси</label>
                 <input @change=${loadSells} class="form-control fs-4" type="text" list="allproducts" name="productSearch" id="productSearch">
                 <datalist id="allproducts">
@@ -1810,13 +1825,103 @@ export async function soldProductsPage() {
     render(soldTemplate(), container);
 }
 
+export async function restockHistoryPage() {
+    const products = await getAllProductsWithoutIngredients();
+    
+    async function search(e) {
+        // If selected  (else called in render at first load of page)
+        if (e)
+            await selectProductFromSearch(e);
+
+        const fromDate = $('#fromDate').val();
+        const toDate = $('#toDate').val();
+
+        const res = await getRestockHistory(fromDate, toDate, selectedProductFromSearch && selectedProductFromSearch._id, selectedProductFromSearch && selectedProductFromSearch.type);
+
+        if (res.status === 200) {
+            const restocks = res.data;
+            
+            render(rows(restocks), document.querySelector('table tbody'));
+        } else {
+            console.error(res);
+            alert('Възникна грешка!');
+        }
+    }
+
+    const rows = (restocks) => html`
+        ${restocks.map((restock) => {
+            const date = new Date(restock.when);
+            const dateString = `${date.getDate() > 9 ? date.getDate() : '0' + date.getDate()}.${(date.getMonth() + 1) > 9 ? date.getMonth() + 1 : '0' + (date.getMonth() + 1)}.${date.getFullYear()}`;
+            const timeString = `${date.getHours() > 9 ? date.getHours() : '0' + date.getHours()}:${date.getMinutes() > 9 ? date.getMinutes() : '0' + date.getMinutes()}`;
+            let unit = 'бр'
+
+            if (['кг', 'л'].includes(restock.product.unit)) {
+                unit = restock.product.unit;
+                restock.product.qty /= 1000;
+            }
+
+            return html`
+            <tr>
+                <td>${dateString}</td>
+                <td>${timeString}</td>
+                <td>${restock.product.name}</td>
+                <td>${restock.product.qty} ${unit}.</td>
+            </tr>`
+        })}
+    `;
+
+    const restockTemplate = () => html`
+        ${backBtn}
+
+        <div class="d-flex w-100 gap-3 p-3 fs-4">
+            <div class="w-50">
+                <label for="fromDate" class="form-label">От</label>
+                <input @change=${search} name="fromDate" class="form-control fs-4" id="fromDate" type="date"/>
+            </div>
+    
+            <div class="w-50">
+                <label for="toDate" class="form-label">До</label>
+                <input @change=${search} name="toDate" class="form-control fs-4" id="toDate" type="date"/>
+            </div>
+        </div>
+
+        <div class="mb-3 p-3 fs-4">
+                <label for="productSearch" class="form-label">Търси</label>
+                <input @change=${search} class="form-control fs-4" type="text" list="allproducts" name="productSearch" id="productSearch">
+                <datalist id="allproducts">
+                    ${products.map(el => {
+                        return html`<option type="product" _id=${el._id} value=${el.name}/>`
+                    })}
+                </datalist>
+        </div>
+
+        <table class="mt-3 table table-striped table-dark table-hover text-center">
+            <thead>
+                <tr>
+                    <th scope="col">Дата</th>
+                    <th scope="col">Час</th>
+                    <th scope="col">Продукт</th>
+                    <th scope="col">Количество</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    `;
+    
+    render(restockTemplate(), container);
+    search();
+}
+
 export function showAdminDashboard() {
+    selectedProductFromSearch = undefined;
+    selectedIngredientFromSearch = undefined;
     const dashboard = () => html`
         <div class="p-3">
             <div class="text-center mt-4">
                 <h1>Специални</h1>
                 <div class="d-inline-flex flex-row flex-wrap gap-3 justify-content-center">
                     <button @click=${() => page('/admin/products/sold') } class="btn btn-success fs-4">Продажби</button>
+                    <button @click=${() => page('/admin/restockHistory') } class="btn btn-info fs-4">История на зареждане</button>
                     <button @click=${() => page('/admin/inventory/scrapped') } class="btn btn-danger fs-4">Бракувана стока</button>
                     <button @click=${() => page('/admin/expireProducts') } class="btn btn-primary fs-4">Срок на годност</button>
                     <button @click=${() => page('/admin/inventory') } class="btn btn-secondary fs-4">Склад</button>
