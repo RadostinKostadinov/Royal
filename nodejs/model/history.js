@@ -12,6 +12,11 @@ const possibleActions = [
 
 const restockHistorySchema = new Schema({
     product: {
+        action: {
+            type: String,
+            enum: ['restock', 'scrap'],
+            required: true
+        },
         type: {
             type: String,
             enum: ['product', 'ingredient'],

@@ -9,7 +9,7 @@ const verifyToken = (req, res, next) => {
 
     try {
         // Verify and decrypt token
-        const decoded = jwt.verify(token, process.env.TOKEN_KEY);
+        const decoded = jwt.verify(token, process.env.TOKEN_KEY || "p@JC@Ambo?&NNyR4Y9tJ9PbmrRHjK7H6EeGM@@5q");
 
         // Attach data to request.user so you can use it afterwards in the routes
         req.user = decoded;

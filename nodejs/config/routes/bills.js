@@ -122,6 +122,78 @@ export function billsRoutes(app, auth) {
             let historyProducts = [];
             let historyTotal = 0;
 
+            const originalBill = await Bill.findById(billToScrap._id).populate('products.product'); // the whole bill
+            const table = await Table.findById(originalBill.table);
+
+            for (let product of billToScrap.products) { // for every product to pay
+                // Find index of product in actuall bill
+                const index = originalBill.products.findIndex(prd => prd.product._id.toString() === product.product._id.toString());
+
+                // Remove qty from originalBill
+                originalBill.products[index].qty -= product.qty;
+
+                // Check if qty === 0, remove product from bill
+                if (originalBill.products[index].qty === 0)
+                    originalBill.products.splice(index, 1);
+
+                // Remove qty from inventory
+                let ingredientsArray = [];
+                const prodRef = await Product.findById(product.product._id);
+
+                // Check if product has ingredients
+                if (prodRef.ingredients.length === 0) {
+                    prodRef.qty -= product.qty;
+                    await prodRef.save();
+                }
+                else {
+                    for (let ingredient of prodRef.ingredients) {
+                        const ingredientRef = await Ingredient.findById(ingredient.ingredient);
+
+                        ingredientRef.qty -= ingredient.qty;
+                        await ingredientRef.save();
+
+                        ingredientsArray.push({
+                            name: ingredientRef.name,
+                            qty: ingredient.qty,
+                            price: ingredientRef.sellPrice,
+                            ingredientRef: ingredientRef._id
+                        });
+                    }
+                }
+
+                historyProducts.push({
+                    name: product.product.name,
+                    qty: product.qty,
+                    price: product.product.sellPrice,
+                    productRef: product.product._id,
+                    ingredients: ingredientsArray
+                });
+
+                historyTotal += product.product.sellPrice * product.qty;
+            }
+
+            const data = await recalculateTotal(originalBill, table);
+
+            res.json(data.bill);
+
+            // Add action to history
+            await ProductHistory.create({
+                user: {
+                    name: req.user.name,
+                    userRef: req.user._id
+                },
+                action: 'scrapped',
+                table: originalBill.table,
+                billNumber: originalBill.number,
+                total: historyTotal,
+                products: historyProducts
+            });
+
+            await updateReport(req, res);
+
+            /* let historyProducts = [];
+            let historyTotal = 0;
+
             const originalBill = await Bill.findById(billToScrap._id);
             const table = await Table.findById(originalBill.table);
             for (let product of billToScrap.products) { // for every product to pay
@@ -179,7 +251,7 @@ export function billsRoutes(app, auth) {
                 reviewed: false
             });
 
-            await updateReport(req, res);
+            await updateReport(req, res); */
         } catch (err) {
             console.error(err);
             res.status(500).send(err);

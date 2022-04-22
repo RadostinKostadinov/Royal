@@ -380,6 +380,14 @@ export async function getProductsWithoutIngredientsFromCategory(_id) {
     return res.data;
 }
 
+export async function getProductSells(_id) {
+    return await axios.post('/getProductSells', {
+        _id
+    }).catch((err) => {
+        return err.response;
+    });
+}
+
 export async function getAllProductsWithoutIngredients() {
     const res = await axios.get('/getAllProductsWithoutIngredients');
     return res.data;

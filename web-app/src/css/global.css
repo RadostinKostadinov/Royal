@@ -71,6 +71,10 @@ body {
 	animation-direction: alternate;
 }
 
+.d-table-footer-group {
+	display: table-footer-group;
+}
+
 #blackscreen {
 	z-index: 9999999;
 	border: none;

@@ -6,7 +6,7 @@ import './bootstrap/bootstrap.bundle.min.js';
 import './css/global.css';
 import { html, render } from 'lit/html.js';
 import { checkSitePass, getAllUsers, login, user } from './api';
-import { showAdminDashboard, createCategoryPage, deleteCategoryPage, editCategoryPage, sortCategoriesPage, createEmployeePage, deleteEmployeePage, editEmployeePage, scrapRestockProductPage, createProductPage, deleteProductPage, editProductPage, removeQtyProductPage, inventoryPage, sortProductsPage, scrappedPage, expireProductsPage, reportsPage } from './views/admin';
+import { showAdminDashboard, createCategoryPage, deleteCategoryPage, editCategoryPage, sortCategoriesPage, createEmployeePage, deleteEmployeePage, editEmployeePage, scrapRestockProductPage, createProductPage, deleteProductPage, editProductPage, removeQtyProductPage, inventoryPage, sortProductsPage, scrappedPage, expireProductsPage, reportsPage, soldProductsPage } from './views/admin';
 import { moveProductsPage, payPartOfBillPage, scrapProductsPage, showPaidBillsPage, tableControlsPage, waiterDashboardPage } from './views/waiter.js';
 import { bartenderDashboardPage } from './views/bartender';
 
@@ -25,6 +25,7 @@ page('/waiter/table/:tableId/bill/:billId/move', auth, moveProductsPage);
 
 // Admin pages
 page('/admin', auth, showAdminDashboard);
+page('/admin/products/sold', auth, soldProductsPage);
 page('/admin/reports', auth, reportsPage);
 page('/admin/expireProducts', auth, expireProductsPage);
 page('/admin/inventory', auth, inventoryPage);
@@ -67,7 +68,7 @@ async function checkIfUserLoggedIn() {
         `;
 
         const numpadTemplate = () => html`
-        <button @click=${() => render(usersTemplate(), container)}
+        <button @click=${()=> render(usersTemplate(), container)}
             class="btn btn-secondary fs-1 mt-3 ms-3">Назад</button>
         
         <div id="numpad-wrapper">
@@ -117,14 +118,14 @@ async function checkIfUserLoggedIn() {
 
             // Check if user entered 4 numbers
             if (pinCode.length === 4)
-                tryLogin();
+                tryLogin(screenCode);
         }
 
         render(usersTemplate(), container);
     }
 }
 
-async function tryLogin() {
+async function tryLogin(screenCode) {
     let res = await login(selectedUser, pinCode);
 
     if (res === 'success')

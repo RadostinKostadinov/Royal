@@ -33,10 +33,6 @@ const io = new Server(httpServer, {
     }
 });
 
-app.get('/', (req, res) => {
-    res.send('hi')
-})
-
 mongoConfig();
 expressConfig(app, express);
 routesConfig(app);

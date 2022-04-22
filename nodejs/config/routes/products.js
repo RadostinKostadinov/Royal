@@ -39,7 +39,7 @@ export async function deleteProductFromEverywhere(product) {
 export function productsRoutes(app, auth) {
     app.get('/getAllRestockedProducts', auth, async (req, res) => {
         try {
-            const products = await RestockHistory.find().sort({ when: -1 });
+            const products = await RestockHistory.find({ "product.expireDate": { $ne: null } }).sort({ when: -1 });
             res.json(products);
         } catch (err) {
             console.error(err);
@@ -99,24 +99,24 @@ export function productsRoutes(app, auth) {
             else if (action === 'scrap')
                 product.qty -= qty;
 
-            product.save(); // Save changes
+            await product.save(); // Save changes
 
             // Done
             res.send('Успешно променихте бройките!');
 
-            if (action === 'restock' && expireDate) {
-                expireDate = new Date(expireDate);
-                // Add action to history
-                RestockHistory.create({
-                    product: {
-                        type: 'product',
-                        name: product.name,
-                        qty,
-                        expireDate,
-                        productRef: product._id
-                    }
-                });
-            }
+            // Add action to history
+            expireDate = new Date(expireDate).toJSON();
+            await RestockHistory.create({
+                product: {
+                    action,
+                    type: 'product',
+                    name: product.name,
+                    qty,
+                    expireDate,
+                    productRef: product._id
+                }
+            });
+
         } catch (err) {
             console.error(err);
             res.status(500).send(err);
@@ -158,9 +158,9 @@ export function productsRoutes(app, auth) {
                 return res.status(400).send('Всички полета са задължителни!');
 
             // Check if prices are okay
-            const pricesRegex = new RegExp(/^\d{1,}(\.\d{1,2})?$/);
+            /* const pricesRegex = new RegExp(/^\d{1,}(\.\d{1,2})?$/);
             if (!pricesRegex.test(buyPrice) || !pricesRegex.test(sellPrice))
-                return res.status(400).send('Цената трябва да е: пример 5.0, 3, 1.20!');
+                return res.status(400).send('Цената трябва да е: пример 5.0, 3, 1.20!'); */
 
             if (qty && ingredients) // Impossible, because product from ingredients cant have qty
                 return res.status(400).send('Невъзможно да има количество и съставки едновременно в 1 продукт!');
@@ -263,9 +263,9 @@ export function productsRoutes(app, auth) {
                 return res.status(400).send('Всички полета са задължителни!');
 
             // Check if prices are okay
-            const pricesRegex = new RegExp(/^\d{1,}(\.\d{1,2})?$/);
+            /* const pricesRegex = new RegExp(/^\d{1,}(\.\d{1,2})?$/);
             if (!pricesRegex.test(buyPrice) || !pricesRegex.test(sellPrice))
-                return res.status(400).send('Цената трябва да е: пример 5.0, 3, 1.20!');
+                return res.status(400).send('Цената трябва да е: пример 5.0, 3, 1.20!'); */
 
             if (qty && ingredients) // Impossible, because product from ingredients cant have qty
                 return res.status(400).send('Невъзможно да има количество и съставки едновременно в 1 продукт!');

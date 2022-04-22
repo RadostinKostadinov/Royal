@@ -4,7 +4,7 @@ import { html, render } from 'lit/html.js';
 import $ from "jquery";
 import Sortable from 'sortablejs';
 import '../css/admin/admin.css';
-import { fixPrice, markHistoryAsScrapped, sortCategories, getProductById, getProductsFromCategory, getAllUsers, editCategory, deleteCategory, deleteUser, createUser, editUser, createCategory, scrapRestockProduct, createProduct, deleteProduct, editProduct, getAllCategories, getAllProducts, sortProducts, logout, getAllIngredients, createIngredient, deleteIngredient, getIngredientById, editIngredient, getAllProductsWithoutIngredients, getProductsWithoutIngredientsFromCategory, scrapRestockIngredient, getAllScrapped, getAllRestockedProducts, getAllReports, getProductsIngredients } from '../api';
+import { fixPrice, markHistoryAsScrapped, sortCategories, getProductById, getProductsFromCategory, getAllUsers, editCategory, deleteCategory, deleteUser, createUser, editUser, createCategory, scrapRestockProduct, createProduct, deleteProduct, editProduct, getAllCategories, getAllProducts, sortProducts, logout, getAllIngredients, createIngredient, deleteIngredient, getIngredientById, editIngredient, getAllProductsWithoutIngredients, getProductsWithoutIngredientsFromCategory, scrapRestockIngredient, getAllScrapped, getAllRestockedProducts, getAllReports, getProductsIngredients, getProductSells } from '../api';
 
 const backBtn = html`<button @click=${()=> page('/admin')} class="btn btn-secondary fs-3 mt-2 ms-2">Назад</button>`;
 let contentType; //  used in loadProducts to determine if we are loading/deleting a product or ingredient
@@ -105,14 +105,19 @@ function selectProductFromSearch(e) {
     if (!selected) return;
 
     const _id = $(`datalist option[value="${selected}"]`).attr('_id');
+    const name = $('#productSearch').val();
     const type = $(`datalist option[value="${selected}"]`).attr('type');
     const unit = $(`datalist option[value="${selected}"]`).attr('unit');
+    const nameWithoutUnit = name.split(` (${unit}`)[0];
+
 
     if (!_id)
         return $('#quantityDiv').addClass('d-none');
 
     selectedProductFromSearch = {
         _id,
+        name,
+        nameWithoutUnit,
         type,
         unit
     };
@@ -367,7 +372,7 @@ export async function scrapRestockProductPage(ctx) {
     const template = () => html`
         ${backBtn}
         <form @submit=${scrapRestock} class="d-flex text-center fs-3 flex-column m-auto mt-5 gap-5 p-3">
-            <div class="mb-3">
+            <div class="mb-3 p-3">
                 <label for="productSearch" class="form-label">Търси</label>
                 <input @change=${selectProductFromSearch} class="form-control fs-4" type="text" list="allproducts" name="productSearch" id="productSearch">
                 <datalist id="allproducts">
@@ -1311,6 +1316,7 @@ export async function inventoryPage() {
     const products = await getAllProductsWithoutIngredients();
     const ingredients = await getAllIngredients();
     const productsAndIngredients = ingredients.concat(products);
+    let lastFoundRow;
 
     let totals = {
         buyPrice: 0,
@@ -1345,11 +1351,11 @@ export async function inventoryPage() {
                     <td scope="row">${product.unit ? 'Съставка' : 'Продукт'}</td>
                     <td scope="row">${name}</td>
                     <td>${qty}</td>
-                    <td>${product.buyPrice}</td>
+                    <td>${fixPrice(product.buyPrice)}</td>
                     <td>${fixPrice(buyTotal)}</td>
-                    <td>${product.sellPrice}</td>
+                    <td>${fixPrice(product.sellPrice)}</td>
                     <td>${fixPrice(sellTotal)}</td>
-                    <td>${fixPrice(difference)}</td>
+                    <td>${fixPrice(difference)} (${((product.sellPrice - product.buyPrice) / product.buyPrice * 100).toFixed(2) }%)</td>
                     <td>${fixPrice(differenceTotal)}</td>
                 </tr>
             `
@@ -1388,9 +1394,39 @@ export async function inventoryPage() {
         render(productRows(productsToShow), document.querySelector('tbody'));
     }
     
+    async function findProduct(e) {
+        await selectProductFromSearch(e);
+
+        // Remove the coloring class from the lastFoundRow
+        if (lastFoundRow)
+            lastFoundRow.removeClass('table-success')
+
+        // Find the row that contains this product
+        lastFoundRow = $(`table tbody tr td:contains(${selectedProductFromSearch.nameWithoutUnit})`).closest('tr');
+        
+        // Add coloring class
+        lastFoundRow.addClass('table-success');
+
+        // Scroll to the row
+        lastFoundRow.get(0).scrollIntoView();
+    }
+    
     const inventoryTemplate = () => html`
         ${backBtn}
-        
+
+        <div class="mb-3 p-3">
+                <label for="productSearch" class="form-label">Търси продукт</label>
+                <input @change=${findProduct} class="form-control fs-4" type="text" list="allproducts" name="productSearch" id="productSearch">
+                <datalist id="allproducts">
+                    ${ingredients.map(el => {
+                    return html`
+                    <option type="ingredients" unit=${el.unit} _id=${el._id} value=${el.name + ` (${el.unit})`} />`  })}
+                    ${products.map(el => {
+                        return html`<option type="product" _id=${el._id} value=${el.name}/>`
+                    })}
+                </datalist>
+        </div>
+
         <div class="p-3 mb-3 mt-3">
             <label for="selected" class="form-label fs-4">Преглед по категория</label>
             <select @change=${showProductsFromCategory} required type="text" class="form-control fs-4" name="_id" id="selected">
@@ -1683,12 +1719,104 @@ export async function expireProductsPage() {
     render(expireTemplate(products), container);
 }
 
+export async function soldProductsPage() {
+    const products = await getAllProducts();
+    let totals = {
+        qty: 0,
+        price: 0
+    }
+
+    async function loadSells(e) {
+        totals.qty = 0;
+        totals.price = 0;
+        
+        await selectProductFromSearch(e);
+
+        const res = await getProductSells(selectedProductFromSearch._id);
+
+        if (res.status === 200) {
+            const sells = res.data;
+
+            render(sellsRows(sells), document.querySelector('table tbody'));
+            render(sellTotal(), document.querySelector('table tfoot'));
+        } else {
+            console.error(res);
+            alert('Възникна грешка!');
+        }
+    }
+
+    const sellTotal = () => html`
+    ${
+        totals.qty > 0
+        ? html`
+        <tr class="table-primary">
+            <td colspan="2"></td>
+            <td>Общо:</td>
+            <td>${totals.qty}</td>
+            <td>${fixPrice(totals.price)}</td>
+        </tr>`
+        : ''
+    }`;
+    
+    const sellsRows = (sells) => html`
+        ${sells.map((sell) => {
+            const date = new Date(sell.when);
+            const dateString = `${date.getDate() > 9 ? date.getDate() : '0' + date.getDate()}.${(date.getMonth() + 1) > 9 ? date.getMonth() + 1 : '0' + (date.getMonth() + 1)}.${date.getFullYear()}`;
+            const timeString = `${date.getHours() > 9 ? date.getHours() : '0' + date.getHours()}:${date.getMinutes() > 9 ? date.getMinutes() : '0' + date.getMinutes()}`;
+
+            totals.qty += sell.qty;
+            totals.price += sell.total;
+            
+            return html`
+            <tr>
+                <td>${dateString}</td>
+                <td>${timeString}</td>
+                <td>${fixPrice(sell.price)}</td>
+                <td>${sell.qty}</td>
+                <td>${fixPrice(sell.total)}</td>
+            </tr>`
+        })}
+    `;
+
+    const soldTemplate = () => html`
+        ${backBtn}
+
+        <div class="mb-3 p-3">
+                <label for="productSearch" class="form-label">Търси</label>
+                <input @change=${loadSells} class="form-control fs-4" type="text" list="allproducts" name="productSearch" id="productSearch">
+                <datalist id="allproducts">
+                    ${products.map(el => {
+                        return html`<option type="product" _id=${el._id} value=${el.name}/>`
+                    })}
+                </datalist>
+        </div>
+
+        <table class="mt-3 table table-striped table-dark table-hover text-center">
+            <thead>
+                <tr>
+                    <th scope="col">Дата</th>
+                    <th scope="col">Час</th>
+                    <!-- <th scope="col">Артикули</th> -->
+                    <th scope="col">Цена</th>
+                    <th scope="col">Количество</th>
+                    <th scope="col">Сума</th>
+                </tr>
+            </thead>
+            <tbody class="d-table-footer-group"></tbody>
+            <tfoot class="fw-bold d-table-footer-group"></tfoot>
+        </table>
+    `;
+    
+    render(soldTemplate(), container);
+}
+
 export function showAdminDashboard() {
     const dashboard = () => html`
         <div class="p-3">
             <div class="text-center mt-4">
                 <h1>Специални</h1>
                 <div class="d-inline-flex flex-row flex-wrap gap-3 justify-content-center">
+                    <button @click=${() => page('/admin/products/sold') } class="btn btn-success fs-4">Продажби</button>
                     <button @click=${() => page('/admin/inventory/scrapped') } class="btn btn-danger fs-4">Бракувана стока</button>
                     <button @click=${() => page('/admin/expireProducts') } class="btn btn-primary fs-4">Срок на годност</button>
                     <button @click=${() => page('/admin/inventory') } class="btn btn-secondary fs-4">Склад</button>

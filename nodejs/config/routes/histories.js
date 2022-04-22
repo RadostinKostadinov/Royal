@@ -5,6 +5,36 @@ import { Ingredient } from "../../model/ingredient.js";
 
 export function historiesRoutes(app, auth) {
 
+    app.post('/getProductSells', auth, async (req, res) => {
+        try {
+            // Check if user admin
+            if (req.user.role !== 'admin')
+                return res.status(403).send('Нямате права!');
+
+            const { _id } = req.body;
+
+            const sells = await ProductHistory.find({ 'products.productRef': _id, action: 'paid' });
+
+            let productSells = [];
+            // Extract only this product from every sell
+            for (let sell of sells) {
+                // Find product in sell.products.productRef
+                const product = sell.products.find(p => p.productRef.toString() === _id.toString());
+                productSells.push({
+                    when: sell.when,
+                    qty: product.qty,
+                    price: product.price,
+                    total: product.qty * product.price
+                });
+            }
+
+            res.json(productSells);
+        } catch (err) {
+            console.error(err);
+            res.status(500).send(err);
+        }
+    });
+
     app.get('/getAllPaidBills', auth, async (req, res) => {
         try {
             let date = new Date();
@@ -35,6 +65,10 @@ export function historiesRoutes(app, auth) {
 
     app.get('/getAllScrapped', auth, async (req, res) => {
         try {
+            // Check if user admin
+            if (req.user.role !== 'admin')
+                return res.status(403).send('Нямате права!');
+
             const allScrapped = await ProductHistory.find({ action: 'scrapped', reviewed: false }).sort({ when: -1 }).populate('table');
             res.json(allScrapped);
         } catch (err) {
@@ -43,8 +77,12 @@ export function historiesRoutes(app, auth) {
         }
     });
 
-    app.post('/markHistoryAsScrapped', async (req, res) => {
+    app.post('/markHistoryAsScrapped', auth, async (req, res) => {
         try {
+            // Check if user admin
+            if (req.user.role !== 'admin')
+                return res.status(403).send('Нямате права!');
+
             const { _id } = req.body; // get history id
             const historyRef = await ProductHistory.findById(_id).populate('products');
 

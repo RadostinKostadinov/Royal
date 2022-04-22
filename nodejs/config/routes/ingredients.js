@@ -32,25 +32,26 @@ export function ingredientsRoutes(app, auth) {
             else if (action === 'scrap')
                 ingredient.qty -= qty;
 
-            ingredient.save(); // Save changes
+            await ingredient.save(); // Save changes
 
             // Done
             res.send('Успешно променихте бройките!');
 
-            if (action === 'restock' && expireDate) {
-                expireDate = new Date(expireDate);
-                // Add action to history
-                RestockHistory.create({
-                    product: {
-                        type: 'ingredient',
-                        unit: ingredient.unit,
-                        name: ingredient.name,
-                        qty,
-                        expireDate,
-                        ingredientRef: ingredient._id
-                    }
-                });
-            }
+
+            // Add action to history
+            expireDate = new Date(expireDate).toJSON();
+            RestockHistory.create({
+                product: {
+                    action,
+                    type: 'ingredient',
+                    unit: ingredient.unit,
+                    name: ingredient.name,
+                    qty,
+                    expireDate,
+                    ingredientRef: ingredient._id
+                }
+            });
+
         } catch (err) {
             console.error(err);
             res.status(500).send(err);
@@ -71,9 +72,9 @@ export function ingredientsRoutes(app, auth) {
                 return res.status(400).send('Всички полета са задължителни!');
 
             // Check if prices are okay
-            const pricesRegex = new RegExp(/^\d{1,}(\.\d{1,2})?$/);
+            /* const pricesRegex = new RegExp(/^\d{1,}(\.\d{1,2})?$/);
             if (!pricesRegex.test(buyPrice) || !pricesRegex.test(sellPrice))
-                return res.status(400).send('Цената трябва да е: пример 5.0, 3, 1.20!');
+                return res.status(400).send('Цената трябва да е: пример 5.0, 3, 1.20!'); */
 
             // Check if qty is integer
             if (qty % 1 !== 0)
@@ -129,7 +130,7 @@ export function ingredientsRoutes(app, auth) {
                 if (product.ingredients.length === 0)
                     await product.remove();
                 else
-                    product.save();
+                    await product.save();
             }
 
             res.send('Успешно изтрихте тази съставка!');
@@ -154,9 +155,9 @@ export function ingredientsRoutes(app, auth) {
                 return res.status(400).send('Всички полета са задължителни!');
 
             // Check if prices are okay
-            const pricesRegex = new RegExp(/^\d{1,}(\.\d{1,2})?$/);
+            /* const pricesRegex = new RegExp(/^\d{1,}(\.\d{1,2})?$/);
             if (!pricesRegex.test(buyPrice) || !pricesRegex.test(sellPrice))
-                return res.status(400).send('Цената трябва да е: пример 5.0, 3, 1.20!');
+                return res.status(400).send('Цената трябва да е: пример 5.0, 3, 1.20!'); */
 
             // Get references to ingredient
             const ingredient = await Ingredient.findById(_id);
@@ -170,7 +171,7 @@ export function ingredientsRoutes(app, auth) {
             ingredient.qty = ['кг', 'л'].includes(ingredient.unit) ? qty * 1000 : qty;
             ingredient.buyPrice = buyPrice;
             ingredient.sellPrice = sellPrice;
-            ingredient.save();
+            await ingredient.save();
 
             // Done
             res.send('Успешно променена съставка!');
