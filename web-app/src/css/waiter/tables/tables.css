@@ -15,6 +15,15 @@
 	background-color: var(--bg-wall);
 }
 
+.tablesGrid .table.bar {
+	background-color: var(--bg-wall);
+	color: white;
+}
+
+.tablesGrid .table.bar .name {
+	font-size: 1.8rem;
+}
+
 .tablesGrid .table {
 	background-color: var(--table-free);
 }

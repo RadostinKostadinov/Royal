@@ -135,7 +135,7 @@ export async function createSystemReport() {
                         for (let ingredient of prodRef.ingredients) {
                             const ingredientRef = await Ingredient.findById(ingredient.ingredient);
 
-                            ingredientRef.qty -= ingredient.qty;
+                            ingredientRef.qty -= ingredient.qty * product.qty;
                             await ingredientRef.save();
 
                             ingredientsArray.push({

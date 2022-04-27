@@ -31,15 +31,6 @@
 		". . . tablev1 tablev1 tablev1 tablev1 . tablev2 tablev2 tablev2 tablev2 tablev2 tablev2 . tablev3 tablev3 tablev3 tablev3 tablev3 tablev3 tablev3 . tablev4 tablev4 tablev4 tablev4 . . . . .";
 }
 
-.tablesGrid .table.bar {
-	background-color: var(--bg-wall);
-	color: white;
-}
-
-.tablesGrid .table.bar .name {
-	font-size: 1.8rem;
-}
-
 .tablesGrid .text {
 	color: white;
 	display: flex;
