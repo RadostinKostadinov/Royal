@@ -62,6 +62,10 @@ export function stopAllSockets() {
     socket.off('entered-scrapProductsPage');
 }
 
+export async function getConsumed() {
+    return await axios.get('/getConsumed');
+}
+
 export async function getNumberOfExpiredProducts() {
     const res = await axios.get('/getNumberOfExpiredProducts');
     return res.data;
@@ -110,9 +114,13 @@ export async function completeOne(prodRef, orderId) {
     });
 }
 
-export async function getAllReports() {
-    const res = await axios.get('/getAllReports');
-    return res.data;
+export async function getAllReports(fromDate, toDate) {
+    return await axios.post('/getAllReports', {
+        fromDate,
+        toDate
+    }).catch((err) => {
+        return err.response;
+    });
 }
 
 export async function getAllOrders() {
@@ -524,6 +532,12 @@ export async function sortCategories(categories) {
     });
 }
 
+export async function generatePersonalBill() {
+    return await axios.get('/generatePersonalBill').catch((err) => {
+        return err.response;
+    });
+}
+
 export async function generateBills(_id) {
     return await axios.post('/generateBills', {
         _id
@@ -556,11 +570,11 @@ export async function logout() {
 }
 
 // PRINTER
+const printerIp = '192.168.0.177'; // Royal IP
+// const printerIp = ''172.16.1.171''; // Home IP
 var printer = null;
 var ePosDev = new epson.ePOSDevice();
-console.log('here');
-ePosDev.connect('172.16.1.171', 8008, cbConnect);
-console.log('here2');
+ePosDev.connect(printerIp, 8008, cbConnect);
 
 function cbConnect(data) {
     if (data == 'OK' || data == 'SSL_CONNECT_OK') {
@@ -568,7 +582,8 @@ function cbConnect(data) {
             { 'crypto': true, 'buffer': false }, cbCreateDevice_printer);
     } else {
         console.error(data);
-        alert('Възникна грешка с принтера!');
+        //TODO REMOVE COMMENT
+        //alert('Възникна грешка с принтера!');
     }
 }
 
@@ -641,8 +656,6 @@ export function printBill(history, tableName) {
     strTotal = strTotal.join('') + '\n\n'; // Result is: ОБЩА СУМА       3.00 ЛВ
     printer.addText(strTotal);
 
-
-
     // CURRENT DATE AND TIME
     printer.addTextStyle(false, false, false, printer.COLOR_1);
     printer.addTextDouble(false, false);
@@ -688,4 +701,88 @@ export function printBill(history, tableName) {
     printer.addText('\nМоля, изискайте фискален бон.\n');
     printer.addCut(printer.CUT_FEED); // Cut paper
     printer.send(); // Send to printer
+}
+
+export async function printReport() {
+    if (printer === null)
+        return alert('Няма свързан принтер!');
+
+    const res = await getTodaysReport();
+
+    if (res.status === 200) {
+        const { personalReport } = res.data;
+
+        let employee = user.name;
+        employee = employee.charAt(0).toUpperCase() + employee.slice(1);
+
+        let strEmployee = ['Служител', '', employee];
+        for (let i = strEmployee[0].length + strEmployee[2].length; i < 48; i++) // Fill with spaces between
+            strEmployee[1] += ' ';
+        strEmployee = strEmployee.join('') + '\n'; // Result is: СЛУЖИТЕЛ       Димитър
+        printer.addText(strEmployee); // Employee line
+
+        // Date in DD-MM-YYYY format with leading zeroes
+        let date = new Date();
+        let day = date.getDate();
+        let month = date.getMonth() + 1;
+        let year = date.getFullYear();
+
+        if (day < 10)
+            day = '0' + day;
+        if (month < 10)
+            month = '0' + month;
+
+        let strDate = day + '-' + month + '-' + year;
+
+        // Time in HH:MM:SS format with leading zeroes
+        let hours = date.getHours();
+        let minutes = date.getMinutes();
+        let seconds = date.getSeconds();
+
+        if (hours < 10)
+            hours = '0' + hours;
+        if (minutes < 10)
+            minutes = '0' + minutes;
+        if (seconds < 10)
+            seconds = '0' + seconds;
+
+        let strTime = hours + ':' + minutes + ':' + seconds;
+
+        let strDateAndTime = [strDate, '', strTime];
+        for (let i = strDateAndTime[0].length + strDateAndTime[2].length; i < 48; i++) // Fill with spaces between
+            strDateAndTime[1] += ' ';
+        strDateAndTime = strDateAndTime.join('') + '\n'; // Result is: 27-04-2022       14:06:09
+
+        printer.addText(strDateAndTime); // Date and time line
+
+        let strIncome = ['Продажби', '', fixPrice(personalReport.income)];
+        for (let i = strIncome[0].length + strIncome[2].length; i < 48; i++) // Fill with spaces between
+            strIncome[1] += ' ';
+        strIncome = strIncome.join('') + '\n'; // Result is: Продажби       3.00 ЛВ
+        printer.addText(strIncome); // Income line
+
+        let strScrapped = ['Брак', '', fixPrice(personalReport.scrapped)];
+        for (let i = strScrapped[0].length + strScrapped[2].length; i < 48; i++) // Fill with spaces between
+            strScrapped[1] += ' ';
+        strScrapped = strScrapped.join('') + '\n'; // Result is: Брак       3.00 ЛВ
+        printer.addText(strScrapped); // Scrapped line
+
+        let strConsumed = ['Консумация', '', fixPrice(personalReport.consumed)];
+        for (let i = strConsumed[0].length + strConsumed[2].length; i < 48; i++) // Fill with spaces between
+            strConsumed[1] += ' ';
+        strConsumed = strConsumed.join('') + '\n'; // Result is: Консумация       3.00 ЛВ
+        printer.addText(strConsumed); // Consumed line
+
+        let strTotal = ['Общ приход', '', fixPrice(personalReport.total)];
+        for (let i = strTotal[0].length + strTotal[2].length; i < 48; i++) // Fill with spaces between
+            strTotal[1] += ' ';
+        strTotal = strTotal.join('') + '\n'; // Result is: Общ приход       3.00 ЛВ
+        printer.addText(strTotal); // Total line
+
+        printer.addCut(printer.CUT_FEED); // Cut paper
+        printer.send(); // Send to printer
+    } else {
+        console.error(res);
+        alert('Възникна грешка');
+    }
 }

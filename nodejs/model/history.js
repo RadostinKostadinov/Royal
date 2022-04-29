@@ -82,7 +82,6 @@ const productHistorySchema = new Schema({
         type: Schema.Types.ObjectId,
         ref: 'Table',
         immutable: true,
-        required: true
     },
     billNumber: { // номер на сметка (подмаса), както са бутоните 1,2,3,4,5,6
         type: Number,

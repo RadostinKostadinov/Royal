@@ -3,7 +3,96 @@ import { ProductHistory } from "../../model/history.js";
 import { Ingredient } from "../../model/ingredient.js";
 import { Product } from "../../model/product.js";
 import { Table } from "../../model/table.js";
+import { User } from "../../model/user.js";
 import { updateReport } from "./reports.js";
+
+export async function convertPersonalBillToHistory() {
+    try {
+        // Find all consumation bills from today
+        let date = new Date();
+
+        // Check if date is between 00:00 and 04:00 hours
+        if (date.getHours() >= 0 && date.getHours() < 4) {
+            // Set date to yesterday at 04:00
+            date.setDate(date.getDate() - 1);
+            date.setHours(4);
+        } else {
+            // Set date to today at 04:00
+            date.setHours(4);
+        }
+
+        const consumationBills = await Bill.find({
+            when: {
+                $gte: date
+            },
+            user: {
+                $ne: undefined
+            }
+        }).populate('products.product');
+
+        for (let bill of consumationBills) {
+            let historyProducts = [];
+            let historyTotal = 0;
+            const user = await User.findById(bill.user);
+
+            for (let product of bill.products) { // for every product to pay
+                // Remove qty from inventory
+                let ingredientsArray = [];
+                const prodRef = await Product.findById(product.product._id);
+
+                // Check if product has ingredients
+                if (prodRef.ingredients.length === 0) {
+                    prodRef.qty -= product.qty;
+                    await prodRef.save();
+                }
+                else {
+                    for (let ingredient of prodRef.ingredients) {
+                        const ingredientRef = await Ingredient.findById(ingredient.ingredient);
+                        ingredientRef.qty -= ingredient.qty * product.qty;
+                        await ingredientRef.save();
+
+
+                        ingredientsArray.push({
+                            name: ingredientRef.name,
+                            qty: ingredient.qty,
+                            price: ingredientRef.sellPrice,
+                            ingredientRef: ingredientRef._id
+                        });
+                    }
+                }
+
+
+                historyProducts.push({
+                    name: product.product.name,
+                    qty: product.qty,
+                    price: product.product.sellPrice,
+                    productRef: product.product._id,
+                    ingredients: ingredientsArray
+                });
+
+                historyTotal += product.product.sellPrice * product.qty;
+            }
+
+            // Add action to history
+            await ProductHistory.create({
+                user: {
+                    name: user.name,
+                    userRef: user._id.toString()
+                },
+                action: 'consumed',
+                total: historyTotal,
+                products: historyProducts
+            });
+
+            // Delete bill
+            await Bill.deleteOne({ _id: bill._id });
+        }
+
+        console.log('All consumation bills are turned into history!');
+    } catch (err) {
+        console.error(err);
+    }
+}
 
 export function billsRoutes(app, auth) {
     app.post('/getLastPaidBillByTableId', auth, async (req, res) => {
@@ -364,16 +453,19 @@ export function billsRoutes(app, auth) {
 
             // Add actions to history
             for (let [action, products] of Object.entries(allActions)) {
-                await ProductHistory.create({
+                let data = {
                     user: {
                         name: req.user.name,
                         userRef: req.user._id
                     },
                     action: action,
-                    table: bill.table,
                     billNumber: bill.number,
                     products: products // all products that were added
-                });
+                }
+
+                if (!bill.user)
+                    data.table = bill.table;
+                await ProductHistory.create(data);
             }
 
             await updateReport(req, res);
@@ -413,7 +505,7 @@ export function billsRoutes(app, auth) {
 
             const table = await Table.findById(bill.table);
 
-            if (!table)
+            if (!bill.user && !table)
                 return res.status(400).send('Масата не съществува!');
 
             // Check if this product is already in bill
@@ -436,8 +528,10 @@ export function billsRoutes(app, auth) {
             await bill.save(); // Save (because we are editing)
 
             // Update table total
-            table.total += product.sellPrice * selectedX;
-            await table.save(); // Save (because we are editing)
+            if (!bill.user) {
+                table.total += product.sellPrice * selectedX;
+                await table.save(); // Save (because we are editing)
+            }
 
             await bill.populate('products.product'); // populate products (+ the one we created)
 
@@ -485,6 +579,26 @@ export function billsRoutes(app, auth) {
 
             // Done
             res.status(201).json(bills);
+        } catch (err) {
+            console.error(err);
+            res.status(500).send(err);
+        }
+    });
+
+    app.get('/generatePersonalBill', auth, async (req, res) => {
+        try {
+            // Check if user already has consumation bill
+            let bill = await Bill.findOne({ user: req.user._id });
+
+            if (bill)
+                return res.json(bill);
+
+            // Else create bill
+            bill = await Bill.create({
+                user: req.user._id
+            });
+
+            res.json(bill);
         } catch (err) {
             console.error(err);
             res.status(500).send(err);

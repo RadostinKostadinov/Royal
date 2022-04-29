@@ -32,7 +32,7 @@ export async function updateReport(req, res) {
             when: {
                 $gte: date
             },
-            action: ['paid', 'scrapped', 'consumed']
+            action: ['paid', 'scrapped']
         });
 
 
@@ -48,9 +48,18 @@ export async function updateReport(req, res) {
                 income += action.total;
             if (action.action === 'scrapped')
                 scrapped += action.total;
-            if (action.action === 'consumed')
-                consumed += action.total;
         }
+
+        // Get consumation
+        const consumationBill = await Bill.findOne({
+            user: _id,
+            when: {
+                $gte: date
+            }
+        });
+
+        if (consumationBill)
+            consumed = consumationBill.total;
 
         total = income - consumed - scrapped;
 
@@ -285,14 +294,30 @@ export function reportsRoutes(app, auth) {
         }
     });
 
-    app.get('/getAllReports', auth, async (req, res) => {
+    app.post('/getAllReports', auth, async (req, res) => {
         try {
             // Check if user is admin
             if (req.user.role !== 'admin')
                 return res.status(401).send('Нямате админски достъп!')
 
+            const { fromDate, toDate } = req.body;
+
+            let criteria = {};
+
+            if (fromDate) {
+                if (!criteria.hasOwnProperty('when'))
+                    criteria.when = {};
+                criteria.when.$gte = new Date(fromDate);
+            }
+
+            if (toDate) {
+                if (!criteria.hasOwnProperty('when'))
+                    criteria.when = {};
+                criteria.when.$lte = new Date(toDate).setHours(23, 59, 59);
+            }
+
             // Get all users reports from today
-            const reports = await Report.find().sort({ when: -1 });
+            const reports = await Report.find(criteria).sort({ when: -1 });
 
             res.json(reports);
         } catch (err) {

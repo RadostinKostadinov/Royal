@@ -1464,33 +1464,12 @@ export async function inventoryPage() {
 }
 
 export async function reportsPage() {
-    //TODO Add ability to choose day, week, month, year or period
-    let allReports = await getAllReports();
-
-    // Split reports by date
-    let splitReports = {};
-    for (let report of allReports) {
-        // Get date for report
-        let date = new Date(report.when);
-
-        // Convert to DD-MM-YYYY
-        date = `${date.getDate()}-${date.getMonth() + 1}-${date.getFullYear()}`;
-
-        // Check if date already created in splitReports
-        if (!splitReports.hasOwnProperty(date)) {
-            splitReports[date] = [];
-        }
-
-        // Add report to splitReports
-        splitReports[date].push(report);
-    }
-
     let total = 0,
         income = 0,
         scrapped = 0,
         consumed = 0;
 
-    const reportTemplate = (report,dateString, timeString) => html`
+    const reportTemplate = (report, dateString, timeString) => html`
         <tr>
             <td scope="row">${dateString}</td>
             <td scope="row">${timeString}</td>
@@ -1566,6 +1545,18 @@ export async function reportsPage() {
     const reportsTemplate = () => html`
         ${backBtn}
 
+        <div class="d-flex w-100 gap-3 p-3 fs-4">
+            <div class="w-50">
+                <label for="fromDate" class="form-label">От</label>
+                <input @change=${loadReports} name="fromDate" class="form-control fs-4" id="fromDate" type="date"/>
+            </div>
+    
+            <div class="w-50">
+                <label for="toDate" class="form-label">До</label>
+                <input @change=${loadReports} name="toDate" class="form-control fs-4" id="toDate" type="date"/>
+            </div>
+        </div>
+
         <table id="totalAll" class="fw-bold mt-4 table fs-b table-dark text-center">
             <thead>
                 <tr>
@@ -1591,11 +1582,49 @@ export async function reportsPage() {
         </table>
     `;
 
+    async function loadReports() {
+        total = 0;
+        income = 0;
+        scrapped = 0;
+        consumed = 0;
+
+        const fromDate = $('#fromDate').val();
+        const toDate = $('#toDate').val();
+
+        const res = await getAllReports(fromDate, toDate);
+
+        if (res.status === 200) {
+            const reports = res.data;
+
+            // Split reports by date
+            let splitReports = {};
+            for (let report of reports) {
+                // Get date for report
+                let date = new Date(report.when);
+
+                // Convert to DD-MM-YYYY
+                date = `${date.getDate()}-${date.getMonth() + 1}-${date.getFullYear()}`;
+
+                // Check if date already created in splitReports
+                if (!splitReports.hasOwnProperty(date)) {
+                    splitReports[date] = [];
+                }
+
+                // Add report to splitReports
+                splitReports[date].push(report);
+            }
+
+            // Render reports
+            render(reportsRows(splitReports), document.querySelector('#selectedReports tbody'));
+            render(totalRowsH(), document.querySelector('#totalAll tbody'));
+        } else {
+            console.error(res);
+            alert('Възникна грешка');
+        }
+    }
+
     render(reportsTemplate(), container);
-    
-    // Render all scrapped products
-    render(reportsRows(splitReports), document.querySelector('#selectedReports tbody'));
-    render(totalRowsH(), document.querySelector('#totalAll tbody'));
+    loadReports();
 }
 
 export async function scrappedPage() {

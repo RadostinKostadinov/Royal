@@ -32,30 +32,6 @@
 
 
 
-var canvas = document.getElementById('canvas');
-var printer = null;
-var ePosDev = new epson.ePOSDevice();
-ePosDev.connect('172.16.1.171', 8008, cbConnect);
-function cbConnect(data) {
-    if(data == 'OK' || data == 'SSL_CONNECT_OK') {
-        ePosDev.createDevice('local_printer', ePosDev.DEVICE_TYPE_PRINTER,
-                              {'crypto':false, 'buffer':false}, cbCreateDevice_printer);
-    } else {
-        alert(data);
-    }
-}
-function cbCreateDevice_printer(devobj, retcode) {
-    if( retcode == 'OK' ) {
-        printer = devobj;
-        printer.timeout = 5000;
-        printer.onreceive = function (res) { alert(res.success); };
-        printer.oncoveropen = function () { alert('coveropen'); };
-        print();
-    } else {
-        alert(retcode);
-    }
-}
-
 function print() {
     printer.addTextAlign(printer.ALIGN_CENTER);
     printer.addText('\"АРТ-АТУ-АНАТОЛИ-УЗУНТОНЕВ\" ЕООД\n');

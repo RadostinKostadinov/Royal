@@ -1,0 +1,22 @@
+<epos-print xmlns="http://www.epson-pos.com/schemas/2011/03/epos-print">
+<text>Служител                           Димитър&#10;</text>
+<text>Продажби                         50.00 ЛВ.&#10;</text>
+<text>Консумация                       20.00 ЛВ.&#10;</text>
+<text>Брак                             05.00 ЛВ.&#10;</text>
+<text reverse="false" ul="false" em="true" color="color_1"/>
+<text>Общ приход                       25.00 ЛВ.&#10;</text>
+</epos-print>
+
+
+
+
+
+function printReport() {
+    printer.addText('Служител                           Димитър\n');
+    printer.addText('Продажби                         50.00 ЛВ.\n');
+    printer.addText('Консумация                       20.00 ЛВ.\n');
+    printer.addText('Брак                             05.00 ЛВ.\n');
+    printer.addTextStyle(false, false, true, printer.COLOR_1);
+    printer.addText('Общ приход                       25.00 ЛВ.\n');
+    printer.send();
+}
