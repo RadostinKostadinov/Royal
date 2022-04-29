@@ -1390,7 +1390,7 @@ export async function payPartOfBillPage(ctx) {
                 <div class="controls d-flex flex-column justify-content-between">
                     <div class="d-flex gap-3 flex-column justify-content-evenly">
                         <button @click=${() => sellPrdcts(true)}>Извади с принт</button>
-                        <button @click=${sellPrdcts}>Извади</button>
+                        <button @click=${() => sellPrdcts()}>Извади</button>
                     </div>
                     <button @click=${() => page(`/waiter/table/${selectedTable}`)}>Отказ</button>
                 </div>
