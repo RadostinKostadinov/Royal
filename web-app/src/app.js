@@ -199,6 +199,5 @@ function showBlackScreen() {
         $('#blackscreen').show(); // Show black screen
 }
 
-// $(document).bind('mousemove', resetActive);
 $(document).bind('click', resetActive);
 $(document).bind('touch', resetActive);

@@ -9,7 +9,7 @@ import { container } from "../app";
 import { html, render } from 'lit/html.js';
 import $ from "jquery";
 import 'bootstrap-icons/font/bootstrap-icons.css';
-import { fixPrice, stopAllSockets, socket, getAllPaidBills, getAddonsForCategory, getLastPaidBillByTableId, addProductToBill, generateBills, getAllCategories, getProductsFromCategory, logout, getBillById, removeOneFromBill, sellProducts, scrapProducts, addProductsToHistory, getTables, getTableTotalById, createNewOrder, getTodaysReport, moveProducts } from '../api';
+import { printBill, fixPrice, stopAllSockets, socket, getAllPaidBills, getAddonsForCategory, getLastPaidBillByTableId, addProductToBill, generateBills, getAllCategories, getProductsFromCategory, logout, getBillById, removeOneFromBill, sellProducts, scrapProducts, addProductsToHistory, getTables, getTableTotalById, createNewOrder, getTodaysReport, moveProducts } from '../api';
 
 let lastRenderedLocation = 'middle'; // remembers the last rendered location, so when the user clicks "Back", take them there
 
@@ -521,7 +521,7 @@ export async function tableControlsPage(ctx) {
 
     }
 
-    async function payWholeBill() {
+    async function payWholeBill(toPrinter) {
         clearTimeout(awayTimeout);
         if (billData.products.length === 0) return;
 
@@ -531,8 +531,13 @@ export async function tableControlsPage(ctx) {
         const res = await sellProducts(billData);
 
         if (res.status === 200) {
-            billData = res.data;
+            billData = res.data.billData;
             socket.emit('billChanged', billData); // send new bill to server to rerender for anyone in same view
+            
+            // If we want to print the bill
+            if (toPrinter)
+                printBill(res.data.history, res.data.tableName);
+
             page(`/waiter`);
         } else {
             console.error(res);
@@ -644,7 +649,7 @@ export async function tableControlsPage(ctx) {
                 <div class="addons d-flex flex-column justify-content-evenly"></div>
                 <div class="controls d-flex flex-column justify-content-evenly">
                     <button @click=${goToPay}>Извади</button>
-                    <button style="opacity: 0.2">Приключи с принт</button>
+                    <button @click=${() => payWholeBill(true)}>Приключи с принт</button>
                     <button @click=${payWholeBill}>Приключи</button>
                     <button @click=${goToScrap}>Брак</button>
                     <button @click=${goToMove}>Премести</button>
@@ -1116,7 +1121,7 @@ export async function payPartOfBillPage(ctx) {
         </table>
     `;
 
-    async function sellPrdcts() {
+    async function sellPrdcts(toPrinter) {
         if (productsToPay.products.length === 0) return;
 
         const res = await sellProducts(productsToPay);
@@ -1125,6 +1130,10 @@ export async function payPartOfBillPage(ctx) {
             // Notify anyone that is already in this screen
             productsToPay.products = [];
             productsToPay.total = 0;
+
+            // If we want to print the bill
+            if (toPrinter)
+                printBill(res.data.history, res.data.tableName);
 
             // Notify anyone still paying products
             socket.emit('addToPay/returnToBill', { bill, productsToPay });
@@ -1154,7 +1163,7 @@ export async function payPartOfBillPage(ctx) {
                 </div>
                 <div class="controls d-flex flex-column justify-content-between">
                     <div class="d-flex gap-3 flex-column justify-content-evenly">
-                        <button>Извади с принт</button>
+                        <button @click=${() => sellPrdcts(true)}>Извади с принт</button>
                         <button @click=${sellPrdcts}>Извади</button>
                     </div>
                     <button @click=${() => page(`/waiter/table/${selectedTable}`)}>Отказ</button>

@@ -257,12 +257,10 @@ export function billsRoutes(app, auth) {
                 historyTotal += product.product.sellPrice * product.qty;
             }
 
-            const data = await recalculateTotal(originalBill, table);
-
-            res.json(data.bill);
+            const billData = (await recalculateTotal(originalBill, table)).bill;
 
             // Add action to history
-            await ProductHistory.create({
+            const history = await ProductHistory.create({
                 user: {
                     name: req.user.name,
                     userRef: req.user._id
@@ -273,6 +271,8 @@ export function billsRoutes(app, auth) {
                 total: historyTotal,
                 products: historyProducts
             });
+
+            res.json({ billData, history, tableName: table.name });
 
             await updateReport(req, res);
         } catch (err) {

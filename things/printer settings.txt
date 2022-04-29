@@ -1,0 +1,90 @@
+<epos-print xmlns="http://www.epson-pos.com/schemas/2011/03/epos-print">
+<text align="center"/>
+<text>&quot;АРТ-АТУ-АНАТОЛИ-УЗУНТОНЕВ&quot; ЕООД&#10;</text>
+<text>гр.БЯЛА, бул. СТЕФАН СТАМБОЛОВ 18&#10;</text>
+<text>ЕИК: 206081751&#10;</text>
+<text>КАФЕ &quot;РОЯЛ&quot;&#10;</text>
+<text>ГРАД БЯЛА, УЛ. ХАДЖИ ДИМИТЪР 1&#10;</text>
+<text>ЗДДС N BG206081751&#10;&#10;</text>
+<text align="left"/>
+<text>СЛУЖИТЕЛ                                 ДИМИТЪР&#10;</text>
+<text>МАСА                                          12&#10;&#10;</text>
+<text></text>
+<text>  2 x 3.30 =&#10;</text>
+<text>КАФЕ</text>
+<text>                                     6.60 ЛВ&#10;</text>
+<text>  4 x 3.80 =&#10;</text>
+<text>БЕЗАЛКОХОЛНА НАПИТКА</text>
+<text>                    15.20 ЛВ&#10;</text>
+<text reverse="false" ul="false" em="true" color="color_1"/>
+<text align="left"/>
+<text dw="true" dh="false"/>
+<text>ОБЩА СУМА</text>
+<text>      121.80 ЛВ&#10;&#10;</text>
+<text reverse="false" ul="false" em="false" color="color_1"/>
+<text dw="false" dh="false"/>
+<text>27-04-2022                              14:06:09&#10;</text>
+<text align="center"/>
+<symbol type="qrcode_model_1" level="default" width="6" height="0" size="0">62587b41bda7e3ee05fbfec4</symbol>
+<text>&#10;Служебна бележка&#10;</text>
+<cut type="feed"/>
+</epos-print>
+
+
+
+var canvas = document.getElementById('canvas');
+var printer = null;
+var ePosDev = new epson.ePOSDevice();
+ePosDev.connect('172.16.1.171', 8008, cbConnect);
+function cbConnect(data) {
+    if(data == 'OK' || data == 'SSL_CONNECT_OK') {
+        ePosDev.createDevice('local_printer', ePosDev.DEVICE_TYPE_PRINTER,
+                              {'crypto':false, 'buffer':false}, cbCreateDevice_printer);
+    } else {
+        alert(data);
+    }
+}
+function cbCreateDevice_printer(devobj, retcode) {
+    if( retcode == 'OK' ) {
+        printer = devobj;
+        printer.timeout = 5000;
+        printer.onreceive = function (res) { alert(res.success); };
+        printer.oncoveropen = function () { alert('coveropen'); };
+        print();
+    } else {
+        alert(retcode);
+    }
+}
+
+function print() {
+    printer.addTextAlign(printer.ALIGN_CENTER);
+    printer.addText('\"АРТ-АТУ-АНАТОЛИ-УЗУНТОНЕВ\" ЕООД\n');
+    printer.addText('гр.БЯЛА, бул. СТЕФАН СТАМБОЛОВ 18\n');
+    printer.addText('ЕИК: 206081751\n');
+    printer.addText('КАФЕ \"РОЯЛ\"\n');
+    printer.addText('ГРАД БЯЛА, УЛ. ХАДЖИ ДИМИТЪР 1\n');
+    printer.addText('ЗДДС N BG206081751\n\n');
+    printer.addTextAlign(printer.ALIGN_LEFT);
+    printer.addText('СЛУЖИТЕЛ                                 ДИМИТЪР\n');
+    printer.addText('МАСА                                          12\n\n');
+    printer.addText('');
+    printer.addText('  2 x 3.30 =\n');
+    printer.addText('КАФЕ');
+    printer.addText('                                     6.60 ЛВ\n');
+    printer.addText('  4 x 3.80 =\n');
+    printer.addText('БЕЗАЛКОХОЛНА НАПИТКА');
+    printer.addText('                    15.20 ЛВ\n');
+    printer.addTextStyle(false, false, true, printer.COLOR_1);
+    printer.addTextAlign(printer.ALIGN_LEFT);
+    printer.addTextDouble(true, false);
+    printer.addText('ОБЩА СУМА');
+    printer.addText('      121.80 ЛВ\n\n');
+    printer.addTextStyle(false, false, false, printer.COLOR_1);
+    printer.addTextDouble(false, false);
+    printer.addText('27-04-2022                              14:06:09\n');
+    printer.addTextAlign(printer.ALIGN_CENTER);
+    printer.addSymbol('62587b41bda7e3ee05fbfec4', printer.SYMBOL_QRCODE_MODEL_1, printer.LEVEL_DEFAULT, 6, 0, 0);
+    printer.addText('\nСлужебна бележка\n');
+    printer.addCut(printer.CUT_FEED);
+    printer.send();
+}
