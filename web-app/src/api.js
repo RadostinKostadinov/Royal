@@ -114,6 +114,16 @@ export async function completeOne(prodRef, orderId) {
     });
 }
 
+export async function getAllConsumation(fromDate, toDate, user) {
+    return await axios.post('/getAllConsumation', {
+        fromDate,
+        toDate,
+        user
+    }).catch((err) => {
+        return err.response;
+    });
+}
+
 export async function getAllReports(fromDate, toDate) {
     return await axios.post('/getAllReports', {
         fromDate,

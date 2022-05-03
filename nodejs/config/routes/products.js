@@ -154,7 +154,7 @@ export function productsRoutes(app, auth) {
                 return res.status(400).send('Грешна стойност от checkbox bartender!');
 
             // Validate user input depending on what they chose (create product or create product from ingredients)
-            if (!(name && buyPrice && sellPrice && categoryId))
+            if (!(name && buyPrice !== undefined && sellPrice !== undefined && categoryId))
                 return res.status(400).send('Всички полета са задължителни!');
 
             // Check if prices are okay
@@ -259,13 +259,8 @@ export function productsRoutes(app, auth) {
 
 
             // Validate user input depending on what they chose (create product or create product from ingredients)
-            if (!(name && buyPrice && sellPrice && categoryId))
+            if (!(name && buyPrice !== undefined && sellPrice !== undefined && categoryId))
                 return res.status(400).send('Всички полета са задължителни!');
-
-            // Check if prices are okay
-            /* const pricesRegex = new RegExp(/^\d{1,}(\.\d{1,2})?$/);
-            if (!pricesRegex.test(buyPrice) || !pricesRegex.test(sellPrice))
-                return res.status(400).send('Цената трябва да е: пример 5.0, 3, 1.20!'); */
 
             if (qty && ingredients) // Impossible, because product from ingredients cant have qty
                 return res.status(400).send('Невъзможно да има количество и съставки едновременно в 1 продукт!');

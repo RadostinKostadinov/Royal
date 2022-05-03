@@ -5,6 +5,43 @@ import { Ingredient } from "../../model/ingredient.js";
 
 export function historiesRoutes(app, auth) {
 
+    app.post('/getAllConsumation', auth, async (req, res) => {
+        try {
+            // Check if user admin
+            if (req.user.role !== 'admin')
+                return res.status(403).send('Нямате права!');
+
+            const { fromDate, toDate, user } = req.body;
+
+            let criteria = {
+                action: 'consumed'
+            };
+
+            if (user)
+                criteria['user.userRef'] = user;
+
+            if (fromDate) {
+                if (!criteria.hasOwnProperty('when'))
+                    criteria.when = {};
+                criteria.when.$gte = new Date(fromDate);
+            }
+
+            if (toDate) {
+                if (!criteria.hasOwnProperty('when'))
+                    criteria.when = {};
+                criteria.when.$lte = new Date(toDate).setHours(23, 59, 59);
+            }
+
+            // Get all users reports from today
+            const reports = await ProductHistory.find(criteria).sort({ when: -1 });
+
+            res.json(reports);
+        } catch (err) {
+            console.log(err);
+            res.status(500).send(err);
+        }
+    });
+
     app.post('/markExpiredAsReviewed', auth, async (req, res) => {
         try {
             // Check if user admin

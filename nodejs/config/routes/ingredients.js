@@ -67,7 +67,7 @@ export function ingredientsRoutes(app, auth) {
             let { name, unit, qty, buyPrice, sellPrice } = req.body;
 
             // Validate user input
-            if (!(name && unit && qty && buyPrice && sellPrice))
+            if (!(name && unit && qty !== undefined && buyPrice !== undefined && sellPrice !== undefined))
                 return res.status(400).send('Всички полета са задължителни!');
 
             // Check if prices are okay
@@ -150,7 +150,7 @@ export function ingredientsRoutes(app, auth) {
             const { _id, name, unit, qty, buyPrice, sellPrice } = req.body;
 
             // Validate user input
-            if (!(_id && name && unit && qty && buyPrice && sellPrice))
+            if (!(_id && name && unit && qty !== undefined && buyPrice !== undefined && sellPrice !== undefined))
                 return res.status(400).send('Всички полета са задължителни!');
 
             // Check if prices are okay

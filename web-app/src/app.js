@@ -6,7 +6,7 @@ import './bootstrap/bootstrap.bundle.min.js';
 import './css/global.css';
 import { html, render } from 'lit/html.js';
 import { checkSitePass, getAllUsers, login, user } from './api';
-import { showAdminDashboard, createCategoryPage, deleteCategoryPage, editCategoryPage, sortCategoriesPage, createEmployeePage, deleteEmployeePage, editEmployeePage, scrapRestockProductPage, createProductPage, deleteProductPage, editProductPage, removeQtyProductPage, inventoryPage, sortProductsPage, scrappedPage, expireProductsPage, reportsPage, soldProductsPage, restockHistoryPage } from './views/admin';
+import { showAdminDashboard, createCategoryPage, deleteCategoryPage, editCategoryPage, sortCategoriesPage, createEmployeePage, deleteEmployeePage, editEmployeePage, scrapRestockProductPage, createProductPage, deleteProductPage, editProductPage, removeQtyProductPage, inventoryPage, sortProductsPage, scrappedPage, expireProductsPage, reportsPage, soldProductsPage, restockHistoryPage, consumationHistoryPage } from './views/admin';
 import { consumationPage, moveProductsPage, payPartOfBillPage, scrapProductsPage, showPaidBillsPage, tableControlsPage, waiterDashboardPage } from './views/waiter.js';
 import { bartenderDashboardPage } from './views/bartender';
 
@@ -26,6 +26,7 @@ page('/waiter/table/:tableId/bill/:billId/move', auth, moveProductsPage);
 
 // Admin pages
 page('/admin', auth, showAdminDashboard);
+page('/admin/consumationHistory', auth, consumationHistoryPage);
 page('/admin/restockHistory', auth, restockHistoryPage);
 page('/admin/products/sold', auth, soldProductsPage);
 page('/admin/reports', auth, reportsPage);
@@ -70,7 +71,7 @@ async function checkIfUserLoggedIn() {
         `;
 
         const numpadTemplate = () => html`
-        <button @click=${()=> render(usersTemplate(), container)}
+        <button @click=${() => render(usersTemplate(), container)}
             class="btn btn-secondary fs-1 mt-3 ms-3">Назад</button>
         
         <div id="numpad-wrapper">

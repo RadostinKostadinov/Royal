@@ -389,18 +389,18 @@ export function billsRoutes(app, auth) {
 
                     // Recalculate totals
                     bill.total = 0;
-                    table.total = 0;
+                    if (table) // if normal bill (not consumation)
+                        table.total = 0;
+
                     for (let product of bill.products) {
                         bill.total += product.product.sellPrice * product.qty;
-                        table.total += product.product.sellPrice * product.qty;
+                        if (table) // if normal bill (not consumation)
+                            table.total += product.product.sellPrice * product.qty;
                     }
 
                     await bill.save();
-                    await table.save();
-
-
-                    if (!table)
-                        return res.status(400).send('Масата не съществува!');
+                    if (table) // if normal bill (not consumation)
+                        await table.save();
 
                     return res.json(bill); // Return bill to rerender
                 }

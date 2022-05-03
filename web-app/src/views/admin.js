@@ -4,7 +4,7 @@ import { html, render } from 'lit/html.js';
 import $ from "jquery";
 import Sortable from 'sortablejs';
 import '../css/admin/admin.css';
-import { fixPrice, markProductAsScrapped, sortCategories, getProductById, getProductsFromCategory, getAllUsers, editCategory, deleteCategory, deleteUser, createUser, editUser, createCategory, scrapRestockProduct, createProduct, deleteProduct, editProduct, getAllCategories, getAllProducts, sortProducts, logout, getAllIngredients, createIngredient, deleteIngredient, getIngredientById, editIngredient, getAllProductsWithoutIngredients, getProductsWithoutIngredientsFromCategory, scrapRestockIngredient, getAllScrapped, getAllRestockedProducts, getAllReports, getProductsIngredients, getProductSells, getRestockHistory, getNumberOfExpiredProducts, markExpiredAsReviewed } from '../api';
+import { fixPrice, markProductAsScrapped, sortCategories, getProductById, getProductsFromCategory, getAllUsers, editCategory, deleteCategory, deleteUser, createUser, editUser, createCategory, scrapRestockProduct, createProduct, deleteProduct, editProduct, getAllCategories, getAllProducts, sortProducts, logout, getAllIngredients, createIngredient, deleteIngredient, getIngredientById, editIngredient, getAllProductsWithoutIngredients, getProductsWithoutIngredientsFromCategory, scrapRestockIngredient, getAllScrapped, getAllRestockedProducts, getAllReports, getProductsIngredients, getProductSells, getRestockHistory, getNumberOfExpiredProducts, markExpiredAsReviewed, getAllConsumation } from '../api';
 
 const backBtn = html`<button @click=${()=> page('/admin')} class="btn btn-secondary fs-3 mt-2 ms-2">Назад</button>`;
 let contentType; //  used in loadProducts to determine if we are loading/deleting a product or ingredient
@@ -1627,6 +1627,113 @@ export async function reportsPage() {
     loadReports();
 }
 
+export async function consumationHistoryPage() {
+    const users = await getAllUsers();
+    let usersTotal = {};
+
+    const rowsTemplate = (consumations) => html`
+        ${ consumations.map( consumation => {
+            let total = 0;
+            const date = new Date(consumation.when);
+            const dateString = `${date.getDate() > 9 ? date.getDate() : '0' + date.getDate()}.${(date.getMonth() + 1) > 9 ? date.getMonth() + 1 : '0' + (date.getMonth() + 1)}.${date.getFullYear()}`;
+            
+            return html`
+                <tr>
+                    <td>${dateString}</td>
+                    <td class="text-capitalize">${consumation.user.name}</td>
+                    <td>
+                        ${Object.values(consumation.products).map(product => {
+                            total += product.price * product.qty
+                            usersTotal[consumation.user.name] = usersTotal[consumation.user.name] ? usersTotal[consumation.user.name] + total : total;
+                            return html`${product.name} x ${product.qty} бр.<br>`
+                        })}
+                    </td>
+                    <td>${fixPrice(total)}</td>
+                </tr>
+            `
+        })}
+    `;
+
+    const allTotals = () => html`
+        ${Object.entries(usersTotal).map(user => html`
+            <tr>
+                <td class="text-capitalize">${user[0]}</td>
+                <td>${fixPrice(user[1])}</td>
+            </tr>
+        `)}
+    `;
+
+    async function loadConsumation() {
+        usersTotal = {};
+        const fromDate = $('#fromDate').val();
+        const toDate = $('#toDate').val();
+        const user = $('#user').val();
+
+        const res = await getAllConsumation(fromDate, toDate, user);
+
+        if (res.status === 200) {
+            const consumations = res.data;
+
+            // Render consumation
+            render(rowsTemplate(consumations), document.querySelector('#selectedConsumations tbody'));
+            render(allTotals(), document.querySelector('#totalAll tbody'));
+        } else {
+            console.error(res);
+            alert('Възникна грешка');
+        }
+    }
+
+    const consumationTemplate = () => html`
+        ${backBtn}
+        
+        <div class="d-flex w-100 gap-3 p-3 fs-4 mb-3">
+            <div class="w-50">
+                <label for="fromDate" class="form-label">От</label>
+                <input @change=${loadConsumation} name="fromDate" class="form-control fs-4" id="fromDate" type="date" />
+            </div>
+        
+            <div class="w-50">
+                <label for="toDate" class="form-label">До</label>
+                <input @change=${loadConsumation} name="toDate" class="form-control fs-4" id="toDate" type="date" />
+            </div>
+        </div>
+
+        <div class="p-3 fs-4 mb-3">
+            <label for="user" class="form-label">Служител</label>
+            <select @change=${loadConsumation} class="form-control fs-4 text-capitalize" name="user" id="user">
+                <option value="" selected>Всички</option>
+                ${users.map(user => html`
+                    <option value="${user._id}">${user.name}</option>
+                `)}
+            </select>
+        </div>
+
+        <table id="totalAll" class="mt-4 table fs-b table-dark text-center">
+            <thead>
+                <tr class="fw-bold">
+                    <th scope="col" colspan="2">Общо за избран период</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+
+        <table id="selectedConsumations" class="mt-4 table table-striped table-dark table-hover text-center">
+            <thead>
+                <tr>
+                    <th scope="col">Дата</th>
+                    <th scope="col">Служител</th>
+                    <th scope="col">Консумация</th>
+                    <th scope="col">Общо</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    `;
+
+    render(consumationTemplate(), container);
+    loadConsumation();
+}
+
 export async function scrappedPage() {
     let allScrapped = await getAllScrapped();
 
@@ -1980,6 +2087,7 @@ export async function showAdminDashboard() {
                 <h1>Специални</h1>
                 <div class="d-inline-flex flex-row flex-wrap gap-3 justify-content-center">
                     <button @click=${() => page('/admin/products/sold') } class="btn btn-success fs-4">Продажби</button>
+                    <button @click=${() => page('/admin/consumationHistory') } class="btn btn-secondary fs-4">История на консумация</button>
                     <button @click=${() => page('/admin/restockHistory') } class="btn btn-info fs-4">История на зареждане</button>
                     <button @click=${() => page('/admin/inventory/scrapped') } class="btn btn-danger fs-4">Бракувана стока</button>
                     <button @click=${() => page('/admin/expireProducts') } class="btn btn-primary fs-4 position-relative">
