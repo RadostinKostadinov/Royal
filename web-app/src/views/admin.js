@@ -1633,22 +1633,20 @@ export async function consumationHistoryPage() {
 
     const rowsTemplate = (consumations) => html`
         ${ consumations.map( consumation => {
-            let total = 0;
             const date = new Date(consumation.when);
             const dateString = `${date.getDate() > 9 ? date.getDate() : '0' + date.getDate()}.${(date.getMonth() + 1) > 9 ? date.getMonth() + 1 : '0' + (date.getMonth() + 1)}.${date.getFullYear()}`;
-            
+            usersTotal[consumation.user.name] = usersTotal[consumation.user.name] ? usersTotal[consumation.user.name] + consumation.total : consumation.total;
+
             return html`
                 <tr>
                     <td>${dateString}</td>
                     <td class="text-capitalize">${consumation.user.name}</td>
                     <td>
                         ${Object.values(consumation.products).map(product => {
-                            total += product.price * product.qty
-                            usersTotal[consumation.user.name] = usersTotal[consumation.user.name] ? usersTotal[consumation.user.name] + total : total;
                             return html`${product.name} x ${product.qty} бр.<br>`
                         })}
                     </td>
-                    <td>${fixPrice(total)}</td>
+                    <td>${fixPrice(consumation.total)}</td>
                 </tr>
             `
         })}

@@ -74,15 +74,16 @@ export async function convertPersonalBillToHistory() {
             }
 
             // Add action to history
-            await ProductHistory.create({
-                user: {
-                    name: user.name,
-                    userRef: user._id.toString()
-                },
-                action: 'consumed',
-                total: historyTotal,
-                products: historyProducts
-            });
+            if (historyTotal > 0)
+                await ProductHistory.create({
+                    user: {
+                        name: user.name,
+                        userRef: user._id.toString()
+                    },
+                    action: 'consumed',
+                    total: historyTotal,
+                    products: historyProducts
+                });
 
             // Delete bill
             await Bill.deleteOne({ _id: bill._id });
