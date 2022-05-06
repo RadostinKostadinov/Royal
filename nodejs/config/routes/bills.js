@@ -177,29 +177,41 @@ export function billsRoutes(app, auth) {
 
             await newBill.populate('products.product');
 
-            const data = await recalculateTotal(currentBill, currentTable);
-            const data2 = await recalculateTotal(newBill, newTable);
+            const data = await recalculateBillTotal(currentBill);
+            const data2 = await recalculateBillTotal(newBill);
 
-            res.json(data2.bill);
+            res.json(data2);
         } catch (err) {
             console.error(err);
             res.status(500).send(err);
         }
     });
 
-    async function recalculateTotal(bill, table) {
-        bill.total = 0;
-        table.total = 0;
+    async function recalculateTableTotal(_id) {
+        const table = await Table.findById(_id);
+        const bills = await Bill.find({ table: _id });
 
-        for (let product of bill.products) {
-            bill.total += product.product.sellPrice * product.qty;
-            table.total += product.product.sellPrice * product.qty;
-        }
+        let total = 0;
+        for (let bill of bills)
+            total += bill.total;
 
-        await bill.save();
+        table.total = total;
         await table.save();
 
-        return { bill, table };
+        return table;
+    }
+
+    async function recalculateBillTotal(bill) {
+        bill.total = 0;
+
+        for (let product of bill.products)
+            bill.total += product.product.sellPrice * product.qty;
+
+
+        await bill.save();
+        await recalculateTableTotal(bill.table);
+
+        return bill;
     }
 
     app.post('/scrapProducts', auth, async (req, res) => {
@@ -262,9 +274,9 @@ export function billsRoutes(app, auth) {
                 historyTotal += product.product.sellPrice * product.qty;
             }
 
-            const data = await recalculateTotal(originalBill, table);
+            const data = await recalculateBillTotal(originalBill);
 
-            res.json(data.bill);
+            res.json(data);
 
             // Add action to history
             await ProductHistory.create({
@@ -347,7 +359,7 @@ export function billsRoutes(app, auth) {
                 historyTotal += product.product.sellPrice * product.qty;
             }
 
-            const billData = (await recalculateTotal(originalBill, table)).bill;
+            const billData = (await recalculateBillTotal(originalBill));
 
             // Add action to history
             const history = await ProductHistory.create({
