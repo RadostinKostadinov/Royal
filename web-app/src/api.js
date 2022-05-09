@@ -580,7 +580,8 @@ export async function logout() {
 }
 
 // PRINTER
-const printerIp = '192.168.0.177'; // Royal IP
+//const printerIp = '192.168.0.177'; // Royal IP
+const printerIp = '192.168.0.171'; // Royal NEW IP
 // const printerIp = ''172.16.1.171''; // Home IP
 var printer = null;
 var ePosDev = new epson.ePOSDevice();
