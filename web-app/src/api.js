@@ -1,5 +1,6 @@
 import axios from 'axios';
 import page from 'page';
+import $ from "jquery";
 import { io } from "socket.io-client";
 
 export let user = JSON.parse(sessionStorage.getItem('user'));
@@ -580,12 +581,17 @@ export async function logout() {
 }
 
 // PRINTER
-//const printerIp = '192.168.0.177'; // Royal IP
-const printerIp = '192.168.0.171'; // Royal NEW IP
+const printerIp = '192.168.0.171'; // Royal IP
+const printerPort = 8008;
 // const printerIp = ''172.16.1.171''; // Home IP
 var printer = null;
+export var printerStatusClass = 'text-warning';
 var ePosDev = new epson.ePOSDevice();
-ePosDev.connect(printerIp, 8008, cbConnect);
+initializePrinter();
+
+function initializePrinter() {
+    ePosDev.connect(printerIp, printerPort, cbConnect);
+}
 
 function cbConnect(data) {
     if (data == 'OK' || data == 'SSL_CONNECT_OK') {
@@ -593,8 +599,12 @@ function cbConnect(data) {
             { 'crypto': true, 'buffer': false }, cbCreateDevice_printer);
     } else {
         console.error(data);
-        //TODO REMOVE COMMENT
-        //alert('Възникна грешка с принтера!');
+        // Remove old status icon color
+        $('#printerStatusIcon').removeClass(printerStatusClass);
+        printerStatusClass = 'text-danger';
+        // Set new status icon color
+        $('#printerStatusIcon').addClass(printerStatusClass);
+        alert('Неуспешна връзка с принтера!\nАко токът е спрял преди това, презареди страницата.');
     }
 }
 
@@ -604,6 +614,13 @@ function cbCreateDevice_printer(devobj, retcode) {
         printer.timeout = 5000;
         printer.onpaperend = () => alert('Няма хартия в принтера!')
         console.log('Printer connected.');
+
+        // Change printer icon to green
+        // Remove old status icon color
+        $('#printerStatusIcon').removeClass(printerStatusClass);
+        printerStatusClass = 'text-success';
+        // Set new status icon color
+        $('#printerStatusIcon').addClass(printerStatusClass);
     } else {
         console.error(retcode);
         alert('Възникна грешка с принтера!');

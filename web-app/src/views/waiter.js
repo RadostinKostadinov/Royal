@@ -9,8 +9,9 @@ import { container } from "../app";
 import { html, render } from 'lit/html.js';
 import $ from "jquery";
 import 'bootstrap-icons/font/bootstrap-icons.css';
-import { printBill, fixPrice, stopAllSockets, socket, getAllPaidBills, getAddonsForCategory, getLastPaidBillByTableId, addProductToBill, generateBills, getAllCategories, getProductsFromCategory, logout, getBillById, removeOneFromBill, sellProducts, scrapProducts, addProductsToHistory, getTables, getTableTotalById, createNewOrder, getTodaysReport, moveProducts, printReport, getConsumed, generatePersonalBill } from '../api';
+import { printerStatusClass, printBill, fixPrice, stopAllSockets, socket, getAllPaidBills, getAddonsForCategory, getLastPaidBillByTableId, addProductToBill, generateBills, getAllCategories, getProductsFromCategory, logout, getBillById, removeOneFromBill, sellProducts, scrapProducts, addProductsToHistory, getTables, getTableTotalById, createNewOrder, getTodaysReport, moveProducts, printReport, getConsumed, generatePersonalBill } from '../api';
 
+console.log(printerStatusClass)
 let lastRenderedLocation = 'middle'; // remembers the last rendered location, so when the user clicks "Back", take them there
 
 // Dashboard contains all the code for rendering the tables view (grid with tables)
@@ -164,6 +165,7 @@ export async function waiterDashboardPage() {
                     <div>${getDay()}</div>
                     <div>${getDate()}</div>
                     <div>${getTime()}</div>
+                    <div>Принтер <i id="printerStatusIcon" class="bi bi-circle-fill ${printerStatusClass}"></i></div>
                 </div>
                 <div class="d-flex flex-column align-items-center mt-5 mb-5 justify-content-between h-100 w-100 ps-2 pe-2">
                     <div id="changeTablesViewButtons" class="d-flex flex-column text-center gap-3 w-100">
