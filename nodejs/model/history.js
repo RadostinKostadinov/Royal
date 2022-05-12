@@ -87,6 +87,7 @@ const productHistorySchema = new Schema({
         type: Number,
         immutable: true
     },
+    discount: Number,
     total: { // Обща сума при плащане, бракуване, консумиране
         type: Number,
         immutable: true

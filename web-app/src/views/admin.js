@@ -1467,7 +1467,8 @@ export async function reportsPage() {
     let total = 0,
         income = 0,
         scrapped = 0,
-        consumed = 0;
+        consumed = 0,
+        discounts = 0;
 
     const reportTemplate = (report, dateString, timeString) => html`
         <tr>
@@ -1477,6 +1478,7 @@ export async function reportsPage() {
             <td scope="row">${fixPrice(report.income)}</td>
             <td scope="row">${fixPrice(report.scrapped)}</td>
             <td scope="row">${fixPrice(report.consumed)}</td>
+            <td scope="row">${report.discounts ? fixPrice(report.discounts) : '0.00'}</td>
             <td scope="row">${fixPrice(report.total)}</td>
         </tr>
     `;
@@ -1487,6 +1489,7 @@ export async function reportsPage() {
             let todayTotal = 0,
                 todayIncome = 0,
                 todayScrapped = 0,
+                todayDiscounts = 0,
                 todayConsumed = 0;
 
                 
@@ -1497,7 +1500,8 @@ export async function reportsPage() {
                 
                 todayIncome += report.income;
                 todayConsumed += report.consumed;
-                todayScrapped += report.scrapped;            
+                todayScrapped += report.scrapped;   
+                todayDiscounts += report.discounts;         
                 todayTotal += report.income - report.consumed - report.scrapped; 
     
                 combinedDailyReports.push(reportTemplate(report, dateString, timeString));
@@ -1510,6 +1514,7 @@ export async function reportsPage() {
                     <td scope="row">${fixPrice(todayIncome)}</td>
                     <td scope="row">${fixPrice(todayScrapped)}</td>
                     <td scope="row">${fixPrice(todayConsumed)}</td>
+                    <td scope="row">${fixPrice(todayDiscounts)}</td>
                     <td scope="row">${fixPrice(todayTotal)}</td>
                 </tr>
             `);
@@ -1517,6 +1522,7 @@ export async function reportsPage() {
             total += todayTotal;
             income += todayIncome;
             consumed += todayConsumed;
+            discounts += todayDiscounts;
             scrapped += todayScrapped;
 
             return combinedDailyReports;
@@ -1535,6 +1541,10 @@ export async function reportsPage() {
         <tr class="table-secondary">
             <td>Консумация</td>
             <td>${fixPrice(consumed)}</td>
+        </tr>
+        <tr class="table-secondary">
+            <td>Отстъпки</td>
+            <td>${fixPrice(discounts)}</td>
         </tr>
         <tr class="table-primary">
             <td>Общ приход</td>
@@ -1575,7 +1585,8 @@ export async function reportsPage() {
                     <th scope="col">Продажби</th>
                     <th scope="col">Брак</th>
                     <th scope="col">Консумация</th>
-                    <th scope="col">Общ приход</th>
+                    <th scope="col">Отстъпки</th>
+                    <th scope="col">Общ приход<br></th>
                 </tr>
             </thead>
             <tbody></tbody>

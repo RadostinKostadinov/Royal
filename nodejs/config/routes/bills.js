@@ -301,7 +301,7 @@ export function billsRoutes(app, auth) {
 
     app.post('/sellProducts', auth, async (req, res) => {
         try {
-            const { billToPay } = req.body; // the products we are going to pay from that bill
+            const { billToPay, discount } = req.body; // the products we are going to pay from that bill
 
             if (billToPay.products.length === 0)
                 return res.status(404).send('Няма продукти в сметката');
@@ -359,10 +359,19 @@ export function billsRoutes(app, auth) {
                 historyTotal += product.product.sellPrice * product.qty;
             }
 
+            if (discount) {
+                originalBill.total -= discount;
+                historyTotal -= discount;
+                if (originalBill.total < 0)
+                    originalBill.total = 0;
+
+                if (historyTotal.total < 0)
+                    historyTotal = 0;
+            }
+
             const billData = (await recalculateBillTotal(originalBill));
 
-            // Add action to history
-            const history = await ProductHistory.create({
+            const historyOptions = {
                 user: {
                     name: req.user.name,
                     userRef: req.user._id
@@ -372,7 +381,14 @@ export function billsRoutes(app, auth) {
                 billNumber: originalBill.number,
                 total: historyTotal,
                 products: historyProducts
-            });
+            }
+
+            if (discount)
+                historyOptions.discount = discount;
+
+
+            // Add action to history
+            const history = await ProductHistory.create(historyOptions);
 
             res.json({ billData, history, tableName: table.name });
 

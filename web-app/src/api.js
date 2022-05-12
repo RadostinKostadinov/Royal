@@ -201,9 +201,10 @@ export async function moveProducts(_id, productsToMove) {
     });
 }
 
-export async function sellProducts(billToPay) {
+export async function sellProducts(billToPay, discount) {
     return await axios.post('/sellProducts', {
-        billToPay
+        billToPay,
+        discount
     }).catch((err) => {
         return err.response;
     });
@@ -800,6 +801,12 @@ export async function printReport() {
             strConsumed[1] += ' ';
         strConsumed = strConsumed.join('') + '\n'; // Result is: Консумация       3.00 ЛВ
         printer.addText(strConsumed); // Consumed line
+
+        let strDiscounts = ['Отстъпки', '', fixPrice(personalReport.discounts)];
+        for (let i = strDiscounts[0].length + strDiscounts[2].length; i < 48; i++) // Fill with spaces between
+            strDiscounts[1] += ' ';
+        strDiscounts = strDiscounts.join('') + '\n'; // Result is: Отстъпки       3.00 ЛВ
+        printer.addText(strDiscounts); // Discounts line
 
         let strTotal = ['Общ приход', '', fixPrice(personalReport.total)];
         for (let i = strTotal[0].length + strTotal[2].length; i < 48; i++) // Fill with spaces between

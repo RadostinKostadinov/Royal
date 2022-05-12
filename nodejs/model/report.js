@@ -28,6 +28,11 @@ const reportSchema = new Schema({
         default: 0,
         required: true
     },
+    discounts: { // Направени остъпки
+        type: Number,
+        default: 0,
+        required: true
+    },
     total: { // = Общ приход - консумация - брак
         type: Number,
         required: true

@@ -40,12 +40,16 @@ export async function updateReport(req, res) {
         let income = 0,
             consumed = 0,
             scrapped = 0,
+            discounts = 0,
             total = 0;
 
         // Go through every action to calculate total income, scrapped, consumed
         for (let action of actions) {
-            if (action.action === 'paid')
+            if (action.action === 'paid') {
+                if (action.discount)
+                    discounts += action.discount;
                 income += action.total;
+            }
             if (action.action === 'scrapped')
                 scrapped += action.total;
         }
@@ -79,6 +83,7 @@ export async function updateReport(req, res) {
             report.income = income;
             report.consumed = consumed;
             report.scrapped = scrapped;
+            report.discounts = discounts;
             report.total = total;
             report.when = new Date();
             await report.save();
@@ -92,6 +97,7 @@ export async function updateReport(req, res) {
                 income,
                 scrapped,
                 consumed,
+                discounts,
                 total
             });
         }
@@ -253,6 +259,7 @@ export function reportsRoutes(app, auth) {
                 remaining: 0,
                 consumed: 0,
                 scrapped: 0,
+                discounts: 0,
                 total: 0
             }
 
@@ -261,6 +268,7 @@ export function reportsRoutes(app, auth) {
                 remaining: 0,
                 consumed: 0,
                 scrapped: 0,
+                discounts: 0,
                 total: 0
             };
 
@@ -277,12 +285,16 @@ export function reportsRoutes(app, auth) {
                 combinedReport.income += report.income;
                 combinedReport.consumed += report.consumed;
                 combinedReport.scrapped += report.scrapped;
+                combinedReport.discounts += report.discounts;
                 combinedReport.total += report.total;
+
+                console.log(combinedReport.discounts, report.discounts);
 
                 if (report.user.userRef.toString() === req.user._id) {
                     personalReport.income += report.income;
                     personalReport.consumed += report.consumed;
                     personalReport.scrapped += report.scrapped;
+                    personalReport.discounts += report.discounts;
                     personalReport.total += report.total;
                 }
             }

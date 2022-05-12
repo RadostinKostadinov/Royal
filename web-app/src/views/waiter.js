@@ -132,6 +132,11 @@ export async function waiterDashboardPage() {
                     <td>${fixPrice(personalReport.consumed) + ' лв.'}</td>
                     <td>${fixPrice(combinedReport.consumed) + ' лв.'}</td>
                 </tr>
+                <tr class="table-secondary">
+                    <td>Отстъпки</td>
+                    <td>${(personalReport.discounts ? (personalReport.discounts) : '0.00') + ' лв.'}</td>
+                    <td>${(combinedReport.discounts ? fixPrice(combinedReport.discounts) : '0.00') + ' лв.'}</td>
+                </tr>
                 <tr class="table-primary">
                     <td>Общ приход</td>
                     <td>${fixPrice(personalReport.total) + ' лв.'}</td>
@@ -1261,12 +1266,16 @@ export async function payPartOfBillPage(ctx) {
                 qty: 1
             });
         }
+
         productsToPay.total += product.product.sellPrice;
+        $('input#discount').attr('max', productsToPay.total);
+        calculateDiscount();
 
         socket.emit('addToPay/returnToBill', { bill, productsToPay});
 
         // Rerender both bill and toPay
         rerender(bill, productsToPay);
+        calculateDiscount();
     }
 
     function returnToBill(index, product) {
@@ -1274,6 +1283,7 @@ export async function payPartOfBillPage(ctx) {
 
         product.qty--;
         productsToPay.total = productsToPay.total - product.product.sellPrice;
+        $('input#discount').attr('max', productsToPay.total);
 
         if (product.qty === 0)
             productsToPay.products.splice(index, 1);
@@ -1299,6 +1309,7 @@ export async function payPartOfBillPage(ctx) {
 
         // Rerender both bill and toPay
         rerender(bill, productsToPay);
+        calculateDiscount();
     }
 
     const productsInBillTemplate = (bill) => html`
@@ -1352,7 +1363,14 @@ export async function payPartOfBillPage(ctx) {
     async function sellPrdcts(toPrinter) {
         if (productsToPay.products.length === 0) return;
 
-        const res = await sellProducts(productsToPay);
+        const discountEl = $('input#discount');
+        const discount = +discountEl.val();
+        const maxDiscount = discountEl.attr('max');
+
+        if (discount > maxDiscount)
+            return alert('Отстъпката не може да е по-голяма от сумата за плащане!')
+
+        const res = await sellProducts(productsToPay, discount);
 
         if (res.status === 200) {
             // Notify anyone that is already in this screen
@@ -1375,6 +1393,38 @@ export async function payPartOfBillPage(ctx) {
         }
     }
 
+    function calculateDiscount(e) {
+        const discountEl = $('input#discount');
+        let discount = +discountEl.val();
+        let maxDiscount = discountEl.attr('max');
+        if (!maxDiscount)
+            maxDiscount = 0;
+        
+        if (e) { // Coming from input change
+            if (discount > maxDiscount) {
+                discountEl.val('');
+                render(fixPrice(productsToPay.total), document.querySelector('#totalToPay .price'));
+                return alert('Отстъпката не може да е по-голяма от сумата за плащане!');
+            }
+
+            // Change total to reflect discount
+            return render(fixPrice(productsToPay.total - discount), document.querySelector('#totalToPay .price'));
+        }
+
+        // Else coming from addToPay/returnToBill
+        if (discount > maxDiscount) // Set discount to the max possible and recalculate
+            discount = maxDiscount;
+
+        if (discount === 0)
+            discountEl.val('');
+        else
+            discountEl.val(discount);
+
+        console.log(productsToPay.total, discount);
+
+        return render(fixPrice(productsToPay.total - discount), document.querySelector('#totalToPay .price'));
+    }
+
     const template = () => html`
         <div id="payPartOfBill">
             <div id="productsInBill" class="productsTables"></div>
@@ -1383,6 +1433,10 @@ export async function payPartOfBillPage(ctx) {
                     <div id="totalOnTable" class="totalBlock">
                         <span>Оставаща сума на масата</span>
                         <div class="price"></div>
+                    </div>
+                    <div>
+                        <span>Отстъпка</span>
+                        <input @change=${calculateDiscount} min="0" type="number" class="form-control" id="discount" />
                     </div>
                     <div id="totalToPay" class="totalBlock">
                         <span>Извадена сума от масата</span>
@@ -1631,15 +1685,12 @@ export async function showPaidBillsPage() {
     const historiesRows = (histories) => html`
         ${histories.map((history) => {
             let allProducts = [];
-            let total = 0;
             const date = new Date(history.when);
             const dateString = `${date.getDate() > 9 ? date.getDate() : '0' + date.getDate()}.${(date.getMonth() + 1) > 9 ? date.getMonth() + 1 : '0' + (date.getMonth() + 1)}.${date.getFullYear()}`;
             const timeString = `${date.getHours() > 9 ? date.getHours() : '0' + date.getHours()}:${date.getMinutes() > 9 ? date.getMinutes() : '0' + date.getMinutes()}`;
 
-            for (let product of history.products) {
-                total += product.qty * product.price;
+            for (let product of history.products)
                 allProducts.push(html`<div>${product.name} x ${product.qty} бр.</div>`)
-            }
 
             return html`
             <tr>
@@ -1649,7 +1700,8 @@ export async function showPaidBillsPage() {
                 <td>${history.billNumber}</td>
                 <td class="text-capitalize">${history.user.name}</td>
                 <td>${allProducts}</td>
-                <td>${total.toFixed(2)}</td>
+                <td>${fixPrice(history.total)}</td>
+                <td>${history.discount ? fixPrice(history.discount) : ''}</td>
             </tr>`
         })}
     `;
@@ -1667,6 +1719,7 @@ export async function showPaidBillsPage() {
                     <th scope="col">Служител</th>
                     <th scope="col">Артикули</th>
                     <th scope="col">Сума</th>
+                    <th scope="col">Отстъпка</th>
                 </tr>
             </thead>
             <tbody>
