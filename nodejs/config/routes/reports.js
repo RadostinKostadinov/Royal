@@ -47,7 +47,7 @@ export async function updateReport(req, res) {
         for (let action of actions) {
             if (action.action === 'paid') {
                 if (action.discount)
-                    discounts += action.discount;
+                    discounts += action.discount ? action.discount : 0;
                 income += action.total;
             }
             if (action.action === 'scrapped')
@@ -285,7 +285,7 @@ export function reportsRoutes(app, auth) {
                 combinedReport.income += report.income;
                 combinedReport.consumed += report.consumed;
                 combinedReport.scrapped += report.scrapped;
-                combinedReport.discounts += report.discounts;
+                combinedReport.discounts += report.discounts ? report.discounts : 0;
                 combinedReport.total += report.total;
 
                 console.log(combinedReport.discounts, report.discounts);
@@ -294,7 +294,7 @@ export function reportsRoutes(app, auth) {
                     personalReport.income += report.income;
                     personalReport.consumed += report.consumed;
                     personalReport.scrapped += report.scrapped;
-                    personalReport.discounts += report.discounts;
+                    personalReport.discounts += report.discounts ? report.discounts : 0;
                     personalReport.total += report.total;
                 }
             }
