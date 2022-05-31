@@ -1613,6 +1613,12 @@ export async function reportsPage() {
                 // Get date for report
                 let date = new Date(report.when);
 
+                // Check if time is between 00:00 and 04:00 hours (if from last night shift)
+                if (date.getHours() >= 0 && date.getHours() < 4) {
+                    // If true, show it in yesterday row group (set date as -1 day)
+                    date.setDate(date.getDate() - 1);
+                }
+
                 // Convert to DD-MM-YYYY
                 date = `${date.getDate()}-${date.getMonth() + 1}-${date.getFullYear()}`;
 
