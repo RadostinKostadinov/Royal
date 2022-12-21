@@ -582,7 +582,7 @@ export async function logout() {
 }
 
 // PRINTER
-const printerIp = '192.168.0.188'; // Royal IP
+const printerIp = '192.168.0.206'; // Royal IP
 const printerPort = 8008;
 var printer = null;
 export var printerStatusClass = 'text-warning';

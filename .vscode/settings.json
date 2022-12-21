@@ -1,10 +1,4 @@
 {
 	"liveServer.settings.root": "/web-app/public",
 	"liveServer.settings.host": "localhost"
-	/* "liveServer.settings.https": {
-		"enable": true, //set it true to enable the feature.
-		"cert": "C:\\Users\\newha\\Desktop\\Royal\\nodejs\\config\\ssl\\cert.pem", //full path of the certificate
-		"key": "C:\\Users\\newha\\Desktop\\Royal\\nodejs\\config\\ssl\\key.pem", //full path of the private key
-		"passphrase": "12345"
-	} */
 }
