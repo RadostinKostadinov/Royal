@@ -11,7 +11,6 @@ import $ from "jquery";
 import 'bootstrap-icons/font/bootstrap-icons.css';
 import { printerStatusClass, printBill, fixPrice, stopAllSockets, socket, getAllPaidBills, getAddonsForCategory, getLastPaidBillByTableId, addProductToBill, generateBills, getAllCategories, getProductsFromCategory, logout, getBillById, removeOneFromBill, sellProducts, scrapProducts, addProductsToHistory, getTables, getTableTotalById, createNewOrder, getTodaysReport, moveProducts, printReport, getConsumed, generatePersonalBill } from '../api';
 
-console.log(printerStatusClass)
 let lastRenderedLocation = 'middle'; // remembers the last rendered location, so when the user clicks "Back", take them there
 
 // Dashboard contains all the code for rendering the tables view (grid with tables)

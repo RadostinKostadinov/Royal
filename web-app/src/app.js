@@ -6,7 +6,7 @@ import './bootstrap/bootstrap.bundle.min.js';
 import './css/global.css';
 import { html, render } from 'lit/html.js';
 import { checkSitePass, getAllUsers, login, user } from './api';
-import { showAdminDashboard, createCategoryPage, deleteCategoryPage, editCategoryPage, sortCategoriesPage, createEmployeePage, deleteEmployeePage, editEmployeePage, scrapRestockProductPage, createProductPage, deleteProductPage, editProductPage, removeQtyProductPage, inventoryPage, sortProductsPage, scrappedPage, expireProductsPage, reportsPage, soldProductsPage, restockHistoryPage, consumationHistoryPage } from './views/admin';
+import { showAdminDashboard, createCategoryPage, deleteCategoryPage, editCategoryPage, sortCategoriesPage, createEmployeePage, deleteEmployeePage, editEmployeePage, scrapRestockProductPage, createProductPage, deleteProductPage, editProductPage, removeQtyProductPage, inventoryPage, sortProductsPage, scrappedPage, expireProductsPage, reportsPage, soldProductsPage, restockHistoryPage, consumationHistoryPage, revisionsPage, createRevisionPage } from './views/admin';
 import { consumationPage, moveProductsPage, payPartOfBillPage, scrapProductsPage, showPaidBillsPage, tableControlsPage, waiterDashboardPage } from './views/waiter.js';
 import { bartenderDashboardPage } from './views/bartender';
 
@@ -31,6 +31,8 @@ page('/admin/restockHistory', auth, restockHistoryPage);
 page('/admin/products/sold', auth, soldProductsPage);
 page('/admin/reports', auth, reportsPage);
 page('/admin/expireProducts', auth, expireProductsPage);
+page('/admin/revisions', auth, revisionsPage);
+page('/admin/createRevision', auth, createRevisionPage);
 page('/admin/inventory', auth, inventoryPage);
 page('/admin/inventory/scrapped', auth, scrappedPage);
 page('/admin/product/scrap', auth, scrapRestockProductPage);

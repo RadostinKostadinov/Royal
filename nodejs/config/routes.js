@@ -4,7 +4,7 @@ import { usersRoutes } from './routes/users.js';
 import { ingredientsRoutes } from './routes/ingredients.js';
 import { billsRoutes } from './routes/bills.js';
 import { tablesRoutes } from './routes/tables.js';
-
+import { revisionsRoutes } from './routes/revisions.js';
 
 import { User } from '../model/user.js';
 import { Category } from '../model/category.js';
@@ -22,7 +22,6 @@ import { Order } from '../model/order.js';
 import { Report } from '../model/report.js';
 
 
-
 function routesConfig(app) {
 
     // Load all routes
@@ -35,6 +34,7 @@ function routesConfig(app) {
     historiesRoutes(app, auth);
     ordersRoutes(app, auth);
     reportsRoutes(app, auth);
+    revisionsRoutes(app, auth);
 
     // Set default 404 for all routes
     app.all('*', (req, res) => {

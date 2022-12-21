@@ -4,7 +4,7 @@ import { html, render } from 'lit/html.js';
 import $ from "jquery";
 import Sortable from 'sortablejs';
 import '../css/admin/admin.css';
-import { fixPrice, markProductAsScrapped, sortCategories, getProductById, getProductsFromCategory, getAllUsers, editCategory, deleteCategory, deleteUser, createUser, editUser, createCategory, scrapRestockProduct, createProduct, deleteProduct, editProduct, getAllCategories, getAllProducts, sortProducts, logout, getAllIngredients, createIngredient, deleteIngredient, getIngredientById, editIngredient, getAllProductsWithoutIngredients, getProductsWithoutIngredientsFromCategory, scrapRestockIngredient, getAllScrapped, getAllRestockedProducts, getAllReports, getProductsIngredients, getProductSells, getRestockHistory, getNumberOfExpiredProducts, markExpiredAsReviewed, getAllConsumation } from '../api';
+import { fixPrice, markProductAsScrapped, sortCategories, getProductById, getProductsFromCategory, getAllUsers, editCategory, deleteCategory, deleteUser, createUser, editUser, createCategory, scrapRestockProduct, createProduct, deleteProduct, editProduct, getAllCategories, getAllProducts, sortProducts, logout, getAllIngredients, createIngredient, deleteIngredient, getIngredientById, editIngredient, getAllProductsWithoutIngredients, getProductsWithoutIngredientsFromCategory, scrapRestockIngredient, getAllScrapped, getAllRestockedProducts, getAllReports, getProductsIngredients, getProductSells, getRestockHistory, getNumberOfExpiredProducts, markExpiredAsReviewed, getAllConsumation, saveRevision, getAllRevisions } from '../api';
 
 const backBtn = html`<button @click=${()=> page('/admin')} class="btn btn-secondary fs-3 mt-2 ms-2">Назад</button>`;
 let contentType; //  used in loadProducts to determine if we are loading/deleting a product or ingredient
@@ -1313,6 +1313,175 @@ export async function sortCategoriesPage() {
     })
 }
 
+export async function revisionsPage() {
+    const allRevisions = await getAllRevisions();
+
+    // Convert allRevisions to when property to dd.mm.yyyy (HH:MM)
+    allRevisions.forEach((revision) => {
+        revision.when = new Date(revision.when).toLocaleString('bg-BG');
+    });
+
+    function selectedRevision(e) {
+        const index = e.target.value;
+        // Create a modifiable copy of allRevisions[index] that wont effect the original variable
+        const revision = JSON.parse(JSON.stringify(allRevisions[index]));
+        
+        render(productRows(revision.products), document.querySelector('tbody'));
+    }
+
+    const productRows = (products) => html`
+        ${products.map((product) => {
+            let unit = 'бр',
+                difference = 0,
+                cellClass = '';
+
+            if (product.type === 'ingredient') {
+                if (product.unit === 'кг' || product.unit === 'л') {
+                    unit = product.unit;
+
+                    product.oldQty /= 1000;
+
+                    if (product.hasOwnProperty('newQty')) {
+                        product.newQty /= 1000;
+                    } else {
+                        product.newQty = product.oldQty;
+                    }
+                } else {
+                    if (!product.hasOwnProperty('newQty'))
+                        product.newQty = product.oldQty;
+                }
+            } else if (!product.hasOwnProperty('newQty')) // If product and no new qty
+                    product.newQty = product.oldQty;
+
+                    
+            difference = +(product.newQty - product.oldQty).toFixed(2);
+
+            if (difference > 0) {
+                difference = `+${difference}`;
+                cellClass = 'table-success';
+            } else if (difference < 0)
+                cellClass = 'table-danger';
+            
+            product.oldQty += ` ${unit}.`
+            product.newQty += ` ${unit}.`
+            difference += ` ${unit}.`
+            return html`
+                <tr class=${cellClass}>
+                    <!-- <td scope="row">${product.hasOwnProperty('unit') ? 'Съставка' : 'Продукт'}</td> -->
+                    <td scope="row">${product.name}</td>
+                    <td>${product.oldQty}</td>
+                    <td>${product.newQty}</td>
+                    <td>${difference}</td>
+                </tr>
+            `
+        })}
+    `;
+
+    const revisionTemplate = () => html`
+        <div class="d-flex justify-content-between p-2">
+            ${backBtn}  
+            <button @click=${() => page('/admin/createRevision')} class="btn btn-primary mt-2 fs-3">Нова ревизия</button>
+        </div>
+
+        <select @change=${selectedRevision} class="form-control mt-2fs-4">
+            <option selected disabled>Избери</option>
+            ${allRevisions.map((revision, i) => html`<option value=${i}>${revision.when}</option>`)}
+        </select>
+
+        <table class="table table-striped table-dark table-hover text-center mt-2">
+            <thead>
+                <tr>
+                    <!-- <th scope="col">Тип</th> -->
+                    <th scope="col">Артикул</th>
+                    <th scope="col">Старо</th>
+                    <th scope="col">Ново</th>
+                    <th scope="col">Разлика</th>
+                </tr>
+            </thead>
+            <tbody>
+            </tbody>
+        </table>
+    `;
+
+    render(revisionTemplate(), container);
+}
+
+export async function createRevisionPage() {
+    const products = await getAllProductsWithoutIngredients();
+    const ingredients = await getAllIngredients();
+    const productsAndIngredients = ingredients.concat(products);
+
+    async function svRevision(e) {
+        e.preventDefault();
+
+        // Get all id and value of all input fields 
+        const formData = new FormData(e.target);
+        const data = [...formData.entries()];
+        const revision = data.map(([_id, qty]) => ({ _id, qty }));
+
+        let res;
+
+        res = await saveRevision(revision);
+
+        console.log(res.data);
+
+        if (res.status === 200) {// Successfully created revision
+            alert(res.data);
+            page('/');
+        } else if (res.status === 400) {
+            alert(res.data);
+        } else {
+            alert('Възникна грешка!');
+            console.error(res);
+        }
+    }
+
+    const productRows = (productsAndIngredients) => html`
+        ${productsAndIngredients.map((product) => {
+            let qty = product.qty,
+                name = product.name,
+                unit = 'бр';
+                
+            if (product.hasOwnProperty('unit') && (product.unit === 'кг' || product.unit === 'л')) {
+                qty /= 1000;
+                unit = product.unit;
+            }
+
+            qty += ` ${unit}.`
+            return html`
+                <tr>
+                    <!-- <td scope="row">${product.unit ? 'Съставка' : 'Продукт'}</td> -->
+                    <td scope="row">${name}</td>
+                    <td>${qty}</td>
+                    <td><input type="number" min=0 step=${product.hasOwnProperty('unit') && (product.unit === 'кг' || product.unit === 'л') ? 0.000005 : ''} class="form-control fs-4" name=${product._id}></td>
+                </tr>
+            `
+        })}
+    `;
+
+    const createRevisionTemplate = () => html`
+        ${backBtn}    
+        <form class="d-flex flex-column align-items-center" @submit=${svRevision}>
+            <table class="table table-striped table-dark table-hover text-center mt-2">
+                <thead>
+                    <tr>
+                        <!-- <th scope="col">Тип</th> -->
+                        <th scope="col">Артикул</th>
+                        <th scope="col">Старо</th>
+                        <th scope="col">Ново</th>
+                    </tr>
+                </thead>
+                <tbody>
+                        ${productRows(productsAndIngredients) }
+                </tbody>
+            </table>
+            <input class="btn w-auto btn-primary fs-3 mt-2 mb-2 ms-2" type="submit" value="Запази" />
+        </form>
+    `;
+
+    render(createRevisionTemplate(), container);
+}
+
 export async function inventoryPage() {
     const categories = await getAllCategories(true);
     const products = await getAllProductsWithoutIngredients();
@@ -2091,7 +2260,7 @@ export async function restockHistoryPage() {
 
 export async function showAdminDashboard() {
     if (numberOfExpiredProducts === undefined)
-        numberOfExpiredProducts = await getNumberOfExpiredProducts()
+        numberOfExpiredProducts = await getNumberOfExpiredProducts();
 
 
     selectedProductFromSearch = undefined;
@@ -2102,6 +2271,7 @@ export async function showAdminDashboard() {
                 <h1>Специални</h1>
                 <div class="d-inline-flex flex-row flex-wrap gap-3 justify-content-center">
                     <button @click=${() => page('/admin/products/sold') } class="btn btn-success fs-4">Продажби</button>
+                    <button @click=${() => page('/admin/revisions') } class="btn btn-info fs-4">Ревизии</button>
                     <button @click=${() => page('/admin/consumationHistory') } class="btn btn-secondary fs-4">История на консумация</button>
                     <button @click=${() => page('/admin/restockHistory') } class="btn btn-info fs-4">История на зареждане</button>
                     <button @click=${() => page('/admin/inventory/scrapped') } class="btn btn-danger fs-4">Бракувана стока</button>

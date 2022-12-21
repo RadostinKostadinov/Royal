@@ -356,6 +356,19 @@ export async function deleteProduct(_id) {
     });
 }
 
+export async function saveRevision(revision) {
+    return await axios.post('/saveRevision', {
+        revision
+    }).catch((err) => {
+        return err.response;
+    });
+}
+
+export async function getAllRevisions() {
+    const res = await axios.get('/getAllRevisions');
+    return res.data;
+}
+
 export async function editProduct(_id, name, qty, selectedIngredients, buyPrice, sellPrice, categoryId, forBartender) {
     return await axios.post('/editProduct', {
         _id,
@@ -587,7 +600,9 @@ const printerPort = 8008;
 var printer = null;
 export var printerStatusClass = 'text-warning';
 var ePosDev = new epson.ePOSDevice();
-initializePrinter();
+
+// TODO: REMOVE COMMENT
+// initializePrinter();
 
 function initializePrinter() {
     ePosDev.connect(printerIp, printerPort, cbConnect);
