@@ -52,6 +52,10 @@ export function revisionsRoutes(app, auth) {
 
                     if (pr.qty !== product.qty)
                         productInfo.newQty = pr.qty;
+
+                    // Update product qty in DB
+                    product.qty = pr.qty;
+                    await product.save();
                 }
 
                 // Add reference and unit to product
