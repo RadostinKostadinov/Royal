@@ -1,0 +1,2 @@
+# Ignore this files or folders from the IMPORT command in Dockerfile
+node_modules

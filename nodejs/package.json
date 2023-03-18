@@ -5,7 +5,9 @@
 	"type": "module",
 	"scripts": {
 		"Start Node Win": "SET NODE_ENV=development && nodemon app.js",
-		"Start Node Mac": "export NODE_ENV=development && nodemon app.js"
+		"Start Node Mac": "export NODE_ENV=development && nodemon app.js",
+		"Docker build": "docker build -t newhappyrabbit/royal .",
+		"Docker run": "docker run -p 27017:27017 -p 3000:3000 newhappyrabbit/royal"
 	},
 	"author": "",
 	"license": "ISC",
