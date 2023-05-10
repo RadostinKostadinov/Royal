@@ -4,7 +4,7 @@ import { html, render } from 'lit/html.js';
 import $ from "jquery";
 import Sortable from 'sortablejs';
 import '../css/admin/admin.css';
-import { fixPrice, markProductAsScrapped, sortCategories, getProductById, getProductsFromCategory, getAllUsers, editCategory, deleteCategory, deleteUser, createUser, editUser, createCategory, scrapRestockProduct, createProduct, deleteProduct, editProduct, getAllCategories, getAllProducts, sortProducts, logout, getAllIngredients, createIngredient, deleteIngredient, getIngredientById, editIngredient, getAllProductsWithoutIngredients, getProductsWithoutIngredientsFromCategory, scrapRestockIngredient, getAllScrapped, getAllRestockedProducts, getAllReports, getProductsIngredients, getProductSells, getRestockHistory, getNumberOfExpiredProducts, markExpiredAsReviewed, getAllConsumation, saveRevision, getAllRevisions } from '../api';
+import { fixPrice, markProductAsScrapped, sortCategories, getProductById, getProductsFromCategory, getAllUsers, editCategory, deleteCategory, deleteUser, createUser, editUser, createCategory, scrapRestockProduct, createProduct, deleteProduct, editProduct, getAllCategories, getAllProducts, sortProducts, logout, getAllIngredients, createIngredient, deleteIngredient, getIngredientById, editIngredient, getAllProductsWithoutIngredients, getProductsWithoutIngredientsFromCategory, scrapRestockIngredient, getAllScrapped, getAllRestockedProducts, getAllReports, getProductsIngredients, getProductSells, getRestockHistory, getNumberOfExpiredProducts, markExpiredAsReviewed, getAllConsumation, saveRevision, getAllRevisions, getInformation } from '../api';
 
 const backBtn = html`<button @click=${()=> page('/admin')} class="btn btn-secondary fs-3 mt-2 ms-2">Назад</button>`;
 let contentType; //  used in loadProducts to determine if we are loading/deleting a product or ingredient
@@ -175,14 +175,26 @@ const prIngInputs = (prOrIng, categories, type) => html`
         `
         : ''
     }
-    <div class="mb-3">
-        <label for="buyPrice" class="form-label">Доставна цена</label>
-        <input required type="text" title="пример: 5.20, 5.0, 5, 0.5, 0.50" value=${prOrIng ? prOrIng.buyPrice : ''} pattern="^\\d{1,}(\\.\\d{1,2})?$" class="form-control fs-4" name="buyPrice" id="buyPrice" placeholder="пример: 1.50">
-    </div>
-    <div class="mb-3">
-        <label for="sellPrice" class="form-label">Продажна цена</label>
-        <input required type="text" title="пример: 5.20, 5.0, 5, 0.5, 0.50" value=${prOrIng ? prOrIng.sellPrice : ''} pattern="^\\d{1,}(\\.\\d{1,2})?$" class="form-control fs-4" name="sellPrice" id="sellPrice" placeholder="пример: 2">
-    </div>
+    ${
+        type !== 'productFromIngredients'
+        ? html`<div class="mb-3">
+                <label for="buyPrice" class="form-label">Доставна цена</label>
+                <input required type="text" title="пример: 5.20, 5.0, 5, 0.5, 0.50" value=${prOrIng ? prOrIng.buyPrice : ''} pattern="^\\d{1,}(\\.\\d{1,2})?$" class="form-control fs-4" name="buyPrice" id="buyPrice" placeholder="пример: 1.50">
+            </div> 
+        `
+        : ''
+    }
+    
+    ${
+    type !== 'ingredient'
+        ? html`<div class="mb-3">
+                    <label for="sellPrice" class="form-label">Продажна цена</label>
+                    <input required type="text" title="пример: 5.20, 5.0, 5, 0.5, 0.50" value=${prOrIng ? prOrIng.sellPrice : '' } pattern="^\\d{1,}(\\.\\d{1,2})?$" class="form-control fs-4" name="sellPrice" id="sellPrice" placeholder="пример: 2">
+                </div>
+        `
+        : ''
+    }
+    
     ${
         categories || ['product', 'productFromIngredients'].includes(type) ? 
         html`
@@ -438,7 +450,6 @@ export async function scrapRestockProductPage(ctx) {
 }
 
 export async function createProductPage() {
-    //TODO To be able to create addons (add the field for which category to appear in)
     const categories = await getAllCategories(); // CHANGE TO TRUE WHEN READY FOR ADDONS
     const ingredients = await getAllIngredients();
     addedIngredients = [];
@@ -522,9 +533,8 @@ export async function createProductPage() {
             return alert('Избери мерна единица!');
         const qty = +formData.get('qty');
         const buyPrice = +formData.get('buyPrice');
-        const sellPrice = +formData.get('sellPrice');
 
-        const res = await createIngredient(name, unit, qty, buyPrice, sellPrice);
+        const res = await createIngredient(name, unit, qty, buyPrice);
 
         if (res.status === 201) {// Successfully created ingredient
             alert(res.data);
@@ -701,7 +711,6 @@ export async function deleteProductPage() {
 }
 
 export async function editProductPage(ctx) {
-    //TODO To be able to edit addons (add the field for which category to appear in)
     const categories = await getAllCategories(true);
     const allProducts = await getAllProducts();
     const allIngredients = await getAllIngredients();
@@ -1311,6 +1320,76 @@ export async function sortCategoriesPage() {
         ghostClass: "active",  // Class name for the drop placeholder
         chosenClass: "list-group-item-action",  // Class name for the chosen item
     })
+}
+
+export async function informationsPage() {
+
+    const informationsTemplate = () => html`
+        ${backBtn}
+        
+        <div class="d-flex w-100 gap-3 p-3 fs-4">
+            <div class="w-50">
+                <label for="fromDate" class="form-label">От</label>
+                <input @change=${loadInformation} name="fromDate" class="form-control fs-4" id="fromDate" type="date" />
+            </div>
+        
+            <div class="w-50">
+                <label for="toDate" class="form-label">До</label>
+                <input @change=${loadInformation} name="toDate" class="form-control fs-4" id="toDate" type="date" />
+            </div>
+        </div>
+        
+        <div id="informations">
+            
+        </div>
+    `;
+
+    async function loadInformation() {
+        const fromDate = $('#fromDate').val();
+        const toDate = $('#toDate').val();
+
+        const res = await getInformation(fromDate, toDate);
+
+        console.log(res.data);
+        return;
+
+        if (res.status === 200) {
+            const reports = res.data;
+
+            // Split reports by date
+            let splitReports = {};
+            for (let report of reports) {
+                // Get date for report
+                let date = new Date(report.when);
+
+                // Check if time is between 00:00 and 04:00 hours (if from last night shift)
+                if (date.getHours() >= 0 && date.getHours() < 4) {
+                    // If true, show it in yesterday row group (set date as -1 day)
+                    date.setDate(date.getDate() - 1);
+                }
+
+                // Convert to DD-MM-YYYY
+                date = `${date.getDate()}-${date.getMonth() + 1}-${date.getFullYear()}`;
+
+                // Check if date already created in splitReports
+                if (!splitReports.hasOwnProperty(date)) {
+                    splitReports[date] = [];
+                }
+
+                // Add report to splitReports
+                splitReports[date].push(report);
+            }
+
+            // Render reports
+            render(totalRowsH(), document.querySelector('#totalAll tbody'));
+        } else {
+            console.error(res);
+            alert('Възникна грешка');
+        }
+    }
+
+    render(informationsTemplate(), container);
+    loadInformation();
 }
 
 export async function revisionsPage() {
@@ -1945,7 +2024,7 @@ export async function scrappedPage() {
             const timeString = `${date.getHours() > 9 ? date.getHours() : '0' + date.getHours()}:${date.getMinutes() > 9 ? date.getMinutes() : '0' + date.getMinutes()}`;
 
             for (let product of history.products) {
-                total += product.qty * product.price;
+                total += product.qty * product.sellPrice;
                 allProducts.push(html`<div>${product.name} x ${product.qty} бр.</div>`)
             }
 
@@ -2116,7 +2195,7 @@ export async function soldProductsPage() {
             <tr>
                 <td>${dateString}</td>
                 <td>${timeString}</td>
-                <td>${fixPrice(sell.price)}</td>
+                <td>${fixPrice(sell.sellPrice)}</td>
                 <td>${sell.qty} бр.</td>
                 <td>${fixPrice(sell.total)}</td>
             </tr>`
@@ -2281,6 +2360,7 @@ export async function showAdminDashboard() {
                     </button>
                     <button @click=${() => page('/admin/inventory') } class="btn btn-secondary fs-4">Склад</button>
                     <button @click=${() => page('/admin/reports') } class="btn btn-secondary fs-4">Отчети</button>
+                    <button @click=${() => page('/admin/informations') } class="btn btn-secondary fs-4">Обобщена информация</button>
                 </div>
             </div>
             <div class="text-center mt-4">

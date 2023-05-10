@@ -149,14 +149,70 @@ export function historiesRoutes(app, auth) {
                 productSells.push({
                     when: sell.when,
                     qty: product.qty,
-                    price: product.price,
-                    total: product.qty * product.price
+                    buyPrice: product.buyPrice,
+                    sellPrice: product.sellPrice,
+                    total: product.qty * product.sellPrice
                 });
             }
 
             res.json(productSells);
         } catch (err) {
             console.error(err);
+            res.status(500).send(err);
+        }
+    });
+
+    app.post('/getInformation', auth, async (req, res) => {
+        try {
+            // Check if user is admin
+            if (req.user.role !== 'admin')
+                return res.status(401).send('Нямате админски достъп!')
+
+            const { fromDate, toDate } = req.body;
+
+            let criteria = {
+                action: 'paid',
+                when: {
+                    $gte: ''
+                }
+            };
+
+            if (fromDate) // start of today
+                criteria.when.$gte = new Date(fromDate).setHours(0, 0, 0);
+            else
+                criteria.when.$gte = new Date().setHours(0, 0, 0);
+
+            if (toDate)
+                criteria.when.$lte = new Date(toDate).setHours(23, 59, 59);
+
+            // Get all paid bills
+            const bills = await ProductHistory.find(criteria).populate('products.productRef');
+
+            let info = {
+                grossIncome: 0,
+                grossIncomeDelivery: 0,
+                totalIncome: 0,
+                totalSells: 0, // Total number of sells (bills)
+                totalProductsSold: 0, // Total number of products sold
+                upsellPercentage: 0
+            }
+
+            for (let bill of bills) {
+                info.grossIncome += bill.total;
+                info.totalSells += 1;
+                info.totalProductsSold += bill.products.length;
+
+                for (let product of bill.products) {
+                    info.grossIncomeDelivery += product.productRef.buyPrice * product.qty;
+                }
+            }
+
+            info.totalIncome = info.grossIncome - info.grossIncomeDelivery;
+            info.upsellPercentage = (info.grossIncome - info.grossIncomeDelivery) / info.grossIncome * 100;
+
+            res.json(info);
+        } catch (err) {
+            console.log(err);
             res.status(500).send(err);
         }
     });

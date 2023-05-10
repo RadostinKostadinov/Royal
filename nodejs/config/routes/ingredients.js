@@ -64,20 +64,16 @@ export function ingredientsRoutes(app, auth) {
                 return res.status(401).send('Нямате достъп!');
 
             // Get user input
-            let { name, unit, qty, buyPrice, sellPrice } = req.body;
+            let { name, unit, qty, buyPrice } = req.body;
 
             // Validate user input
-            if (!(name && unit && qty !== undefined && buyPrice !== undefined && sellPrice !== undefined))
+            if (!(name && unit && qty !== undefined && buyPrice !== undefined))
                 return res.status(400).send('Всички полета са задължителни!');
 
             // Check if prices are okay
             /* const pricesRegex = new RegExp(/^\d{1,}(\.\d{1,2})?$/);
             if (!pricesRegex.test(buyPrice) || !pricesRegex.test(sellPrice))
                 return res.status(400).send('Цената трябва да е: пример 5.0, 3, 1.20!'); */
-
-            // Check if qty is integer
-            if (qty % 1 !== 0)
-                return res.status(400).send('Бройката трябва да е цяло число (примерно 10, 500)!');
 
             // Check if ingredient is in kg, l or br
             if (['кг', 'л'].includes(unit))
@@ -88,8 +84,7 @@ export function ingredientsRoutes(app, auth) {
                 name,
                 unit,
                 qty,
-                buyPrice,
-                sellPrice
+                buyPrice
             });
 
             res.status(201).send('Успешно създадена съставка!');
@@ -147,10 +142,10 @@ export function ingredientsRoutes(app, auth) {
 
 
             // Get user input
-            const { _id, name, unit, qty, buyPrice, sellPrice } = req.body;
+            const { _id, name, unit, qty, buyPrice } = req.body;
 
             // Validate user input
-            if (!(_id && name && unit && qty !== undefined && buyPrice !== undefined && sellPrice !== undefined))
+            if (!(_id && name && unit && qty !== undefined && buyPrice !== undefined))
                 return res.status(400).send('Всички полета са задължителни!');
 
             // Check if prices are okay
@@ -169,7 +164,6 @@ export function ingredientsRoutes(app, auth) {
             ingredient.unit = unit;
             ingredient.qty = ['кг', 'л'].includes(ingredient.unit) ? qty * 1000 : qty;
             ingredient.buyPrice = buyPrice;
-            ingredient.sellPrice = sellPrice;
             await ingredient.save();
 
             // Done

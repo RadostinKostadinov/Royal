@@ -342,7 +342,6 @@ export function billsRoutes(app, auth) {
                         ingredientsArray.push({
                             name: ingredientRef.name,
                             qty: ingredient.qty,
-                            price: ingredientRef.sellPrice,
                             ingredientRef: ingredientRef._id
                         });
                     }
@@ -351,7 +350,8 @@ export function billsRoutes(app, auth) {
                 historyProducts.push({
                     name: product.product.name,
                     qty: product.qty,
-                    price: product.product.sellPrice,
+                    sellPrice: product.product.sellPrice,
+                    buyPrice: product.product.buyPrice,
                     productRef: product.product._id,
                     ingredients: ingredientsArray
                 });
@@ -472,7 +472,8 @@ export function billsRoutes(app, auth) {
                 allActions[prod.action].push({
                     name: product.name, // Статично име на продукта (дори да се изтрие от БД няма проблем)
                     qty: prod.selectedX, // Колко бройки сме добавили към масата
-                    price: product.sellPrice, // Каква е текущата цена на този продукт (с времето може да се промени)
+                    buyPrice: product.buyPrice,
+                    sellPrice: product.sellPrice, // Каква е текущата цена на този продукт (с времето може да се промени)
                     forBartender: product.forBartender, // Дали продуктът е за бармана
                     productRef: product._id // Референция към продукта
                 });

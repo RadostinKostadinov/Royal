@@ -104,7 +104,12 @@ const productHistorySchema = new Schema({
                 immutable: true,
                 required: true
             },
-            price: { // Каква е била цената на този продукт при бракуване/зареждане.. (с времето може да се промени)
+            buyPrice: { // Каква е била цената на този продукт при бракуване/зареждане.. (с времето може да се промени)
+                type: Number,
+                immutable: true,
+                required: true
+            },
+            sellPrice: {
                 type: Number,
                 immutable: true,
                 required: true
@@ -123,11 +128,6 @@ const productHistorySchema = new Schema({
                         required: true
                     },
                     qty: { type: Number, min: 1, immutable: true }, // how much of this ingredient does it take (for ex. if 1 coffee takes 20ml milk, then qty = 20)
-                    price: { // Каква е била цената на тази съставка при бракуване/зареждане.. (с времето може да се промени)
-                        type: Number,
-                        immutable: true,
-                        required: true
-                    },
                     ingredientRef: { type: Schema.Types.ObjectId, ref: 'Ingredient', immutable: true },
                 }
             ],

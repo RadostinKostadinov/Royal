@@ -20,9 +20,9 @@ import { ordersRoutes } from './routes/orders.js';
 import { reportsRoutes } from './routes/reports.js';
 import { Order } from '../model/order.js';
 import { Report } from '../model/report.js';
+import { recalculateProductBuyPrice } from './routes/products.js';
 
-
-function routesConfig(app) {
+async function routesConfig(app) {
 
     // Load all routes
     categoriesRoutes(app, auth);
@@ -41,6 +41,28 @@ function routesConfig(app) {
         res.status(404).send('404 Not Found');
     });
 
+    /* TODO RUN THIS WHEN TRANSFERING TO LIVE DB AFTER NEW PRICES/MODELS UPDATE */
+    async function convertOldDB() {
+        // Calculate all products with ingredients buyPrice
+        let products = await Product.find({ ingredients: { $ne: [] } });
+        for (let product of products)
+            await recalculateProductBuyPrice(product);
+
+        // TODO Convert old productHistories to new model
+        // OR OPTIOANLLY DELETE ALL PRODUCTHISTORIES
+
+        //Steps to remove sellPrice from all ingredients:
+
+        //1. Open MongoDB Compass
+        //2. Click mongosh
+        //3. Type: use royal
+        //4. Type: db.ingredients.updateMany( {}, { $unset: {"sellPrice": {$ne: undefined}}})
+
+        // Delete all buyPrice from products with ingredients
+        await Product.updateMany({ ingredients: { $ne: [] } }, { $unset: { buyPrice: 1 } });
+
+    }
+    await convertOldDB();
     /* TODO DELETE THIS DEFAULTS WHEN FINALIZING APP */
     async function createDefaults() {
         async function createDefaultUsers() {

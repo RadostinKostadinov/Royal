@@ -99,6 +99,15 @@ export async function getRestockHistory(fromDate, toDate, _id, type) {
     });
 }
 
+export async function getInformation(fromDate, toDate) {
+    return await axios.post('/getInformation', {
+        fromDate,
+        toDate
+    }).catch((err) => {
+        return err.response;
+    });
+}
+
 export async function completeAll(prodRef, orderId) {
     return await axios.post('/completeAll', {
         prodRef,
@@ -675,7 +684,7 @@ export function printBill(history, tableName) {
 
     // All products
     for (let product of history.products) {
-        const productTotal = fixPrice(product.qty * product.price);
+        const productTotal = fixPrice(product.qty * product.sellPrice);
 
         let strProduct = [product.name, '', productTotal + ' ЛВ.'];
 
@@ -685,7 +694,7 @@ export function printBill(history, tableName) {
         strProduct = strProduct.join('') + '\n'; // Result is: Кафе       3.00 ЛВ 
 
         printer.addText(strProduct); // Product line
-        printer.addText(`  ${product.qty} x ${fixPrice(product.price)} =\n`); // Quantity line
+        printer.addText(`  ${product.qty} x ${fixPrice(product.sellPrice)} =\n`); // Quantity line
     }
 
 
