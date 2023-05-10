@@ -21,11 +21,6 @@ export const ingredientSchema = new Schema({
         match: [/^\d{1,}(\.\d{1,2})?$/, 'Цената трябва да е: пример 5.0, 3, 1.20!'],
         required: true
     },
-    sellPrice: {
-        type: Number,
-        match: [/^\d{1,}(\.\d{1,2})?$/, 'Цената трябва да е: пример 5.0, 3, 1.20!'],
-        required: true
-    },
     position: { type: Number, default: 1 }, // The position that it appears in the menu!
 });
 

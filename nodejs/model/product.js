@@ -28,8 +28,7 @@ const productSchema = new Schema({
     ],
     buyPrice: {
         type: Number,
-        match: [/^\d{1,}(\.\d{1,2})?$/, 'Цената трябва да е: пример 5.0, 3, 1.20!'],
-        required: true
+        match: [/^\d{1,}(\.\d{1,2})?$/, 'Цената трябва да е: пример 5.0, 3, 1.20!']
     },
     sellPrice: {
         type: Number,

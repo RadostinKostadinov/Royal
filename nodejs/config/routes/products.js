@@ -3,6 +3,20 @@ import { Category } from "../../model/category.js";
 import { RestockHistory } from "../../model/history.js";
 import { Bill } from "../../model/bill.js";
 import { Table } from "../../model/table.js";
+import { Ingredient } from "../../model/ingredient.js";
+
+export async function recalculateProductBuyPrice(product) {
+    let ingredientsPrice = 0;
+
+    for (let ingredient of product.ingredients) {
+        const ing = await Ingredient.findById(ingredient.ingredient);
+
+        ingredientsPrice += ing.buyPrice * (ing.unit === 'бр' ? ingredient.qty : ingredient.qty / 1000);
+    }
+
+    product.buyPrice = ingredientsPrice;
+    await product.save();
+}
 
 export async function deleteProductFromEverywhere(product) {
     // Delete from all bills
@@ -154,7 +168,7 @@ export function productsRoutes(app, auth) {
                 return res.status(400).send('Грешна стойност от checkbox bartender!');
 
             // Validate user input depending on what they chose (create product or create product from ingredients)
-            if (!(name && buyPrice !== undefined && sellPrice !== undefined && categoryId))
+            if (!(name && sellPrice !== undefined && categoryId))
                 return res.status(400).send('Всички полета са задължителни!');
 
             // Check if prices are okay
@@ -164,6 +178,9 @@ export function productsRoutes(app, auth) {
 
             if (qty && ingredients) // Impossible, because product from ingredients cant have qty
                 return res.status(400).send('Невъзможно да има количество и съставки едновременно в 1 продукт!');
+
+            if (!ingredients && !buyPrice)
+                return res.status(400).send('Доставната цена за продукти без съставки е задължителна!');
 
             if (qty && ((qty % 1) !== 0)) // User chose to create normal product, check if qty is integer
                 return res.status(400).send('Количеството трябва да е цяло число (примерно 10, 500)!');
@@ -181,9 +198,13 @@ export function productsRoutes(app, auth) {
                 return res.status(400).send('Категорията не съществува!');
 
             // Create product in database
-            await Product.create({
-                name, qty, ingredients, buyPrice, sellPrice, category, forBartender
+            let pr = await Product.create({
+                name, qty, ingredients, sellPrice, category, forBartender
             });
+
+            // If product has ingredients, calculate its buy price
+            if (ingredients)
+                await recalculateProductBuyPrice(pr);
 
             // Done
             res.status(201).send('Успешно създаден продукт!');
@@ -259,11 +280,14 @@ export function productsRoutes(app, auth) {
 
 
             // Validate user input depending on what they chose (create product or create product from ingredients)
-            if (!(name && buyPrice !== undefined && sellPrice !== undefined && categoryId))
+            if (!(name && sellPrice !== undefined && categoryId))
                 return res.status(400).send('Всички полета са задължителни!');
 
             if (qty && ingredients) // Impossible, because product from ingredients cant have qty
                 return res.status(400).send('Невъзможно да има количество и съставки едновременно в 1 продукт!');
+
+            if (!ingredients && !buyPrice)
+                return res.status(400).send('Доставната цена за продукти без съставки е задължителна!');
 
             if (qty && ((qty % 1) !== 0)) // User chose to create normal product, check if qty is integer
                 return res.status(400).send('Количеството трябва да е цяло число (примерно 10, 500)!');
@@ -284,7 +308,6 @@ export function productsRoutes(app, auth) {
 
             // Update product values
             product.name = name;
-            product.buyPrice = buyPrice;
             product.sellPrice = sellPrice;
             product.category = categoryId;
             product.forBartender = forBartender;
@@ -292,12 +315,14 @@ export function productsRoutes(app, auth) {
             if (qty) { // if simple product, change qty and remove ingredients (there shouldnt be any)
                 product.ingredients = [];
                 product.qty = +qty;
+                product.buyPrice = buyPrice;
             } else if (ingredients) { // if product from ingredients, delete qty and update ingredients
                 delete product.qty;
                 product.ingredients = ingredients;
+                await recalculateProductBuyPrice(product);
             }
 
-            product.save();
+            await product.save();
 
             // Done
             res.send('Успешно променен продукт!');

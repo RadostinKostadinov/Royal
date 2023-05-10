@@ -6,7 +6,7 @@ import './bootstrap/bootstrap.bundle.min.js';
 import './css/global.css';
 import { html, render } from 'lit/html.js';
 import { checkSitePass, getAllUsers, login, user } from './api';
-import { showAdminDashboard, createCategoryPage, deleteCategoryPage, editCategoryPage, sortCategoriesPage, createEmployeePage, deleteEmployeePage, editEmployeePage, scrapRestockProductPage, createProductPage, deleteProductPage, editProductPage, removeQtyProductPage, inventoryPage, sortProductsPage, scrappedPage, expireProductsPage, reportsPage, soldProductsPage, restockHistoryPage, consumationHistoryPage, revisionsPage, createRevisionPage } from './views/admin';
+import { showAdminDashboard, createCategoryPage, deleteCategoryPage, editCategoryPage, sortCategoriesPage, createEmployeePage, deleteEmployeePage, editEmployeePage, scrapRestockProductPage, createProductPage, deleteProductPage, editProductPage, removeQtyProductPage, inventoryPage, sortProductsPage, scrappedPage, expireProductsPage, reportsPage, soldProductsPage, restockHistoryPage, consumationHistoryPage, revisionsPage, createRevisionPage, informationsPage } from './views/admin';
 import { consumationPage, moveProductsPage, payPartOfBillPage, scrapProductsPage, showPaidBillsPage, tableControlsPage, waiterDashboardPage } from './views/waiter.js';
 import { bartenderDashboardPage } from './views/bartender';
 
@@ -32,6 +32,7 @@ page('/admin/products/sold', auth, soldProductsPage);
 page('/admin/reports', auth, reportsPage);
 page('/admin/expireProducts', auth, expireProductsPage);
 page('/admin/revisions', auth, revisionsPage);
+page('/admin/informations', auth, informationsPage);
 page('/admin/createRevision', auth, createRevisionPage);
 page('/admin/inventory', auth, inventoryPage);
 page('/admin/inventory/scrapped', auth, scrappedPage);
@@ -73,7 +74,7 @@ async function checkIfUserLoggedIn() {
         `;
 
         const numpadTemplate = () => html`
-        <button @click=${() => render(usersTemplate(), container)}
+        <button @click=${()=> render(usersTemplate(), container)}
             class="btn btn-secondary fs-1 mt-3 ms-3">Назад</button>
         
         <div id="numpad-wrapper">
