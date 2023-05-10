@@ -47,7 +47,7 @@ export function revisionsRoutes(app, auth) {
                     pr.qty = Number(pr.qty);
 
                     // If ingredient, multiply by 1000 (convert from kg to g)
-                    if (type === 'ingredient')
+                    if (type === 'ingredient' && (product.unit == 'кг' || product.unit == 'л'))
                         pr.qty *= 1000;
 
                     if (pr.qty !== product.qty)

@@ -8,7 +8,8 @@ export let user = JSON.parse(sessionStorage.getItem('user'));
 let nodeURL = 'http://localhost:3000';
 
 if (location.hostname !== "localhost" && location.hostname !== "127.0.0.1")
-    nodeURL = 'http://barroyal.eu:3000'; // LIVE
+    nodeURL = 'http://31.211.145.98:3000'; // Use this when hosted on local server and has no domain pointed to it
+//nodeURL = 'http://barroyal.eu:3000'; // LIVE (use when uploaded to online server with domain)
 
 if (location.hostname.startsWith("192.")) // FOR LOCAL USE WHEN SECOND PC IS A SERVER
     nodeURL = `http://${location.hostname}:3000`;
