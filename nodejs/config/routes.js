@@ -49,7 +49,7 @@ async function routesConfig(app) {
             await recalculateProductBuyPrice(product);
 
         // TODO Convert old productHistories to new model
-        // OR OPTIOANLLY DELETE ALL PRODUCTHISTORIES
+        // OR OPTIONALLY DELETE ALL PRODUCTHISTORIES
 
         //Steps to remove sellPrice from all ingredients:
 
