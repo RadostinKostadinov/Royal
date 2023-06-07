@@ -1331,10 +1331,41 @@ export async function informationsPage() {
             </div>
         </div>
         
-        <div id="informations">
-            
+        <div id="informations" class="d-flex flex-wrap w-100 gap-3 p-3">
         </div>
     `;
+
+    const infoTemplate = (info) => html`
+        <div class="flex-fill border border-info rounded p-2 text-info">
+            <h5>Общ оборот</h5>
+            <span>${info.grossIncome.toFixed(2)} лв.</span>
+        </div>
+
+        <div class="flex-fill border border-info rounded p-2 text-info">
+            <h5>Оборот на доставни цени</h5>
+            <span>${info.grossIncomeDelivery.toFixed(2)} лв.</span >
+        </div >
+
+        <div class="flex-fill border border-info rounded p-2 text-info">
+            <h5>Печалба</h5>
+            <span>${info.totalIncome.toFixed(2)} лв.</span>
+        </div>
+
+        <div class="flex-fill border border-info rounded p-2 text-info">
+            <h5>Обща надценка</h5>
+            <span>${info.upsellPercentage.toFixed(2)}%</span>
+        </div>
+
+        <div class="flex-fill border border-info rounded p-2 text-info">
+            <h5>Брой сметки</h5>
+            <span>${info.totalSells} бр.</span>
+        </div>
+
+        <div class="flex-fill border border-info rounded p-2 text-info">
+            <h5>Брой продадени продукти</h5>
+            <span>${info.totalProductsSold} бр.</span>
+        </div>
+`;
 
     async function loadInformation() {
         const fromDate = $('#fromDate').val();
@@ -1342,38 +1373,11 @@ export async function informationsPage() {
 
         const res = await getInformation(fromDate, toDate);
 
-        console.log(res.data);
-        return;
-
         if (res.status === 200) {
-            const reports = res.data;
-
-            // Split reports by date
-            let splitReports = {};
-            for (let report of reports) {
-                // Get date for report
-                let date = new Date(report.when);
-
-                // Check if time is between 00:00 and 04:00 hours (if from last night shift)
-                if (date.getHours() >= 0 && date.getHours() < 4) {
-                    // If true, show it in yesterday row group (set date as -1 day)
-                    date.setDate(date.getDate() - 1);
-                }
-
-                // Convert to DD-MM-YYYY
-                date = `${date.getDate()}-${date.getMonth() + 1}-${date.getFullYear()}`;
-
-                // Check if date already created in splitReports
-                if (!splitReports.hasOwnProperty(date)) {
-                    splitReports[date] = [];
-                }
-
-                // Add report to splitReports
-                splitReports[date].push(report);
-            }
+            const info = res.data;
 
             // Render reports
-            render(totalRowsH(), document.querySelector('#totalAll tbody'));
+            render(infoTemplate(info), document.querySelector('#informations'));
         } else {
             console.error(res);
             alert('Възникна грешка');
@@ -1445,34 +1449,35 @@ export async function revisionsPage() {
                     <td>${difference}</td>
                 </tr>
             `
-    })}
-    `;
+    })
+        }
+`;
 
     const revisionTemplate = () => html`
-        <div class="d-flex justify-content-between p-2">
-            ${backBtn}  
-            <button @click=${() => page('/admin/createRevision')} class="btn btn-primary mt-2 fs-3">Нова ревизия</button>
-        </div>
+    < div class="d-flex justify-content-between p-2" >
+        ${backBtn}
+<button @click=${() => page('/admin/createRevision')} class="btn btn-primary mt-2 fs-3" > Нова ревизия</button >
+        </div >
 
-        <select @change=${selectedRevision} class="form-control mt-2fs-4">
-            <option selected disabled>Избери</option>
+    <select @change=${selectedRevision} class="form-control mt-2fs-4" >
+        <option selected disabled>Избери</option>
             ${allRevisions.map((revision, i) => html`<option value=${i}>${revision.when}</option>`)}
-        </select>
+        </select >
 
-        <table class="table table-striped table-dark table-hover text-center mt-2">
-            <thead>
-                <tr>
-                    <!-- <th scope="col">Тип</th> -->
-                    <th scope="col">Артикул</th>
-                    <th scope="col">Старо</th>
-                    <th scope="col">Ново</th>
-                    <th scope="col">Разлика</th>
-                </tr>
-            </thead>
-            <tbody>
-            </tbody>
-        </table>
-    `;
+    <table class="table table-striped table-dark table-hover text-center mt-2">
+        <thead>
+            <tr>
+                <!-- <th scope="col">Тип</th> -->
+                <th scope="col">Артикул</th>
+                <th scope="col">Старо</th>
+                <th scope="col">Ново</th>
+                <th scope="col">Разлика</th>
+            </tr>
+        </thead>
+        <tbody>
+        </tbody>
+    </table>
+`;
 
     render(revisionTemplate(), container);
 }
@@ -1527,12 +1532,13 @@ export async function createRevisionPage() {
                     <td><input type="number" min=0 step=${product.hasOwnProperty('unit') && (product.unit === 'кг' || product.unit === 'л') ? 0.000005 : ''} class="form-control fs-4" name=${product._id}></td>
                 </tr>
             `
-    })}
-    `;
+    })
+        }
+`;
 
     const createRevisionTemplate = () => html`
-        ${backBtn}    
-        <form class="d-flex flex-column align-items-center" @submit=${svRevision}>
+        ${backBtn}
+<form class="d-flex flex-column align-items-center" @submit=${svRevision}>
             <table class="table table-striped table-dark table-hover text-center mt-2">
                 <thead>
                     <tr>
@@ -1547,7 +1553,7 @@ export async function createRevisionPage() {
                 </tbody>
             </table>
             <input class="btn w-auto btn-primary fs-3 mt-2 mb-2 ms-2" type="submit" value="Запази" />
-        </form>
+        </form >
     `;
 
     render(createRevisionTemplate(), container);
@@ -1601,16 +1607,17 @@ export async function inventoryPage() {
                     <td>${product.sellPrice ? fixPrice(differenceTotal) : "-"}</td>
                 </tr>
             `
-    })}
-        <tr class="table-primary">
-            <th colspan="4" class="text-center">Общо: </th>
-            <th>${fixPrice(totals.buyPrice)}</th>
-            <td></td>
-            <th>${fixPrice(totals.sellPrice)}</th>
-            <td></td>
-            <th>${fixPrice(totals.difference)}</th>
-        </tr>
-    `;
+    })
+        }
+<tr class="table-primary">
+    <th colspan="4" class="text-center">Общо: </th>
+    <th>${fixPrice(totals.buyPrice)}</th>
+    <td></td>
+    <th>${fixPrice(totals.sellPrice)}</th>
+    <td></td>
+    <th>${fixPrice(totals.difference)}</th>
+</tr>
+`;
 
     async function showProductsFromCategory(e) {
         totals = {
@@ -1644,7 +1651,7 @@ export async function inventoryPage() {
             lastFoundRow.removeClass('table-success')
 
         // Find the row that contains this product
-        lastFoundRow = $(`table tbody tr td:contains(${selectedProductFromSearch.nameWithoutUnit})`).closest('tr');
+        lastFoundRow = $(`table tbody tr td: contains(${selectedProductFromSearch.nameWithoutUnit})`).closest('tr');
 
         // Add coloring class
         lastFoundRow.addClass('table-success');
@@ -1677,26 +1684,26 @@ export async function inventoryPage() {
                 <option value="ingredients">Съставки</option>
                 ${categories.map((category) => html`<option value=${category._id}>${category.name}</option>`)}
             </select>
-        </div>
-    
-        <table class="table table-striped table-dark table-hover text-center">
-            <thead>
-                <tr>
-                    <th scope="col">Тип</th>
-                    <th scope="col">Артикул</th>
-                    <th scope="col">Количество</th>
-                    <th scope="col">Доставна цена</th>
-                    <th scope="col">Доставна общо</th>
-                    <th scope="col">Продажна цена</th>
-                    <th scope="col">Продажна общо</th>
-                    <th scope="col">Разлика цена</th>
-                    <th scope="col">Разлика общо</th>
-                </tr>
-            </thead>
-            <tbody>
-            </tbody>
-        </table>
-    `;
+        </div >
+
+    <table class="table table-striped table-dark table-hover text-center">
+        <thead>
+            <tr>
+                <th scope="col">Тип</th>
+                <th scope="col">Артикул</th>
+                <th scope="col">Количество</th>
+                <th scope="col">Доставна цена</th>
+                <th scope="col">Доставна общо</th>
+                <th scope="col">Продажна цена</th>
+                <th scope="col">Продажна общо</th>
+                <th scope="col">Разлика цена</th>
+                <th scope="col">Разлика общо</th>
+            </tr>
+        </thead>
+        <tbody>
+        </tbody>
+    </table>
+`;
 
     render(inventoryTemplate(), container);
 
@@ -1712,7 +1719,7 @@ export async function reportsPage() {
         discounts = 0;
 
     const reportTemplate = (report, dateString, timeString) => html`
-        <tr>
+    < tr >
             <td scope="row">${dateString}</td>
             <td scope="row">${timeString}</td>
             <td scope="row" class="text-capitalize">${report.user.name}</td>
@@ -1721,7 +1728,7 @@ export async function reportsPage() {
             <td scope="row">${fixPrice(report.consumed)}</td>
             <td scope="row">${report.discounts ? fixPrice(report.discounts) : '0.00'}</td>
             <td scope="row">${fixPrice(report.total)}</td>
-        </tr>
+        </tr >
     `;
 
     const reportsRows = (date) => html`
@@ -1767,14 +1774,15 @@ export async function reportsPage() {
         scrapped += todayScrapped;
 
         return combinedDailyReports;
-    })}
-    `;
+    })
+        }
+`;
 
     const totalRowsH = () => html`
-        <tr class="table-success">
+    < tr class="table-success" >
             <td>Приход</td>
             <td>${fixPrice(income)}</td>
-        </tr>
+        </tr >
         <tr class="table-danger">
             <td>Брак</td>
             <td>${fixPrice(scrapped)}</td>
@@ -1791,7 +1799,7 @@ export async function reportsPage() {
             <td>Общ приход</td>
             <td>${fixPrice(total)}</td>
         </tr>
-    `;
+`;
 
     const reportsTemplate = () => html`
         ${backBtn}
@@ -1832,7 +1840,7 @@ export async function reportsPage() {
             </thead>
             <tbody></tbody>
         </table>
-    `;
+`;
 
     async function loadReports() {
         total = 0;
@@ -1861,7 +1869,7 @@ export async function reportsPage() {
                 }
 
                 // Convert to DD-MM-YYYY
-                date = `${date.getDate()}-${date.getMonth() + 1}-${date.getFullYear()}`;
+                date = `${date.getDate()} -${date.getMonth() + 1} -${date.getFullYear()} `;
 
                 // Check if date already created in splitReports
                 if (!splitReports.hasOwnProperty(date)) {
@@ -1907,8 +1915,9 @@ export async function consumationHistoryPage() {
                     <td>${fixPrice(consumation.total)}</td>
                 </tr>
             `
-    })}
-    `;
+    })
+        }
+`;
 
     const allTotals = () => html`
         ${Object.entries(usersTotal).map(user => html`
@@ -1916,8 +1925,9 @@ export async function consumationHistoryPage() {
                 <td class="text-capitalize">${user[0]}</td>
                 <td>${fixPrice(user[1])}</td>
             </tr>
-        `)}
-    `;
+        `)
+        }
+`;
 
     async function loadConsumation() {
         usersTotal = {};
@@ -1962,7 +1972,7 @@ export async function consumationHistoryPage() {
                     <option value="${user._id}">${user.name}</option>
                 `)}
             </select>
-        </div>
+        </div >
 
         <table id="totalAll" class="mt-4 table fs-b table-dark text-center">
             <thead>
@@ -1984,7 +1994,7 @@ export async function consumationHistoryPage() {
             </thead>
             <tbody></tbody>
         </table>
-    `;
+`;
 
     render(consumationTemplate(), container);
     loadConsumation();
@@ -2032,29 +2042,30 @@ export async function scrappedPage() {
                 <td>${total.toFixed(2)}</td>
                 <td><button @click=${markPrdAsScrapped} class="btn btn-danger" _id=${history._id}>Бракувай</button></td>
             </tr>`
-    })}
-    `;
+    })
+        }
+`;
 
     const scrappedTemplate = () => html`
         ${backBtn}
-    
-        <table class="mt-3 table table-striped table-dark table-hover text-center">
-            <thead>
-                <tr>
-                    <th scope="col">Дата</th>
-                    <th scope="col">Час</th>
-                    <th scope="col">Маса</th>
-                    <th scope="col">Сметка</th>
-                    <th scope="col">Служител</th>
-                    <th scope="col">Артикули</th>
-                    <th scope="col">Сума</th>
-                    <th scope="col"></th>
-                </tr>
-            </thead>
-            <tbody>
-            </tbody>
-        </table>
-    `;
+
+<table class="mt-3 table table-striped table-dark table-hover text-center">
+    <thead>
+        <tr>
+            <th scope="col">Дата</th>
+            <th scope="col">Час</th>
+            <th scope="col">Маса</th>
+            <th scope="col">Сметка</th>
+            <th scope="col">Служител</th>
+            <th scope="col">Артикули</th>
+            <th scope="col">Сума</th>
+            <th scope="col"></th>
+        </tr>
+    </thead>
+    <tbody>
+    </tbody>
+</table>
+`;
 
     render(scrappedTemplate(), container);
 
@@ -2082,19 +2093,19 @@ export async function expireProductsPage() {
 
     const expireTemplate = (products) => html`
         ${backBtn}
-    
-        <table class="mt-3 table table-striped table-dark table-hover text-center">
-            <thead>
-                <tr>
-                    <th scope="col">Дата на зареждане</th>
-                    <th scope="col">Артикул</th>
-                    <th scope="col">Количество</th>
-                    <th scope="col">Срок на годност</th>
-                    <th></th>
-                </tr>
-            </thead>
-            <tbody>
-                ${products.map((product) => {
+
+<table class="mt-3 table table-striped table-dark table-hover text-center">
+    <thead>
+        <tr>
+            <th scope="col">Дата на зареждане</th>
+            <th scope="col">Артикул</th>
+            <th scope="col">Количество</th>
+            <th scope="col">Срок на годност</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        ${products.map((product) => {
         let qty = product.product.qty,
             name = product.product.name,
             restockDate = new Date(product.when),
@@ -2126,9 +2137,9 @@ export async function expireProductsPage() {
                             </tr>
                         `
     })}
-            </tbody>
-        </table>
-    `;
+    </tbody>
+</table>
+`;
 
     render(expireTemplate(products), container);
 }
@@ -2172,7 +2183,7 @@ export async function soldProductsPage() {
             <td>${fixPrice(totals.price)}</td>
         </tr>`
             : ''
-        }`;
+        } `;
 
     const sellsRows = (sells) => html`
         ${sells.map((sell) => {
@@ -2191,8 +2202,9 @@ export async function soldProductsPage() {
                 <td>${sell.qty} бр.</td>
                 <td>${fixPrice(sell.total)}</td>
             </tr>`
-    })}
-    `;
+    })
+        }
+`;
 
     const soldTemplate = () => html`
         ${backBtn}
@@ -2233,7 +2245,7 @@ export async function soldProductsPage() {
             <tbody class="d-table-footer-group"></tbody>
             <tfoot class="fw-bold d-table-footer-group"></tfoot>
         </table>
-    `;
+`;
 
     render(soldTemplate(), container);
 }
@@ -2281,8 +2293,9 @@ export async function restockHistoryPage() {
                 <td>${restock.product.name}</td>
                 <td>${restock.product.qty} ${unit}.</td>
             </tr>`
-    })}
-    `;
+    })
+        }
+`;
 
     const restockTemplate = () => html`
         ${backBtn}
@@ -2323,7 +2336,7 @@ export async function restockHistoryPage() {
             </thead>
             <tbody></tbody>
         </table>
-    `;
+`;
 
     render(restockTemplate(), container);
     search();
@@ -2337,24 +2350,24 @@ export async function showAdminDashboard() {
     selectedProductFromSearch = undefined;
     selectedIngredientFromSearch = undefined;
     const dashboard = () => html`
-        <div class="p-3">
+    < div class="p-3" >
             <div class="text-center mt-4">
                 <h1>Специални</h1>
                 <div class="d-inline-flex flex-row flex-wrap gap-3 justify-content-center">
                     <button @click=${() => page('/admin/products/sold')} class="btn btn-success fs-4">Продажби</button>
                     <button @click=${() => page('/admin/revisions')} class="btn btn-info fs-4">Ревизии</button>
-                    <button @click=${() => page('/admin/consumationHistory')} class="btn btn-secondary fs-4">История на консумация</button>
-                    <button @click=${() => page('/admin/restockHistory')} class="btn btn-info fs-4">История на зареждане</button>
-                    <button @click=${() => page('/admin/inventory/scrapped')} class="btn btn-danger fs-4">Бракувана стока</button>
-                    <button @click=${() => page('/admin/expireProducts')} class="btn btn-primary fs-4 position-relative">
-                        Срок на годност
-                        <span id="numberOfExpiredProducts" class="${numberOfExpiredProducts === 0 && 'd-none'} position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">${numberOfExpiredProducts}</span>
-                    </button>
-                    <button @click=${() => page('/admin/inventory')} class="btn btn-secondary fs-4">Склад</button>
-                    <button @click=${() => page('/admin/reports')} class="btn btn-secondary fs-4">Отчети</button>
-                    <button @click=${() => page('/admin/informations')} class="btn btn-secondary fs-4">Обобщена информация</button>
-                </div>
-            </div>
+                    <button @click=${() => page('/admin/consumationHistory')} class="btn btn-secondary fs-4" > История на консумация</button >
+    <button @click=${() => page('/admin/restockHistory')} class="btn btn-info fs-4" > История на зареждане</button >
+        <button @click=${() => page('/admin/inventory/scrapped')} class="btn btn-danger fs-4" > Бракувана стока</button >
+            <button @click=${() => page('/admin/expireProducts')} class="btn btn-primary fs-4 position-relative" >
+                Срок на годност
+                    < span id = "numberOfExpiredProducts" class="${numberOfExpiredProducts === 0 && 'd-none'} position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" > ${numberOfExpiredProducts}</span >
+                    </button >
+    <button @click=${() => page('/admin/inventory')} class="btn btn-secondary fs-4" > Склад</button >
+        <button @click=${() => page('/admin/reports')} class="btn btn-secondary fs-4" > Отчети</button >
+            <button @click=${() => page('/admin/informations')} class="btn btn-secondary fs-4" > Обобщена информация</button >
+                </div >
+            </div >
             <div class="text-center mt-4">
                 <h1>Стока</h1>
                 <div class="d-inline-flex flex-row flex-wrap gap-3 justify-content-center">
@@ -2362,35 +2375,35 @@ export async function showAdminDashboard() {
                     <button @click=${() => page('/admin/product/scrap')} class="btn btn-danger fs-4">Бракувай</button>
                     <div class="d-inline-flex flex-row flex-wrap gap-3 justify-content-center">
                         <button @click=${() => page('/admin/product/create')} class="btn btn-success fs-4">Създай</button>
-                        <button @click=${() => page('/admin/product/delete')} class="btn btn-danger fs-4">Изтрий</button>
-                        <button @click=${() => page('/admin/product/edit')} class="btn btn-secondary fs-4">Редактирай</button>
-                        <button @click=${() => page('/admin/product/reorder')} class="btn btn-secondary fs-4">Подреди</button>
-                    </div>
-                </div>
-            </div>
+                        <button @click=${() => page('/admin/product/delete')} class="btn btn-danger fs-4" > Изтрий</button >
+    <button @click=${() => page('/admin/product/edit')} class="btn btn-secondary fs-4" > Редактирай</button >
+        <button @click=${() => page('/admin/product/reorder')} class="btn btn-secondary fs-4" > Подреди</button >
+                    </div >
+                </div >
+            </div >
             <div class="text-center mt-4">
                 <h1>Категории</h1>
                 <div class="d-inline-flex flex-row flex-wrap gap-3 justify-content-center">
                     <button @click=${() => page('/admin/category/create')} class="btn btn-success fs-4">Създай</button>
                     <button @click=${() => page('/admin/category/delete')} class="btn btn-danger fs-4">Изтрий</button>
-                    <button @click=${() => page('/admin/category/edit')} class="btn btn-secondary fs-4">Редактирай</button>
-                    <button @click=${() => page('/admin/category/reorder')} class="btn btn-secondary fs-4">Подреди</button>
-                </div>
-            </div>
+                    <button @click=${() => page('/admin/category/edit')} class="btn btn-secondary fs-4" > Редактирай</button >
+    <button @click=${() => page('/admin/category/reorder')} class="btn btn-secondary fs-4" > Подреди</button >
+                </div >
+            </div >
             <div class="text-center mt-4">
                 <h1>Служители</h1>
                 <div class="d-inline-flex flex-row flex-wrap gap-3 justify-content-center">
                     <button @click=${() => page('/admin/employee/create')} class="btn btn-success fs-4">Създай</button>
                     <button @click=${() => page('/admin/employee/delete')} class="btn btn-danger fs-4">Изтрий</button>
-                    <button @click=${() => page('/admin/employee/edit')} class="btn btn-secondary fs-4">Редактирай</button>
-                </div>
-            </div>
+                    <button @click=${() => page('/admin/employee/edit')} class="btn btn-secondary fs-4" > Редактирай</button >
+                </div >
+            </div >
             <div class="d-flex mt-5 flex-row flex-wrap gap-3 justify-content-end">
                 <button @click=${() => page('/waiter')} class="btn btn-secondary fs-4">Маси</button>
-                <button @click=${() => page('/bartender')} class="btn btn-secondary fs-4">Поръчки</button>
-                <button @click=${logout} class="btn btn-danger fs-4">Изход</button>
-            </div>
-        </div>
+                <button @click=${() => page('/bartender')} class="btn btn-secondary fs-4" > Поръчки</button >
+    <button @click=${logout} class="btn btn-danger fs-4" > Изход</button >
+            </div >
+        </div >
     `;
 
     render(dashboard(), container);
