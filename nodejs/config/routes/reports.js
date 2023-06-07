@@ -167,7 +167,8 @@ export async function createSystemReport() {
                     historyProducts.push({
                         name: prodRef.name,
                         qty: product.qty,
-                        price: prodRef.sellPrice,
+                        buyPrice: product.product.buyPrice,
+                        sellPrice: product.product.sellPrice,
                         productRef: product.product,
                         ingredients: ingredientsArray
                     });

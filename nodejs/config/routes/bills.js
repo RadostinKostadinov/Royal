@@ -65,7 +65,8 @@ export async function convertPersonalBillToHistory() {
                 historyProducts.push({
                     name: product.product.name,
                     qty: product.qty,
-                    price: product.product.sellPrice,
+                    buyPrice: product.product.buyPrice,
+                    sellPrice: product.product.sellPrice,
                     productRef: product.product._id,
                     ingredients: ingredientsArray
                 });
@@ -266,7 +267,8 @@ export function billsRoutes(app, auth) {
                 historyProducts.push({
                     name: product.product.name,
                     qty: product.qty,
-                    price: product.product.sellPrice,
+                    buyPrice: product.product.buyPrice,
+                    sellPrice: product.product.sellPrice,
                     productRef: product.product._id,
                     ingredients: ingredientsArray
                 });
