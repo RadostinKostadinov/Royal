@@ -41,8 +41,9 @@ async function routesConfig(app) {
         res.status(404).send('404 Not Found');
     });
 
-    /* TODO RUN THIS WHEN TRANSFERING TO LIVE DB AFTER NEW PRICES/MODELS UPDATE */
     async function convertOldDB() {
+        // This functions was used to convert OLD DB model to NEW DB model
+        // TODO DELETE THIS FUNCTION IN NEXT MERGE IF NOT OF USE
         // Calculate all products with ingredients buyPrice
         let products = await Product.find({ ingredients: { $ne: [] } });
         for (let product of products)
@@ -55,7 +56,6 @@ async function routesConfig(app) {
         //3. Type: use royal
         //4. Type: db.ingredients.updateMany( {}, { $unset: {"sellPrice": {$ne: undefined}}})
 
-        // TODO Convert old productHistories to new model
         let histories = await ProductHistory.find({});
 
         for (let history of histories) {
@@ -85,7 +85,6 @@ async function routesConfig(app) {
     }
     // await convertOldDB();
 
-    /* TODO DELETE THIS DEFAULTS WHEN FINALIZING APP */
     async function createDefaults() {
         async function createDefaultUsers() {
             const users = [

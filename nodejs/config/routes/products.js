@@ -234,7 +234,6 @@ export function productsRoutes(app, auth) {
 
             // await product.remove(); // Delete the product
 
-            //FIXME ТРЯБВА ДА ИЗТРИВА ОТ ВСИЧКИ СМЕТКИ И МАСИ
             await deleteProductFromEverywhere(product);
 
             res.send('Успешно изтрихте този продукт!');

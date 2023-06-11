@@ -620,6 +620,7 @@ function initializePrinter() {
 }
 
 function cbConnect(data) {
+    console.log(data);
     if (data == 'OK' || data == 'SSL_CONNECT_OK') {
         ePosDev.createDevice('local_printer', ePosDev.DEVICE_TYPE_PRINTER,
             { 'crypto': true, 'buffer': false }, cbCreateDevice_printer);
@@ -630,7 +631,6 @@ function cbConnect(data) {
         printerStatusClass = 'text-danger';
         // Set new status icon color
         $('#printerStatusIcon').addClass(printerStatusClass);
-        alert('Неуспешна връзка с принтера!\nАко токът е спрял преди това, презареди страницата.');
     }
 }
 
