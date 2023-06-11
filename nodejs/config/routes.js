@@ -62,7 +62,7 @@ async function routesConfig(app) {
         await Product.updateMany({ ingredients: { $ne: [] } }, { $unset: { buyPrice: 1 } });
 
     }
-    await convertOldDB();
+    // await convertOldDB();
     /* TODO DELETE THIS DEFAULTS WHEN FINALIZING APP */
     async function createDefaults() {
         async function createDefaultUsers() {

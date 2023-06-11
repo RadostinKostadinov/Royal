@@ -28,12 +28,12 @@ export function usersRoutes(app, auth) {
 
             // Check if req.ip is in any object inbannedIps
             if (bannedIps.some(obj => obj.ip === req.ip))
-                return res.status(403).send('Прекалено много грешни опити!\nСвържи се с админитратор за да отстрани проблема!')
+                return res.status(403).send('Прекалено много грешни опити!\nСвържи се с администратор за да отстрани проблема!')
 
             // Check if IP is not in the safe IP's list
             const safeIps = await SafeIp.find();
             if (!safeIps.some(obj => obj.ip === req.ip))
-                return res.status(401).send('Неразпознато IP адрес!');
+                return res.status(401).send('Неразпознат IP адрес!');
 
             // Get user input
             const { id, pin } = req.body;

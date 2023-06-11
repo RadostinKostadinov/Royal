@@ -4,9 +4,8 @@
 	"main": "app.js",
 	"type": "module",
 	"scripts": {
-		"NEW Start Node ALL": "nodemon app.js",
-		"OLD Start Node Win": "SET NODE_ENV=development && nodemon app.js",
-		"OLD Start Node Mac": "export NODE_ENV=development && nodemon app.js",
+		"Start Node": "nodemon app.js",
+		"Run tests": "SET MONGO_URI=mongodb://127.0.0.1:27017/testdb&& mocha --reporter spec --exit",
 		"Docker build": "docker build -t newhappyrabbit/royal .",
 		"Docker run": "docker run -p 27017:27017 -p 3000:3000 newhappyrabbit/royal"
 	},
@@ -22,5 +21,10 @@
 		"mongoose": "^6.2.11",
 		"node-cron": "^3.0.0",
 		"socket.io": "^4.4.1"
+	},
+	"devDependencies": {
+		"chai": "^4.3.7",
+		"chai-http": "^4.3.0",
+		"mocha": "^10.2.0"
 	}
 }

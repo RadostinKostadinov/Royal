@@ -208,7 +208,7 @@ export function historiesRoutes(app, auth) {
             }
 
             info.totalIncome = info.grossIncome - info.grossIncomeDelivery;
-            info.upsellPercentage = (info.grossIncome - info.grossIncomeDelivery) / info.grossIncome * 100;
+            info.upsellPercentage = (info.grossIncome - info.grossIncomeDelivery) / info.grossIncomeDelivery * 100;
 
             res.json(info);
         } catch (err) {
