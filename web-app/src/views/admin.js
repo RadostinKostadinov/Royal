@@ -6,7 +6,7 @@ import Sortable from 'sortablejs';
 import '../css/admin/admin.css';
 import { fixPrice, markProductAsScrapped, sortCategories, getProductById, getProductsFromCategory, getAllUsers, editCategory, deleteCategory, deleteUser, createUser, editUser, createCategory, scrapRestockProduct, createProduct, deleteProduct, editProduct, getAllCategories, getAllProducts, sortProducts, logout, getAllIngredients, createIngredient, deleteIngredient, getIngredientById, editIngredient, getAllProductsWithoutIngredients, getProductsWithoutIngredientsFromCategory, scrapRestockIngredient, getAllScrapped, getAllRestockedProducts, getAllReports, getProductsIngredients, getProductSells, getRestockHistory, getNumberOfExpiredProducts, markExpiredAsReviewed, getAllConsumation, saveRevision, getAllRevisions, getInformation } from '../api';
 
-const backBtn = html`<button @click=${()=> page('/admin')} class="btn btn-secondary fs-3 mt-2 ms-2">Назад</button>`;
+const backBtn = html`<button @click=${() => page('/admin')} class="btn btn-secondary fs-3 mt-2 ms-2">Назад</button>`;
 let contentType; //  used in loadProducts to determine if we are loading/deleting a product or ingredient
 let selectedProductFromSearch,
     selectedIngredientFromSearch;
@@ -16,15 +16,15 @@ let numberOfExpiredProducts;
 async function loadProducts(e, showProductsFromIngredients) {
     selectedProductFromSearch = undefined;
     selectedIngredientFromSearch = undefined;
-    
+
     // Get selected category
     const categoryId = e.target.value;
 
     let contentToRender;
-    
+
     if (categoryId === null || categoryId === 'Избери')
         return alert('Избери категория!');
-        
+
     if (categoryId === 'ingredients') {
         const res = await getAllIngredients();
 
@@ -34,7 +34,7 @@ async function loadProducts(e, showProductsFromIngredients) {
         // Get category and render products as options
         const res = await getProductsFromCategory(categoryId);
 
-        
+
         if (res.status === 200) {
             contentType = 'product';
             let productsWithoutIngredients = [];
@@ -44,10 +44,10 @@ async function loadProducts(e, showProductsFromIngredients) {
                     if (product.hasOwnProperty('qty'))
                         productsWithoutIngredients.push(product);
                 }
-    
+
                 contentToRender = productsWithoutIngredients;
             }
-            else 
+            else
                 contentToRender = res.data;
         }
         if (res.status === 400)
@@ -150,8 +150,7 @@ const prIngInputs = (prOrIng, categories, type) => html`
         <label for="name" class="form-label">Име</label>
         <input required type="text" class="form-control fs-4" value=${prOrIng ? prOrIng.name : ''} name="name" id="name" placeholder="пример: Бира">
     </div>
-    ${
-        (prOrIng && prOrIng.unit) || type === 'ingredient'
+    ${(prOrIng && prOrIng.unit) || type === 'ingredient'
         ? html`
             <div class="mb-3">
                 <label for="unit" class="form-label">Мерна единица</label>
@@ -159,24 +158,22 @@ const prIngInputs = (prOrIng, categories, type) => html`
                     <option ?selected=${!prOrIng} disabled>Избери</option>
                     <option ?selected=${prOrIng ? (prOrIng.unit === 'кг') : false} value="кг">килограм</option>
                     <option ?selected=${prOrIng ? (prOrIng.unit === 'л') : false} value="л">литър</option>
-                    <option ?selected=${prOrIng ? (prOrIng.unit === 'бр') : false } value="бр">брой</option>
+                    <option ?selected=${prOrIng ? (prOrIng.unit === 'бр') : false} value="бр">брой</option>
                 </select>
             </div>
         `
         : ''
     }
-    ${
-        type !== 'productFromIngredients'
+    ${type !== 'productFromIngredients'
         ? html`
             <div class="mb-3">
                 <label for="qty" class="form-label">Количество</label>
-                <input required type="number" min=${type === 'ingredient' ? '' : 1 } step=${type === 'ingredient' ? 0.000005 : ''} value=${prOrIng ? (type === 'ingredient' && ['кг','л'].includes(prOrIng.unit) ? prOrIng.qty/1000 : prOrIng.qty) : ''} class="form-control fs-4" name="qty" id="qty" placeholder="пример: 50">
+                <input required type="number" min=${type === 'ingredient' ? '' : 1} step=${type === 'ingredient' ? 0.000005 : ''} value=${prOrIng ? (type === 'ingredient' && ['кг', 'л'].includes(prOrIng.unit) ? prOrIng.qty / 1000 : prOrIng.qty) : ''} class="form-control fs-4" name="qty" id="qty" placeholder="пример: 50">
             </div>
         `
         : ''
     }
-    ${
-        type !== 'productFromIngredients'
+    ${type !== 'productFromIngredients'
         ? html`<div class="mb-3">
                 <label for="buyPrice" class="form-label">Доставна цена</label>
                 <input required type="text" title="пример: 5.20, 5.0, 5, 0.5, 0.50" value=${prOrIng ? prOrIng.buyPrice : ''} pattern="^\\d{1,}(\\.\\d{1,2})?$" class="form-control fs-4" name="buyPrice" id="buyPrice" placeholder="пример: 1.50">
@@ -185,18 +182,16 @@ const prIngInputs = (prOrIng, categories, type) => html`
         : ''
     }
     
-    ${
-    type !== 'ingredient'
+    ${type !== 'ingredient'
         ? html`<div class="mb-3">
                     <label for="sellPrice" class="form-label">Продажна цена</label>
-                    <input required type="text" title="пример: 5.20, 5.0, 5, 0.5, 0.50" value=${prOrIng ? prOrIng.sellPrice : '' } pattern="^\\d{1,}(\\.\\d{1,2})?$" class="form-control fs-4" name="sellPrice" id="sellPrice" placeholder="пример: 2">
+                    <input required type="text" title="пример: 5.20, 5.0, 5, 0.5, 0.50" value=${prOrIng ? prOrIng.sellPrice : ''} pattern="^\\d{1,}(\\.\\d{1,2})?$" class="form-control fs-4" name="sellPrice" id="sellPrice" placeholder="пример: 2">
                 </div>
         `
         : ''
     }
     
-    ${
-        categories || ['product', 'productFromIngredients'].includes(type) ? 
+    ${categories || ['product', 'productFromIngredients'].includes(type) ?
         html`
             <div class="mb-3">
                 <label for="pr-categoryId" class="form-label">Категория</label>
@@ -208,8 +203,7 @@ const prIngInputs = (prOrIng, categories, type) => html`
         `
         : ''
     }
-    ${
-        ['product', 'productFromIngredients'].includes(type)
+    ${['product', 'productFromIngredients'].includes(type)
         ? html`
             <div class="mb-3">
                 <label class="form-label">Да се появява на монитора на</label>
@@ -226,8 +220,7 @@ const prIngInputs = (prOrIng, categories, type) => html`
         : ''
     }
 
-    ${
-        type === 'productFromIngredients'
+    ${type === 'productFromIngredients'
         ? html`
             <div class="mb-5 pt-3" id="ingredients">
                 <label class="form-label fs-3">Избери съставки</label>
@@ -255,8 +248,8 @@ const addIngredientModal = (ingredients) => html`
                             <input @change=${selectIngredientFromSearch} class="form-control fs-4" type="text" list="allingredients" name="ingredientSearch" id="ingredientSearch">
                             <datalist id="allingredients">
                                 ${ingredients.map(el => {
-                                    return html`<option type="ingredients" unit=${el.unit} _id=${el._id} name=${el.name} value=${el.name + ` (${el.unit})`} />`
-                                })}
+    return html`<option type="ingredients" unit=${el.unit} _id=${el._id} name=${el.name} value=${el.name + ` (${el.unit})`} />`
+})}
                             </datalist>
                         </div>
                         <div class="mb-3">
@@ -308,17 +301,16 @@ function addIngredient() {
 }
 
 const ingredientsTemplate = () => html`
-        ${
-            addedIngredients.map(ingredient => {
-                return html`
+        ${addedIngredients.map(ingredient => {
+    return html`
                     <div class="mb-3">
                         <label for=${ingredient._id} class="form-label">${ingredient.name}</label>
                         <input type="number" value=${ingredient.qty} class="form-control fs-4" name="ingredients" id=${ingredient._id} placeholder="пример: 50">
                     </div>
                 `;
-            })
-        }
-`;  
+})
+    }
+`;
 
 export async function scrapRestockProductPage(ctx) {
     // Check if coming for restock or scrapping
@@ -326,7 +318,7 @@ export async function scrapRestockProductPage(ctx) {
     const categories = await getAllCategories(true);
     const allProducts = await getAllProductsWithoutIngredients();
     const allIngredients = await getAllIngredients();
-    
+
     async function scrapRestock(e) {
         e.preventDefault();
         const formData = new FormData(e.target);
@@ -343,7 +335,7 @@ export async function scrapRestockProductPage(ctx) {
             _id = formData.get('_id');
             selectedCategory = formData.get('categoryId');
         }
-        
+
         if (_id === null)
             return alert('Избери продукт!');
         if (qty === null)
@@ -372,7 +364,7 @@ export async function scrapRestockProductPage(ctx) {
                 $('#categoryId').val('Избери'); // Clear category select
                 $('#_id').val('Избери'); // Clear product select
             }
-            
+
             selectedProductFromSearch = undefined;
         }
         else if (res.status === 400)
@@ -391,11 +383,11 @@ export async function scrapRestockProductPage(ctx) {
                 <input @change=${selectProductFromSearch} class="form-control fs-4" type="text" list="allproducts" name="productSearch" id="productSearch">
                 <datalist id="allproducts">
                     ${allIngredients.map(el => {
-                        return html`<option type="ingredients" unit=${el.unit} _id=${el._id} value=${el.name + ` (${el.unit})`} />`
-                    })}
+        return html`<option type="ingredients" unit=${el.unit} _id=${el._id} value=${el.name + ` (${el.unit})`} />`
+    })}
                     ${allProducts.map(el => {
-                        return html`<option type="product" _id=${el._id} value=${el.name}/>`
-                    })}
+        return html`<option type="product" _id=${el._id} value=${el.name}/>`
+    })}
                 </datalist>
             </div>
 
@@ -438,10 +430,10 @@ export async function scrapRestockProductPage(ctx) {
                 <label for="expireDate" class="form-label">Дата</label>
                 <input name="expireDate" class="form-control fs-4" id="expireDate" type="date"/>
             </div>
-            ${ action === 'restock' 
+            ${action === 'restock'
             ? html`<input class="btn btn-primary fs-3" type="submit" value="Зареди" />`
             : html`<input class="btn btn-danger fs-3" type="submit" value="Бракувай" />`
-            }
+        }
             
         </form>
     `;
@@ -465,7 +457,7 @@ export async function createProductPage() {
         const sellPrice = +formData.get('sellPrice');
         const categoryId = formData.get('pr-categoryId');
         const forBartender = formData.get('forBartender') || false;
-        
+
         if (categoryId === null)
             return alert('Избери категория!');
 
@@ -677,11 +669,11 @@ export async function deleteProductPage() {
                 <input @change=${selectProductFromSearch} class="form-control fs-4" type="text" list="allproducts" name="productSearch" id="productSearch">
                 <datalist id="allproducts">
                     ${allIngredients.map(el => {
-                        return html`<option type="ingredients" unit=${el.unit} _id=${el._id} value=${el.name + ` (${el.unit})`} />`
-                    })}
+        return html`<option type="ingredients" unit=${el.unit} _id=${el._id} value=${el.name + ` (${el.unit})`} />`
+    })}
                     ${allProducts.map(el => {
-                        return html`<option type="product" _id=${el._id} value=${el.name}/>`
-                    })}
+        return html`<option type="product" _id=${el._id} value=${el.name}/>`
+    })}
                 </datalist>
             </div>
             <div class="mb-3">
@@ -690,11 +682,11 @@ export async function deleteProductPage() {
                     <option selected disabled>Избери</option>
                     <option value="ingredients">Съставки</option>
                     ${categories.map((category) => {
-                        if (category.hasOwnProperty('parent')) // if it has a parent, it means its a subcategory (child)
-                            return html`<option value=${category._id}>    ${category.name}</option>`
+        if (category.hasOwnProperty('parent')) // if it has a parent, it means its a subcategory (child)
+            return html`<option value=${category._id}>    ${category.name}</option>`
 
-                        return html`<option value=${category._id}>${category.name}</option>`
-                    })}
+        return html`<option value=${category._id}>${category.name}</option>`
+    })}
                 </select>
             </div>
             <div class="mb-3 d-none" id="product">
@@ -749,10 +741,10 @@ export async function editProductPage(ctx) {
             const forBartender = formData.get('forBartender') || false;
             let selectedIngredients;
 
-            
+
             if (categoryId === null)
                 return alert('Избери категория!');
-            
+
             if (qty) // simple product
                 qty = +qty;
             else { // product from ingredients
@@ -776,7 +768,7 @@ export async function editProductPage(ctx) {
         if (res.status === 200) {// Successfully edited product/ingredient
             selectedIngredientFromSearch = undefined;
             selectedProductFromSearch = undefined;
-            
+
             alert(res.data);
             page('/');
             page(ctx.path); // redirect back here
@@ -800,10 +792,10 @@ export async function editProductPage(ctx) {
         }
         else
             _id = e.target.value;
-            
+
         $('#product-info').removeClass('d-none');
 
-        if (_id === null || _id === 'Избери') 
+        if (_id === null || _id === 'Избери')
             return alert('Избери категория!');
 
 
@@ -811,7 +803,7 @@ export async function editProductPage(ctx) {
         if (contentType === 'ingredient') {
             const res = await getIngredientById(_id);
             const ingredient = res.data;
-            
+
             render(prIngInputs(ingredient, undefined, 'ingredient'), document.getElementById('product-info'))
         }
         else {
@@ -823,7 +815,7 @@ export async function editProductPage(ctx) {
                 if (product.ingredients.length) {
                     // Render product first
                     render(prIngInputs(product, categories, 'productFromIngredients'), document.getElementById('product-info'));
-                    
+
                     // Get products ingredients ids, names and qty
                     const res = await getProductsIngredients(_id);
 
@@ -831,7 +823,7 @@ export async function editProductPage(ctx) {
                         const ingredients = res.data;
 
                         addedIngredients = [];
-                        for (let ingredient of ingredients) 
+                        for (let ingredient of ingredients)
                             addedIngredients.push({ _id: ingredient.ingredient._id, name: ingredient.ingredient.name, qty: ingredient.qty });
 
                         // Render ingredients
@@ -843,7 +835,7 @@ export async function editProductPage(ctx) {
                 }
                 else
                     render(prIngInputs(product, categories, 'product'), document.getElementById('product-info'));
-                
+
                 $('#forBartender').attr('checked', product.forBartender);
                 $('#pr-categoryId').val(product.category);
             }
@@ -858,11 +850,11 @@ export async function editProductPage(ctx) {
                 <input @change=${loadProductInfo} class="form-control fs-4" type="text" list="allproducts" name="productSearch" id="productSearch">
                 <datalist id="allproducts">
                     ${allIngredients.map(el => {
-                        return html`<option type="ingredients" _id=${el._id} value=${el.name + ` (${el.unit})`} />`
-                    })}
+        return html`<option type="ingredients" _id=${el._id} value=${el.name + ` (${el.unit})`} />`
+    })}
                     ${allProducts.map(el => {
-                        return html`<option type="product" _id=${el._id} value=${el.name}/>`
-                    })}
+        return html`<option type="product" _id=${el._id} value=${el.name}/>`
+    })}
                 </datalist>
         </div>
 
@@ -921,8 +913,8 @@ export async function sortProductsPage() {
         const res = await getProductsFromCategory(_id);
         const products = res.data;
 
-        
-        
+
+
         render(productsTemplate(products), document.getElementById('products'));// render all products in sorting div
     }
 
@@ -939,11 +931,11 @@ export async function sortProductsPage() {
             <select @change=${getProducts} required type="text" class="form-control fs-4" name="categoryId" id="categoryId">
                 <option selected disabled>Избери</option>
                 ${categories.map((category) => {
-                    if (category.hasOwnProperty('parent')) // if it has a parent, it means its a subcategory (child)
-                        return html`<option value=${category._id}>    ${category.name}</option>`
+        if (category.hasOwnProperty('parent')) // if it has a parent, it means its a subcategory (child)
+            return html`<option value=${category._id}>    ${category.name}</option>`
 
-                    return html`<option value=${category._id}>${category.name}</option>`
-                })}
+        return html`<option value=${category._id}>${category.name}</option>`
+    })}
             </select>
         </div>
 
@@ -1339,10 +1331,41 @@ export async function informationsPage() {
             </div>
         </div>
         
-        <div id="informations">
-            
+        <div id="informations" class="d-flex flex-wrap w-100 gap-3 p-3">
         </div>
     `;
+
+    const infoTemplate = (info) => html`
+        <div class="flex-fill border border-info rounded p-2 text-info">
+            <h5>Общ оборот</h5>
+            <span>${info.grossIncome.toFixed(2)} лв.</span>
+        </div>
+
+        <div class="flex-fill border border-info rounded p-2 text-info">
+            <h5>Оборот на доставни цени</h5>
+            <span>${info.grossIncomeDelivery.toFixed(2)} лв.</span >
+        </div >
+
+        <div class="flex-fill border border-info rounded p-2 text-info">
+            <h5>Печалба</h5>
+            <span>${info.totalIncome.toFixed(2)} лв.</span>
+        </div>
+
+        <div class="flex-fill border border-info rounded p-2 text-info">
+            <h5>Обща надценка</h5>
+            <span>${info.upsellPercentage.toFixed(2)}%</span>
+        </div>
+
+        <div class="flex-fill border border-info rounded p-2 text-info">
+            <h5>Брой сметки</h5>
+            <span>${info.totalSells} бр.</span>
+        </div>
+
+        <div class="flex-fill border border-info rounded p-2 text-info">
+            <h5>Брой продадени продукти</h5>
+            <span>${info.totalProductsSold} бр.</span>
+        </div>
+`;
 
     async function loadInformation() {
         const fromDate = $('#fromDate').val();
@@ -1350,38 +1373,11 @@ export async function informationsPage() {
 
         const res = await getInformation(fromDate, toDate);
 
-        console.log(res.data);
-        return;
-
         if (res.status === 200) {
-            const reports = res.data;
-
-            // Split reports by date
-            let splitReports = {};
-            for (let report of reports) {
-                // Get date for report
-                let date = new Date(report.when);
-
-                // Check if time is between 00:00 and 04:00 hours (if from last night shift)
-                if (date.getHours() >= 0 && date.getHours() < 4) {
-                    // If true, show it in yesterday row group (set date as -1 day)
-                    date.setDate(date.getDate() - 1);
-                }
-
-                // Convert to DD-MM-YYYY
-                date = `${date.getDate()}-${date.getMonth() + 1}-${date.getFullYear()}`;
-
-                // Check if date already created in splitReports
-                if (!splitReports.hasOwnProperty(date)) {
-                    splitReports[date] = [];
-                }
-
-                // Add report to splitReports
-                splitReports[date].push(report);
-            }
+            const info = res.data;
 
             // Render reports
-            render(totalRowsH(), document.querySelector('#totalAll tbody'));
+            render(infoTemplate(info), document.querySelector('#informations'));
         } else {
             console.error(res);
             alert('Възникна грешка');
@@ -1404,47 +1400,47 @@ export async function revisionsPage() {
         const index = e.target.value;
         // Create a modifiable copy of allRevisions[index] that wont effect the original variable
         const revision = JSON.parse(JSON.stringify(allRevisions[index]));
-        
+
         render(productRows(revision.products), document.querySelector('tbody'));
     }
 
     const productRows = (products) => html`
         ${products.map((product) => {
-            let unit = 'бр',
-                difference = 0,
-                cellClass = '';
+        let unit = 'бр',
+            difference = 0,
+            cellClass = '';
 
-            if (product.type === 'ingredient') {
-                if (product.unit === 'кг' || product.unit === 'л') {
-                    unit = product.unit;
+        if (product.type === 'ingredient') {
+            if (product.unit === 'кг' || product.unit === 'л') {
+                unit = product.unit;
 
-                    product.oldQty /= 1000;
+                product.oldQty /= 1000;
 
-                    if (product.hasOwnProperty('newQty')) {
-                        product.newQty /= 1000;
-                    } else {
-                        product.newQty = product.oldQty;
-                    }
+                if (product.hasOwnProperty('newQty')) {
+                    product.newQty /= 1000;
                 } else {
-                    if (!product.hasOwnProperty('newQty'))
-                        product.newQty = product.oldQty;
-                }
-            } else if (!product.hasOwnProperty('newQty')) // If product and no new qty
                     product.newQty = product.oldQty;
+                }
+            } else {
+                if (!product.hasOwnProperty('newQty'))
+                    product.newQty = product.oldQty;
+            }
+        } else if (!product.hasOwnProperty('newQty')) // If product and no new qty
+            product.newQty = product.oldQty;
 
-                    
-            difference = +(product.newQty - product.oldQty).toFixed(2);
 
-            if (difference > 0) {
-                difference = `+${difference}`;
-                cellClass = 'table-success';
-            } else if (difference < 0)
-                cellClass = 'table-danger';
-            
-            product.oldQty += ` ${unit}.`
-            product.newQty += ` ${unit}.`
-            difference += ` ${unit}.`
-            return html`
+        difference = +(product.newQty - product.oldQty).toFixed(2);
+
+        if (difference > 0) {
+            difference = `+${difference}`;
+            cellClass = 'table-success';
+        } else if (difference < 0)
+            cellClass = 'table-danger';
+
+        product.oldQty += ` ${unit}.`
+        product.newQty += ` ${unit}.`
+        difference += ` ${unit}.`
+        return html`
                 <tr class=${cellClass}>
                     <!-- <td scope="row">${product.hasOwnProperty('unit') ? 'Съставка' : 'Продукт'}</td> -->
                     <td scope="row">${product.name}</td>
@@ -1453,34 +1449,35 @@ export async function revisionsPage() {
                     <td>${difference}</td>
                 </tr>
             `
-        })}
-    `;
+    })
+        }
+`;
 
     const revisionTemplate = () => html`
-        <div class="d-flex justify-content-between p-2">
-            ${backBtn}  
-            <button @click=${() => page('/admin/createRevision')} class="btn btn-primary mt-2 fs-3">Нова ревизия</button>
-        </div>
+    < div class="d-flex justify-content-between p-2" >
+        ${backBtn}
+<button @click=${() => page('/admin/createRevision')} class="btn btn-primary mt-2 fs-3" > Нова ревизия</button >
+        </div >
 
-        <select @change=${selectedRevision} class="form-control mt-2fs-4">
-            <option selected disabled>Избери</option>
+    <select @change=${selectedRevision} class="form-control mt-2fs-4" >
+        <option selected disabled>Избери</option>
             ${allRevisions.map((revision, i) => html`<option value=${i}>${revision.when}</option>`)}
-        </select>
+        </select >
 
-        <table class="table table-striped table-dark table-hover text-center mt-2">
-            <thead>
-                <tr>
-                    <!-- <th scope="col">Тип</th> -->
-                    <th scope="col">Артикул</th>
-                    <th scope="col">Старо</th>
-                    <th scope="col">Ново</th>
-                    <th scope="col">Разлика</th>
-                </tr>
-            </thead>
-            <tbody>
-            </tbody>
-        </table>
-    `;
+    <table class="table table-striped table-dark table-hover text-center mt-2">
+        <thead>
+            <tr>
+                <!-- <th scope="col">Тип</th> -->
+                <th scope="col">Артикул</th>
+                <th scope="col">Старо</th>
+                <th scope="col">Ново</th>
+                <th scope="col">Разлика</th>
+            </tr>
+        </thead>
+        <tbody>
+        </tbody>
+    </table>
+`;
 
     render(revisionTemplate(), container);
 }
@@ -1517,17 +1514,17 @@ export async function createRevisionPage() {
 
     const productRows = (productsAndIngredients) => html`
         ${productsAndIngredients.map((product) => {
-            let qty = product.qty,
-                name = product.name,
-                unit = 'бр';
-                
-            if (product.hasOwnProperty('unit') && (product.unit === 'кг' || product.unit === 'л')) {
-                qty /= 1000;
-                unit = product.unit;
-            }
+        let qty = product.qty,
+            name = product.name,
+            unit = 'бр';
 
-            qty += ` ${unit}.`
-            return html`
+        if (product.hasOwnProperty('unit') && (product.unit === 'кг' || product.unit === 'л')) {
+            qty /= 1000;
+            unit = product.unit;
+        }
+
+        qty += ` ${unit}.`
+        return html`
                 <tr>
                     <!-- <td scope="row">${product.unit ? 'Съставка' : 'Продукт'}</td> -->
                     <td scope="row">${name}</td>
@@ -1535,12 +1532,13 @@ export async function createRevisionPage() {
                     <td><input type="number" min=0 step=${product.hasOwnProperty('unit') && (product.unit === 'кг' || product.unit === 'л') ? 0.000005 : ''} class="form-control fs-4" name=${product._id}></td>
                 </tr>
             `
-        })}
-    `;
+    })
+        }
+`;
 
     const createRevisionTemplate = () => html`
-        ${backBtn}    
-        <form class="d-flex flex-column align-items-center" @submit=${svRevision}>
+        ${backBtn}
+<form class="d-flex flex-column align-items-center" @submit=${svRevision}>
             <table class="table table-striped table-dark table-hover text-center mt-2">
                 <thead>
                     <tr>
@@ -1551,11 +1549,11 @@ export async function createRevisionPage() {
                     </tr>
                 </thead>
                 <tbody>
-                        ${productRows(productsAndIngredients) }
+                        ${productRows(productsAndIngredients)}
                 </tbody>
             </table>
             <input class="btn w-auto btn-primary fs-3 mt-2 mb-2 ms-2" type="submit" value="Запази" />
-        </form>
+        </form >
     `;
 
     render(createRevisionTemplate(), container);
@@ -1576,49 +1574,50 @@ export async function inventoryPage() {
 
     const productRows = (products) => html`
         ${products.map((product) => {
-            let qty = product.qty,
-                name = product.name,
-                unit = 'бр';
-                
-            if (product.hasOwnProperty('unit') && (product.unit === 'кг' || product.unit === 'л')) {
-                qty /= 1000;
-                unit = product.unit;
-            }
+        let qty = product.qty,
+            name = product.name,
+            unit = 'бр';
 
-            
-            let buyTotal = qty * product.buyPrice,
+        if (product.hasOwnProperty('unit') && (product.unit === 'кг' || product.unit === 'л')) {
+            qty /= 1000;
+            unit = product.unit;
+        }
+
+
+        let buyTotal = qty * product.buyPrice,
             sellTotal = qty * product.sellPrice,
             difference = product.sellPrice - product.buyPrice,
             differenceTotal = qty * difference;
 
-            totals.buyPrice += buyTotal;
-            totals.sellPrice += sellTotal;
-            totals.difference += differenceTotal;
+        totals.buyPrice += buyTotal;
+        totals.sellPrice += sellTotal;
+        totals.difference += differenceTotal;
 
-            qty += ` ${unit}.`
-            return html`
+        qty += ` ${unit}.`
+        return html`
                 <tr class="${qty <= 0 ? 'table-danger' : ''}">
                     <td scope="row">${product.unit ? 'Съставка' : 'Продукт'}</td>
                     <td scope="row">${name}</td>
                     <td>${qty}</td>
                     <td>${fixPrice(product.buyPrice)}</td>
                     <td>${fixPrice(buyTotal)}</td>
-                    <td>${fixPrice(product.sellPrice)}</td>
-                    <td>${fixPrice(sellTotal)}</td>
-                    <td>${fixPrice(difference)} (${((product.sellPrice - product.buyPrice) / product.buyPrice * 100).toFixed(2) }%)</td>
-                    <td>${fixPrice(differenceTotal)}</td>
+                    <td>${product.sellPrice ? fixPrice(product.sellPrice) : "-"}</td>
+                    <td>${product.sellPrice ? fixPrice(sellTotal) : "-"}</td>
+                    <td>${product.sellPrice ? `${fixPrice(difference)} (${((product.sellPrice - product.buyPrice) / product.buyPrice * 100).toFixed(2)}%)` : "-"}</td>
+                    <td>${product.sellPrice ? fixPrice(differenceTotal) : "-"}</td>
                 </tr>
             `
-        })}
-        <tr class="table-primary">
-            <th colspan="4" class="text-center">Общо: </th>
-            <th>${fixPrice(totals.buyPrice)}</th>
-            <td></td>
-            <th>${fixPrice(totals.sellPrice)}</th>
-            <td></td>
-            <th>${fixPrice(totals.difference)}</th>
-        </tr>
-    `;
+    })
+        }
+<tr class="table-primary">
+    <th colspan="4" class="text-center">Общо: </th>
+    <th>${fixPrice(totals.buyPrice)}</th>
+    <td></td>
+    <th>${fixPrice(totals.sellPrice)}</th>
+    <td></td>
+    <th>${fixPrice(totals.difference)}</th>
+</tr>
+`;
 
     async function showProductsFromCategory(e) {
         totals = {
@@ -1635,15 +1634,15 @@ export async function inventoryPage() {
             productsToShow = productsAndIngredients;
         else if (categoryId === 'ingredients') // show only ingredients
             productsToShow = ingredients;
-        else 
+        else
             productsToShow = await getProductsWithoutIngredientsFromCategory(categoryId);
 
         if (productsToShow.length === 0)
             return alert('Няма продукти в избраната категория!')
-        
+
         render(productRows(productsToShow), document.querySelector('tbody'));
     }
-    
+
     async function findProduct(e) {
         await selectProductFromSearch(e);
 
@@ -1652,15 +1651,15 @@ export async function inventoryPage() {
             lastFoundRow.removeClass('table-success')
 
         // Find the row that contains this product
-        lastFoundRow = $(`table tbody tr td:contains(${selectedProductFromSearch.nameWithoutUnit})`).closest('tr');
-        
+        lastFoundRow = $(`table tbody tr td: contains(${selectedProductFromSearch.nameWithoutUnit})`).closest('tr');
+
         // Add coloring class
         lastFoundRow.addClass('table-success');
 
         // Scroll to the row
         lastFoundRow.get(0).scrollIntoView();
     }
-    
+
     const inventoryTemplate = () => html`
         ${backBtn}
 
@@ -1669,11 +1668,12 @@ export async function inventoryPage() {
                 <input @change=${findProduct} class="form-control fs-4" type="text" list="allproducts" name="productSearch" id="productSearch">
                 <datalist id="allproducts">
                     ${ingredients.map(el => {
-                    return html`
-                    <option type="ingredients" unit=${el.unit} _id=${el._id} value=${el.name + ` (${el.unit})`} />`  })}
+        return html`
+                    <option type="ingredients" unit=${el.unit} _id=${el._id} value=${el.name + ` (${el.unit})`} />`
+    })}
                     ${products.map(el => {
-                        return html`<option type="product" _id=${el._id} value=${el.name}/>`
-                    })}
+        return html`<option type="product" _id=${el._id} value=${el.name}/>`
+    })}
                 </datalist>
         </div>
 
@@ -1684,29 +1684,29 @@ export async function inventoryPage() {
                 <option value="ingredients">Съставки</option>
                 ${categories.map((category) => html`<option value=${category._id}>${category.name}</option>`)}
             </select>
-        </div>
-    
-        <table class="table table-striped table-dark table-hover text-center">
-            <thead>
-                <tr>
-                    <th scope="col">Тип</th>
-                    <th scope="col">Артикул</th>
-                    <th scope="col">Количество</th>
-                    <th scope="col">Доставна цена</th>
-                    <th scope="col">Доставна общо</th>
-                    <th scope="col">Продажна цена</th>
-                    <th scope="col">Продажна общо</th>
-                    <th scope="col">Разлика цена</th>
-                    <th scope="col">Разлика общо</th>
-                </tr>
-            </thead>
-            <tbody>
-            </tbody>
-        </table>
-    `;
+        </div >
+
+    <table class="table table-striped table-dark table-hover text-center">
+        <thead>
+            <tr>
+                <th scope="col">Тип</th>
+                <th scope="col">Артикул</th>
+                <th scope="col">Количество</th>
+                <th scope="col">Доставна цена</th>
+                <th scope="col">Доставна общо</th>
+                <th scope="col">Продажна цена</th>
+                <th scope="col">Продажна общо</th>
+                <th scope="col">Разлика цена</th>
+                <th scope="col">Разлика общо</th>
+            </tr>
+        </thead>
+        <tbody>
+        </tbody>
+    </table>
+`;
 
     render(inventoryTemplate(), container);
-    
+
     // Render all products
     render(productRows(productsAndIngredients), document.querySelector('tbody'));
 }
@@ -1719,7 +1719,7 @@ export async function reportsPage() {
         discounts = 0;
 
     const reportTemplate = (report, dateString, timeString) => html`
-        <tr>
+    < tr >
             <td scope="row">${dateString}</td>
             <td scope="row">${timeString}</td>
             <td scope="row" class="text-capitalize">${report.user.name}</td>
@@ -1728,35 +1728,35 @@ export async function reportsPage() {
             <td scope="row">${fixPrice(report.consumed)}</td>
             <td scope="row">${report.discounts ? fixPrice(report.discounts) : '0.00'}</td>
             <td scope="row">${fixPrice(report.total)}</td>
-        </tr>
+        </tr >
     `;
 
     const reportsRows = (date) => html`
         ${Object.values(date).map((dailyReports) => {
-            let combinedDailyReports = [];
-            let todayTotal = 0,
-                todayIncome = 0,
-                todayScrapped = 0,
-                todayDiscounts = 0,
-                todayConsumed = 0;
+        let combinedDailyReports = [];
+        let todayTotal = 0,
+            todayIncome = 0,
+            todayScrapped = 0,
+            todayDiscounts = 0,
+            todayConsumed = 0;
 
-                
-            for (let report of dailyReports) {
-                const date = new Date(report.when);
-                const dateString = `${date.getDate() > 9 ? date.getDate() : '0' + date.getDate()}.${(date.getMonth() + 1) > 9 ? date.getMonth() + 1 : '0' + (date.getMonth() + 1)}.${date.getFullYear()}`;
-                const timeString = `${date.getHours() > 9 ? date.getHours() : '0' + date.getHours()}:${date.getMinutes() > 9 ? date.getMinutes() : '0' + date.getMinutes()}`;
-                
-                todayIncome += report.income;
-                todayConsumed += report.consumed;
-                todayScrapped += report.scrapped;   
-                todayDiscounts += report.discounts;         
-                todayTotal += report.income - report.consumed - report.scrapped; 
-    
-                combinedDailyReports.push(reportTemplate(report, dateString, timeString));
-            }
 
-            // Add the total for the day row
-            combinedDailyReports.push(html`
+        for (let report of dailyReports) {
+            const date = new Date(report.when);
+            const dateString = `${date.getDate() > 9 ? date.getDate() : '0' + date.getDate()}.${(date.getMonth() + 1) > 9 ? date.getMonth() + 1 : '0' + (date.getMonth() + 1)}.${date.getFullYear()}`;
+            const timeString = `${date.getHours() > 9 ? date.getHours() : '0' + date.getHours()}:${date.getMinutes() > 9 ? date.getMinutes() : '0' + date.getMinutes()}`;
+
+            todayIncome += report.income;
+            todayConsumed += report.consumed;
+            todayScrapped += report.scrapped;
+            todayDiscounts += report.discounts;
+            todayTotal += report.income - report.consumed - report.scrapped;
+
+            combinedDailyReports.push(reportTemplate(report, dateString, timeString));
+        }
+
+        // Add the total for the day row
+        combinedDailyReports.push(html`
                 <tr style="border-bottom: 3px solid white" class="table-primary fw-bold">
                     <td scope="row" colspan="3">Общо:</td>
                     <td scope="row">${fixPrice(todayIncome)}</td>
@@ -1767,21 +1767,22 @@ export async function reportsPage() {
                 </tr>
             `);
 
-            total += todayTotal;
-            income += todayIncome;
-            consumed += todayConsumed;
-            discounts += todayDiscounts;
-            scrapped += todayScrapped;
+        total += todayTotal;
+        income += todayIncome;
+        consumed += todayConsumed;
+        discounts += todayDiscounts;
+        scrapped += todayScrapped;
 
-            return combinedDailyReports;
-        })}
-    `;
-    
+        return combinedDailyReports;
+    })
+        }
+`;
+
     const totalRowsH = () => html`
-        <tr class="table-success">
+    < tr class="table-success" >
             <td>Приход</td>
             <td>${fixPrice(income)}</td>
-        </tr>
+        </tr >
         <tr class="table-danger">
             <td>Брак</td>
             <td>${fixPrice(scrapped)}</td>
@@ -1798,8 +1799,8 @@ export async function reportsPage() {
             <td>Общ приход</td>
             <td>${fixPrice(total)}</td>
         </tr>
-    `;
-    
+`;
+
     const reportsTemplate = () => html`
         ${backBtn}
 
@@ -1839,7 +1840,7 @@ export async function reportsPage() {
             </thead>
             <tbody></tbody>
         </table>
-    `;
+`;
 
     async function loadReports() {
         total = 0;
@@ -1868,7 +1869,7 @@ export async function reportsPage() {
                 }
 
                 // Convert to DD-MM-YYYY
-                date = `${date.getDate()}-${date.getMonth() + 1}-${date.getFullYear()}`;
+                date = `${date.getDate()} -${date.getMonth() + 1} -${date.getFullYear()} `;
 
                 // Check if date already created in splitReports
                 if (!splitReports.hasOwnProperty(date)) {
@@ -1897,25 +1898,26 @@ export async function consumationHistoryPage() {
     let usersTotal = {};
 
     const rowsTemplate = (consumations) => html`
-        ${ consumations.map( consumation => {
-            const date = new Date(consumation.when);
-            const dateString = `${date.getDate() > 9 ? date.getDate() : '0' + date.getDate()}.${(date.getMonth() + 1) > 9 ? date.getMonth() + 1 : '0' + (date.getMonth() + 1)}.${date.getFullYear()}`;
-            usersTotal[consumation.user.name] = usersTotal[consumation.user.name] ? usersTotal[consumation.user.name] + consumation.total : consumation.total;
+        ${consumations.map(consumation => {
+        const date = new Date(consumation.when);
+        const dateString = `${date.getDate() > 9 ? date.getDate() : '0' + date.getDate()}.${(date.getMonth() + 1) > 9 ? date.getMonth() + 1 : '0' + (date.getMonth() + 1)}.${date.getFullYear()}`;
+        usersTotal[consumation.user.name] = usersTotal[consumation.user.name] ? usersTotal[consumation.user.name] + consumation.total : consumation.total;
 
-            return html`
+        return html`
                 <tr>
                     <td>${dateString}</td>
                     <td class="text-capitalize">${consumation.user.name}</td>
                     <td>
                         ${Object.values(consumation.products).map(product => {
-                            return html`${product.name} x ${product.qty} бр.<br>`
-                        })}
+            return html`${product.name} x ${product.qty} бр.<br>`
+        })}
                     </td>
                     <td>${fixPrice(consumation.total)}</td>
                 </tr>
             `
-        })}
-    `;
+    })
+        }
+`;
 
     const allTotals = () => html`
         ${Object.entries(usersTotal).map(user => html`
@@ -1923,8 +1925,9 @@ export async function consumationHistoryPage() {
                 <td class="text-capitalize">${user[0]}</td>
                 <td>${fixPrice(user[1])}</td>
             </tr>
-        `)}
-    `;
+        `)
+        }
+`;
 
     async function loadConsumation() {
         usersTotal = {};
@@ -1969,7 +1972,7 @@ export async function consumationHistoryPage() {
                     <option value="${user._id}">${user.name}</option>
                 `)}
             </select>
-        </div>
+        </div >
 
         <table id="totalAll" class="mt-4 table fs-b table-dark text-center">
             <thead>
@@ -1991,7 +1994,7 @@ export async function consumationHistoryPage() {
             </thead>
             <tbody></tbody>
         </table>
-    `;
+`;
 
     render(consumationTemplate(), container);
     loadConsumation();
@@ -2017,18 +2020,18 @@ export async function scrappedPage() {
 
     const historiesRows = (histories) => html`
         ${histories.map((history) => {
-            let allProducts = [];
-            let total = 0;
-            const date = new Date(history.when);
-            const dateString = `${date.getDate() > 9 ? date.getDate() : '0' + date.getDate()}.${(date.getMonth() + 1) > 9 ? date.getMonth() + 1 : '0' + (date.getMonth() + 1)}.${date.getFullYear()}`;
-            const timeString = `${date.getHours() > 9 ? date.getHours() : '0' + date.getHours()}:${date.getMinutes() > 9 ? date.getMinutes() : '0' + date.getMinutes()}`;
+        let allProducts = [];
+        let total = 0;
+        const date = new Date(history.when);
+        const dateString = `${date.getDate() > 9 ? date.getDate() : '0' + date.getDate()}.${(date.getMonth() + 1) > 9 ? date.getMonth() + 1 : '0' + (date.getMonth() + 1)}.${date.getFullYear()}`;
+        const timeString = `${date.getHours() > 9 ? date.getHours() : '0' + date.getHours()}:${date.getMinutes() > 9 ? date.getMinutes() : '0' + date.getMinutes()}`;
 
-            for (let product of history.products) {
-                total += product.qty * product.sellPrice;
-                allProducts.push(html`<div>${product.name} x ${product.qty} бр.</div>`)
-            }
+        for (let product of history.products) {
+            total += product.qty * product.sellPrice;
+            allProducts.push(html`<div>${product.name} x ${product.qty} бр.</div>`)
+        }
 
-            return html`
+        return html`
             <tr>
                 <td>${dateString}</td>
                 <td>${timeString}</td>
@@ -2039,32 +2042,33 @@ export async function scrappedPage() {
                 <td>${total.toFixed(2)}</td>
                 <td><button @click=${markPrdAsScrapped} class="btn btn-danger" _id=${history._id}>Бракувай</button></td>
             </tr>`
-        })}
-    `;
-    
+    })
+        }
+`;
+
     const scrappedTemplate = () => html`
         ${backBtn}
-    
-        <table class="mt-3 table table-striped table-dark table-hover text-center">
-            <thead>
-                <tr>
-                    <th scope="col">Дата</th>
-                    <th scope="col">Час</th>
-                    <th scope="col">Маса</th>
-                    <th scope="col">Сметка</th>
-                    <th scope="col">Служител</th>
-                    <th scope="col">Артикули</th>
-                    <th scope="col">Сума</th>
-                    <th scope="col"></th>
-                </tr>
-            </thead>
-            <tbody>
-            </tbody>
-        </table>
-    `;
+
+<table class="mt-3 table table-striped table-dark table-hover text-center">
+    <thead>
+        <tr>
+            <th scope="col">Дата</th>
+            <th scope="col">Час</th>
+            <th scope="col">Маса</th>
+            <th scope="col">Сметка</th>
+            <th scope="col">Служител</th>
+            <th scope="col">Артикули</th>
+            <th scope="col">Сума</th>
+            <th scope="col"></th>
+        </tr>
+    </thead>
+    <tbody>
+    </tbody>
+</table>
+`;
 
     render(scrappedTemplate(), container);
-    
+
     // Render all scrapped products
     render(historiesRows(allScrapped), document.querySelector('tbody'));
 }
@@ -2086,56 +2090,56 @@ export async function expireProductsPage() {
             alert('Възникна грешка!');
         }
     }
-    
+
     const expireTemplate = (products) => html`
         ${backBtn}
-    
-        <table class="mt-3 table table-striped table-dark table-hover text-center">
-            <thead>
-                <tr>
-                    <th scope="col">Дата на зареждане</th>
-                    <th scope="col">Артикул</th>
-                    <th scope="col">Количество</th>
-                    <th scope="col">Срок на годност</th>
-                    <th></th>
-                </tr>
-            </thead>
-            <tbody>
-                ${products.map((product) => {
-                        let qty = product.product.qty,
-                            name = product.product.name,
-                            restockDate = new Date(product.when),
-                            expireDate = new Date(product.product.expireDate),
-                            unit = 'бр',
-                            today = new Date(),
-                            expired = false;
 
-                        expireDate = `${expireDate.getDate() < 10 ? '0' + expireDate.getDate() : expireDate.getDate()}.${(expireDate.getMonth() + 1) < 10 ? '0' + (expireDate.getMonth() + 1) : (expireDate.getMonth() + 1)}.${expireDate.getFullYear()}`;
-                        restockDate = `${restockDate.getDate() < 10 ? '0' + restockDate.getDate() : restockDate.getDate()}.${(restockDate.getMonth() + 1) < 10 ? '0' + (restockDate.getMonth() + 1) : (restockDate.getMonth() + 1)}.${restockDate.getFullYear()}`;
-                    
-                        if (today > new Date(product.product.expireDate) && product.reviewed === false)
-                            expired = true;
-                        
-                        if (product.product.hasOwnProperty('unit') && (product.product.unit === 'кг' || product.product.unit === 'л')) {
-                            qty /= 1000;
-                            unit = product.product.unit;
-                        }
+<table class="mt-3 table table-striped table-dark table-hover text-center">
+    <thead>
+        <tr>
+            <th scope="col">Дата на зареждане</th>
+            <th scope="col">Артикул</th>
+            <th scope="col">Количество</th>
+            <th scope="col">Срок на годност</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        ${products.map((product) => {
+        let qty = product.product.qty,
+            name = product.product.name,
+            restockDate = new Date(product.when),
+            expireDate = new Date(product.product.expireDate),
+            unit = 'бр',
+            today = new Date(),
+            expired = false;
 
-                        qty += ` ${unit}.`
-                        return html`
+        expireDate = `${expireDate.getDate() < 10 ? '0' + expireDate.getDate() : expireDate.getDate()}.${(expireDate.getMonth() + 1) < 10 ? '0' + (expireDate.getMonth() + 1) : (expireDate.getMonth() + 1)}.${expireDate.getFullYear()}`;
+        restockDate = `${restockDate.getDate() < 10 ? '0' + restockDate.getDate() : restockDate.getDate()}.${(restockDate.getMonth() + 1) < 10 ? '0' + (restockDate.getMonth() + 1) : (restockDate.getMonth() + 1)}.${restockDate.getFullYear()}`;
+
+        if (today > new Date(product.product.expireDate) && product.reviewed === false)
+            expired = true;
+
+        if (product.product.hasOwnProperty('unit') && (product.product.unit === 'кг' || product.product.unit === 'л')) {
+            qty /= 1000;
+            unit = product.product.unit;
+        }
+
+        qty += ` ${unit}.`
+        return html`
                             <tr id=${product._id} valign="middle">
                                 <td>${restockDate}</td>
                                 <td>${name}</td>
                                 <td>${qty}</td>
                                 <td class="expiredDateCell ${expired && 'table-danger'}">${expireDate}</td>
                                 <td class="expiredBtnCell">${expired ?
-                                    html`<button @click=${() => markAsReviewed(product._id)} class="btn btn-info fs-5">OK</button>` : ''}</td>
+                html`<button @click=${() => markAsReviewed(product._id)} class="btn btn-info fs-5">OK</button>` : ''}</td>
                             </tr>
                         `
-                })}
-            </tbody>
-        </table>
-    `;
+    })}
+    </tbody>
+</table>
+`;
 
     render(expireTemplate(products), container);
 }
@@ -2150,7 +2154,7 @@ export async function soldProductsPage() {
     async function loadSells(e) {
         totals.qty = 0;
         totals.price = 0;
-        
+
         await selectProductFromSearch(e);
 
         const fromDate = $('#fromDate').val();
@@ -2170,28 +2174,27 @@ export async function soldProductsPage() {
     }
 
     const sellTotal = () => html`
-    ${
-        totals.qty > 0
-        ? html`
+    ${totals.qty > 0
+            ? html`
         <tr class="table-primary">
             <td colspan="2"></td>
             <td>Общо:</td>
             <td>${totals.qty} бр.</td>
             <td>${fixPrice(totals.price)}</td>
         </tr>`
-        : ''
-    }`;
-    
+            : ''
+        } `;
+
     const sellsRows = (sells) => html`
         ${sells.map((sell) => {
-            const date = new Date(sell.when);
-            const dateString = `${date.getDate() > 9 ? date.getDate() : '0' + date.getDate()}.${(date.getMonth() + 1) > 9 ? date.getMonth() + 1 : '0' + (date.getMonth() + 1)}.${date.getFullYear()}`;
-            const timeString = `${date.getHours() > 9 ? date.getHours() : '0' + date.getHours()}:${date.getMinutes() > 9 ? date.getMinutes() : '0' + date.getMinutes()}`;
+        const date = new Date(sell.when);
+        const dateString = `${date.getDate() > 9 ? date.getDate() : '0' + date.getDate()}.${(date.getMonth() + 1) > 9 ? date.getMonth() + 1 : '0' + (date.getMonth() + 1)}.${date.getFullYear()}`;
+        const timeString = `${date.getHours() > 9 ? date.getHours() : '0' + date.getHours()}:${date.getMinutes() > 9 ? date.getMinutes() : '0' + date.getMinutes()}`;
 
-            totals.qty += sell.qty;
-            totals.price += sell.total;
-            
-            return html`
+        totals.qty += sell.qty;
+        totals.price += sell.total;
+
+        return html`
             <tr>
                 <td>${dateString}</td>
                 <td>${timeString}</td>
@@ -2199,8 +2202,9 @@ export async function soldProductsPage() {
                 <td>${sell.qty} бр.</td>
                 <td>${fixPrice(sell.total)}</td>
             </tr>`
-        })}
-    `;
+    })
+        }
+`;
 
     const soldTemplate = () => html`
         ${backBtn}
@@ -2222,8 +2226,8 @@ export async function soldProductsPage() {
                 <input @change=${loadSells} class="form-control fs-4" type="text" list="allproducts" name="productSearch" id="productSearch">
                 <datalist id="allproducts">
                     ${products.map(el => {
-                        return html`<option type="product" _id=${el._id} value=${el.name}/>`
-                    })}
+        return html`<option type="product" _id=${el._id} value=${el.name}/>`
+    })}
                 </datalist>
         </div>
 
@@ -2241,15 +2245,15 @@ export async function soldProductsPage() {
             <tbody class="d-table-footer-group"></tbody>
             <tfoot class="fw-bold d-table-footer-group"></tfoot>
         </table>
-    `;
-    
+`;
+
     render(soldTemplate(), container);
 }
 
 export async function restockHistoryPage() {
     const ingredients = await getAllIngredients();
     const products = await getAllProductsWithoutIngredients();
-    
+
     async function search(e) {
         // If selected  (else called in render at first load of page)
         if (e)
@@ -2262,7 +2266,7 @@ export async function restockHistoryPage() {
 
         if (res.status === 200) {
             const restocks = res.data;
-            
+
             render(rows(restocks), document.querySelector('table tbody'));
         } else {
             console.error(res);
@@ -2272,25 +2276,26 @@ export async function restockHistoryPage() {
 
     const rows = (restocks) => html`
         ${restocks.map((restock) => {
-            const date = new Date(restock.when);
-            const dateString = `${date.getDate() > 9 ? date.getDate() : '0' + date.getDate()}.${(date.getMonth() + 1) > 9 ? date.getMonth() + 1 : '0' + (date.getMonth() + 1)}.${date.getFullYear()}`;
-            const timeString = `${date.getHours() > 9 ? date.getHours() : '0' + date.getHours()}:${date.getMinutes() > 9 ? date.getMinutes() : '0' + date.getMinutes()}`;
-            let unit = 'бр'
+        const date = new Date(restock.when);
+        const dateString = `${date.getDate() > 9 ? date.getDate() : '0' + date.getDate()}.${(date.getMonth() + 1) > 9 ? date.getMonth() + 1 : '0' + (date.getMonth() + 1)}.${date.getFullYear()}`;
+        const timeString = `${date.getHours() > 9 ? date.getHours() : '0' + date.getHours()}:${date.getMinutes() > 9 ? date.getMinutes() : '0' + date.getMinutes()}`;
+        let unit = 'бр'
 
-            if (['кг', 'л'].includes(restock.product.unit)) {
-                unit = restock.product.unit;
-                restock.product.qty /= 1000;
-            }
+        if (['кг', 'л'].includes(restock.product.unit)) {
+            unit = restock.product.unit;
+            restock.product.qty /= 1000;
+        }
 
-            return html`
+        return html`
             <tr>
                 <td>${dateString}</td>
                 <td>${timeString}</td>
                 <td>${restock.product.name}</td>
                 <td>${restock.product.qty} ${unit}.</td>
             </tr>`
-        })}
-    `;
+    })
+        }
+`;
 
     const restockTemplate = () => html`
         ${backBtn}
@@ -2312,11 +2317,11 @@ export async function restockHistoryPage() {
                 <input @change=${search} class="form-control fs-4" type="text" list="allproducts" name="productSearch" id="productSearch">
                 <datalist id="allproducts">
                     ${ingredients.map(el => {
-                        return html`<option type="ingredients" unit=${el.unit} _id=${el._id} value=${el.name + ` (${el.unit})`} />`
-                    })}
+        return html`<option type="ingredients" unit=${el.unit} _id=${el._id} value=${el.name + ` (${el.unit})`} />`
+    })}
                     ${products.map(el => {
-                        return html`<option type="product" _id=${el._id} value=${el.name}/>`
-                    })}
+        return html`<option type="product" _id=${el._id} value=${el.name}/>`
+    })}
                 </datalist>
         </div>
 
@@ -2331,8 +2336,8 @@ export async function restockHistoryPage() {
             </thead>
             <tbody></tbody>
         </table>
-    `;
-    
+`;
+
     render(restockTemplate(), container);
     search();
 }
@@ -2345,60 +2350,60 @@ export async function showAdminDashboard() {
     selectedProductFromSearch = undefined;
     selectedIngredientFromSearch = undefined;
     const dashboard = () => html`
-        <div class="p-3">
+    < div class="p-3" >
             <div class="text-center mt-4">
                 <h1>Специални</h1>
                 <div class="d-inline-flex flex-row flex-wrap gap-3 justify-content-center">
-                    <button @click=${() => page('/admin/products/sold') } class="btn btn-success fs-4">Продажби</button>
-                    <button @click=${() => page('/admin/revisions') } class="btn btn-info fs-4">Ревизии</button>
-                    <button @click=${() => page('/admin/consumationHistory') } class="btn btn-secondary fs-4">История на консумация</button>
-                    <button @click=${() => page('/admin/restockHistory') } class="btn btn-info fs-4">История на зареждане</button>
-                    <button @click=${() => page('/admin/inventory/scrapped') } class="btn btn-danger fs-4">Бракувана стока</button>
-                    <button @click=${() => page('/admin/expireProducts') } class="btn btn-primary fs-4 position-relative">
-                        Срок на годност
-                        <span id="numberOfExpiredProducts" class="${numberOfExpiredProducts === 0 && 'd-none'} position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">${numberOfExpiredProducts}</span>
-                    </button>
-                    <button @click=${() => page('/admin/inventory') } class="btn btn-secondary fs-4">Склад</button>
-                    <button @click=${() => page('/admin/reports') } class="btn btn-secondary fs-4">Отчети</button>
-                    <button @click=${() => page('/admin/informations') } class="btn btn-secondary fs-4">Обобщена информация</button>
-                </div>
-            </div>
+                    <button @click=${() => page('/admin/products/sold')} class="btn btn-success fs-4">Продажби</button>
+                    <button @click=${() => page('/admin/revisions')} class="btn btn-info fs-4">Ревизии</button>
+                    <button @click=${() => page('/admin/consumationHistory')} class="btn btn-secondary fs-4" > История на консумация</button >
+    <button @click=${() => page('/admin/restockHistory')} class="btn btn-info fs-4" > История на зареждане</button >
+        <button @click=${() => page('/admin/inventory/scrapped')} class="btn btn-danger fs-4" > Бракувана стока</button >
+            <button @click=${() => page('/admin/expireProducts')} class="btn btn-primary fs-4 position-relative" >
+                Срок на годност
+                    < span id = "numberOfExpiredProducts" class="${numberOfExpiredProducts === 0 && 'd-none'} position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" > ${numberOfExpiredProducts}</span >
+                    </button >
+    <button @click=${() => page('/admin/inventory')} class="btn btn-secondary fs-4" > Склад</button >
+        <button @click=${() => page('/admin/reports')} class="btn btn-secondary fs-4" > Отчети</button >
+            <button @click=${() => page('/admin/informations')} class="btn btn-secondary fs-4" > Обобщена информация</button >
+                </div >
+            </div >
             <div class="text-center mt-4">
                 <h1>Стока</h1>
                 <div class="d-inline-flex flex-row flex-wrap gap-3 justify-content-center">
-                    <button @click=${() => page('/admin/product/restock') } class="btn btn-primary fs-4">Зареди</button>
+                    <button @click=${() => page('/admin/product/restock')} class="btn btn-primary fs-4">Зареди</button>
                     <button @click=${() => page('/admin/product/scrap')} class="btn btn-danger fs-4">Бракувай</button>
                     <div class="d-inline-flex flex-row flex-wrap gap-3 justify-content-center">
-                        <button @click=${() => page('/admin/product/create') } class="btn btn-success fs-4">Създай</button>
-                        <button @click=${() => page('/admin/product/delete') } class="btn btn-danger fs-4">Изтрий</button>
-                        <button @click=${() => page('/admin/product/edit') } class="btn btn-secondary fs-4">Редактирай</button>
-                        <button @click=${() => page('/admin/product/reorder') } class="btn btn-secondary fs-4">Подреди</button>
-                    </div>
-                </div>
-            </div>
+                        <button @click=${() => page('/admin/product/create')} class="btn btn-success fs-4">Създай</button>
+                        <button @click=${() => page('/admin/product/delete')} class="btn btn-danger fs-4" > Изтрий</button >
+    <button @click=${() => page('/admin/product/edit')} class="btn btn-secondary fs-4" > Редактирай</button >
+        <button @click=${() => page('/admin/product/reorder')} class="btn btn-secondary fs-4" > Подреди</button >
+                    </div >
+                </div >
+            </div >
             <div class="text-center mt-4">
                 <h1>Категории</h1>
                 <div class="d-inline-flex flex-row flex-wrap gap-3 justify-content-center">
                     <button @click=${() => page('/admin/category/create')} class="btn btn-success fs-4">Създай</button>
-                    <button @click=${() => page('/admin/category/delete') } class="btn btn-danger fs-4">Изтрий</button>
-                    <button @click=${() => page('/admin/category/edit') } class="btn btn-secondary fs-4">Редактирай</button>
-                    <button @click=${() => page('/admin/category/reorder') } class="btn btn-secondary fs-4">Подреди</button>
-                </div>
-            </div>
+                    <button @click=${() => page('/admin/category/delete')} class="btn btn-danger fs-4">Изтрий</button>
+                    <button @click=${() => page('/admin/category/edit')} class="btn btn-secondary fs-4" > Редактирай</button >
+    <button @click=${() => page('/admin/category/reorder')} class="btn btn-secondary fs-4" > Подреди</button >
+                </div >
+            </div >
             <div class="text-center mt-4">
                 <h1>Служители</h1>
                 <div class="d-inline-flex flex-row flex-wrap gap-3 justify-content-center">
-                    <button @click=${() => page('/admin/employee/create') } class="btn btn-success fs-4">Създай</button>
-                    <button @click=${() => page('/admin/employee/delete') } class="btn btn-danger fs-4">Изтрий</button>
-                    <button @click=${() => page('/admin/employee/edit') } class="btn btn-secondary fs-4">Редактирай</button>
-                </div>
-            </div>
+                    <button @click=${() => page('/admin/employee/create')} class="btn btn-success fs-4">Създай</button>
+                    <button @click=${() => page('/admin/employee/delete')} class="btn btn-danger fs-4">Изтрий</button>
+                    <button @click=${() => page('/admin/employee/edit')} class="btn btn-secondary fs-4" > Редактирай</button >
+                </div >
+            </div >
             <div class="d-flex mt-5 flex-row flex-wrap gap-3 justify-content-end">
                 <button @click=${() => page('/waiter')} class="btn btn-secondary fs-4">Маси</button>
-                <button @click=${() => page('/bartender')} class="btn btn-secondary fs-4">Поръчки</button>
-                <button @click=${logout} class="btn btn-danger fs-4">Изход</button>
-            </div>
-        </div>
+                <button @click=${() => page('/bartender')} class="btn btn-secondary fs-4" > Поръчки</button >
+    <button @click=${logout} class="btn btn-danger fs-4" > Изход</button >
+            </div >
+        </div >
     `;
 
     render(dashboard(), container);

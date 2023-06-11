@@ -48,9 +48,6 @@ async function routesConfig(app) {
         for (let product of products)
             await recalculateProductBuyPrice(product);
 
-        // TODO Convert old productHistories to new model
-        // OR OPTIONALLY DELETE ALL PRODUCTHISTORIES
-
         //Steps to remove sellPrice from all ingredients:
 
         //1. Open MongoDB Compass
@@ -58,11 +55,36 @@ async function routesConfig(app) {
         //3. Type: use royal
         //4. Type: db.ingredients.updateMany( {}, { $unset: {"sellPrice": {$ne: undefined}}})
 
-        // Delete all buyPrice from products with ingredients
-        await Product.updateMany({ ingredients: { $ne: [] } }, { $unset: { buyPrice: 1 } });
+        // TODO Convert old productHistories to new model
+        let histories = await ProductHistory.find({});
 
+        for (let history of histories) {
+            let newPrs = []
+
+            for (let product of history.products) {
+                let prid = product.productRef;
+
+                let pr = await Product.findOne({ _id: prid });
+
+                let historyPr = {
+                    name: product.name,
+                    qty: product.qty,
+                    productRef: product.productRef,
+                    buyPrice: pr.buyPrice,
+                    sellPrice: pr.sellPrice,
+                    _id: product._id,
+                    ingredients: product.ingredients
+                };
+
+                newPrs.push(historyPr);
+            }
+
+            await ProductHistory.updateOne({ _id: history._id }, { "products": newPrs });
+        }
+        console.log("Convertion from Old DB done!");
     }
     // await convertOldDB();
+
     /* TODO DELETE THIS DEFAULTS WHEN FINALIZING APP */
     async function createDefaults() {
         async function createDefaultUsers() {
