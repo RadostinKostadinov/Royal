@@ -32,6 +32,11 @@ const restockHistorySchema = new Schema({
             immutable: true,
             required: true
         },
+        buyPrice: {
+            type: Number,
+            immutable: true,
+            required: true
+        },
         expireDate: {
             type: Date,
             immutable: true

@@ -620,7 +620,6 @@ function initializePrinter() {
 }
 
 function cbConnect(data) {
-    console.log(data);
     if (data == 'OK' || data == 'SSL_CONNECT_OK') {
         ePosDev.createDevice('local_printer', ePosDev.DEVICE_TYPE_PRINTER,
             { 'crypto': true, 'buffer': false }, cbCreateDevice_printer);

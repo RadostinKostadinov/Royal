@@ -1,6 +1,4 @@
 import { ProductHistory, RestockHistory } from "../../model/history.js";
-import { Product } from "../../model/product.js";
-import { Ingredient } from "../../model/ingredient.js";
 
 
 export function historiesRoutes(app, auth) {
@@ -32,7 +30,7 @@ export function historiesRoutes(app, auth) {
                 criteria.when.$lte = new Date(toDate).setHours(23, 59, 59);
             }
 
-            // Get all users reports from today
+            // Get all users reports
             const reports = await ProductHistory.find(criteria).sort({ when: -1 });
 
             res.json(reports);
@@ -105,7 +103,6 @@ export function historiesRoutes(app, auth) {
             }
 
             const history = await RestockHistory.find(criteria).sort({ when: -1 });
-
 
             res.json(history);
         } catch (err) {

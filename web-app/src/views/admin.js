@@ -1353,7 +1353,7 @@ export async function informationsPage() {
 
         <div class="flex-fill border border-info rounded p-2 text-info">
             <h5>Обща надценка</h5>
-            <span>${info.upsellPercentage.toFixed(2)}%</span>
+            <span>${info.upsellPercentage ? info.upsellPercentage.toFixed(2) : "0"}%</span>
         </div>
 
         <div class="flex-fill border border-info rounded p-2 text-info">
@@ -1454,7 +1454,7 @@ export async function revisionsPage() {
 `;
 
     const revisionTemplate = () => html`
-    < div class="d-flex justify-content-between p-2" >
+    <div class="d-flex justify-content-between p-2" >
         ${backBtn}
 <button @click=${() => page('/admin/createRevision')} class="btn btn-primary mt-2 fs-3" > Нова ревизия</button >
         </div >
@@ -1719,7 +1719,7 @@ export async function reportsPage() {
         discounts = 0;
 
     const reportTemplate = (report, dateString, timeString) => html`
-    < tr >
+        <tr >
             <td scope="row">${dateString}</td>
             <td scope="row">${timeString}</td>
             <td scope="row" class="text-capitalize">${report.user.name}</td>
@@ -1779,7 +1779,7 @@ export async function reportsPage() {
 `;
 
     const totalRowsH = () => html`
-    < tr class="table-success" >
+        <tr class="table-success">
             <td>Приход</td>
             <td>${fixPrice(income)}</td>
         </tr >
@@ -1901,7 +1901,23 @@ export async function consumationHistoryPage() {
         ${consumations.map(consumation => {
         const date = new Date(consumation.when);
         const dateString = `${date.getDate() > 9 ? date.getDate() : '0' + date.getDate()}.${(date.getMonth() + 1) > 9 ? date.getMonth() + 1 : '0' + (date.getMonth() + 1)}.${date.getFullYear()}`;
-        usersTotal[consumation.user.name] = usersTotal[consumation.user.name] ? usersTotal[consumation.user.name] + consumation.total : consumation.total;
+
+        consumation.totalUpsell = 0;
+        consumation.total = 0;
+        for (let product of consumation.products) {
+            consumation.totalUpsell += product.buyPrice * product.qty;
+            consumation.total += product.sellPrice * product.qty;
+
+        }
+
+        if (usersTotal[consumation.user.name]) {
+            usersTotal[consumation.user.name].total += consumation.total;
+            usersTotal[consumation.user.name].totalUpsell += consumation.totalUpsell;
+        } else {
+            usersTotal[consumation.user.name] = {}
+            usersTotal[consumation.user.name].total = consumation.total;
+            usersTotal[consumation.user.name].totalUpsell = consumation.totalUpsell;
+        }
 
         return html`
                 <tr>
@@ -1912,6 +1928,7 @@ export async function consumationHistoryPage() {
             return html`${product.name} x ${product.qty} бр.<br>`
         })}
                     </td>
+                    <td>${fixPrice(consumation.totalUpsell)}</td>
                     <td>${fixPrice(consumation.total)}</td>
                 </tr>
             `
@@ -1923,7 +1940,8 @@ export async function consumationHistoryPage() {
         ${Object.entries(usersTotal).map(user => html`
             <tr>
                 <td class="text-capitalize">${user[0]}</td>
-                <td>${fixPrice(user[1])}</td>
+                <td>${fixPrice(user[1].totalUpsell)}</td>
+                <td>${fixPrice(user[1].total)}</td>
             </tr>
         `)
         }
@@ -1989,7 +2007,8 @@ export async function consumationHistoryPage() {
                     <th scope="col">Дата</th>
                     <th scope="col">Служител</th>
                     <th scope="col">Консумация</th>
-                    <th scope="col">Общо</th>
+                    <th scope="col">Общо доставна</th>
+                    <th scope="col">Общо продажна</th>
                 </tr>
             </thead>
             <tbody></tbody>
@@ -2157,6 +2176,9 @@ export async function soldProductsPage() {
 
         await selectProductFromSearch(e);
 
+        if (!selectedProductFromSearch) // After picking date this func activates, so check if product is selected
+            return;
+
         const fromDate = $('#fromDate').val();
         const toDate = $('#toDate').val();
 
@@ -2292,6 +2314,8 @@ export async function restockHistoryPage() {
                 <td>${timeString}</td>
                 <td>${restock.product.name}</td>
                 <td>${restock.product.qty} ${unit}.</td>
+                <td>${fixPrice(restock.product.buyPrice)} лв.</td>
+                <td>${fixPrice(restock.product.buyPrice * restock.product.qty)} лв.</td>
             </tr>`
     })
         }
@@ -2332,6 +2356,8 @@ export async function restockHistoryPage() {
                     <th scope="col">Час</th>
                     <th scope="col">Продукт</th>
                     <th scope="col">Количество</th>
+                    <th scope="col">Доставна цена</th>
+                    <th scope="col">Общо</th>
                 </tr>
             </thead>
             <tbody></tbody>
@@ -2350,18 +2376,18 @@ export async function showAdminDashboard() {
     selectedProductFromSearch = undefined;
     selectedIngredientFromSearch = undefined;
     const dashboard = () => html`
-    < div class="p-3" >
+    <div class="p-3" >
             <div class="text-center mt-4">
                 <h1>Специални</h1>
                 <div class="d-inline-flex flex-row flex-wrap gap-3 justify-content-center">
                     <button @click=${() => page('/admin/products/sold')} class="btn btn-success fs-4">Продажби</button>
                     <button @click=${() => page('/admin/revisions')} class="btn btn-info fs-4">Ревизии</button>
                     <button @click=${() => page('/admin/consumationHistory')} class="btn btn-secondary fs-4" > История на консумация</button >
-    <button @click=${() => page('/admin/restockHistory')} class="btn btn-info fs-4" > История на зареждане</button >
-        <button @click=${() => page('/admin/inventory/scrapped')} class="btn btn-danger fs-4" > Бракувана стока</button >
-            <button @click=${() => page('/admin/expireProducts')} class="btn btn-primary fs-4 position-relative" >
+    <button @click=${() => page('/admin/restockHistory')} class="btn btn-info fs-4" > История на зареждане</button>
+        <button @click=${() => page('/admin/inventory/scrapped')} class="btn btn-danger fs-4" > Бракувана стока</button>
+            <button @click=${() => page('/admin/expireProducts')} class="btn btn-primary fs-4 position-relative">
                 Срок на годност
-                    < span id = "numberOfExpiredProducts" class="${numberOfExpiredProducts === 0 && 'd-none'} position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" > ${numberOfExpiredProducts}</span >
+                    <span id = "numberOfExpiredProducts" class="${numberOfExpiredProducts === 0 && 'd-none'} position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" > ${numberOfExpiredProducts}</span >
                     </button >
     <button @click=${() => page('/admin/inventory')} class="btn btn-secondary fs-4" > Склад</button >
         <button @click=${() => page('/admin/reports')} class="btn btn-secondary fs-4" > Отчети</button >

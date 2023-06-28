@@ -41,6 +41,47 @@ async function routesConfig(app) {
         res.status(404).send('404 Not Found');
     });
 
+    //TODO RUN THIS ONCE AND DELETE ON SERVER
+    async function fixRestockHistories() {
+        let histories = await RestockHistory.find({});
+
+        for (let history of histories) {
+            let newHistory = {
+                _id: history._id,
+                reviewed: history.reviewed,
+                product: {
+                    type: history.product.type,
+                    name: history.product.name,
+                    qty: history.product.qty,
+                    expireDate: history.product.expireDate,
+                },
+                when: history.when
+            };
+
+            let price;
+
+            if (history.product.type === 'ingredient') {
+                let ingredient = await Ingredient.findOne({ _id: history.product.ingredientRef });
+
+                price = ingredient.buyPrice;
+                newHistory.product.ingredientRef = history.product.ingredientRef;
+                newHistory.product.unit = history.product.unit;
+            } else {
+                let product = await Product.findOne({ _id: history.product.productRef });
+
+                price = product.buyPrice;
+                newHistory.product.productRef = history.product.productRef;
+            }
+
+            newHistory.product.buyPrice = price;
+
+            await RestockHistory.deleteOne({ _id: history._id });
+            await RestockHistory.create(newHistory);
+        }
+        console.log('Products updated.')
+    }
+    // await fixRestockHistories();
+
     async function convertOldDB() {
         // This functions was used to convert OLD DB model to NEW DB model
         // TODO DELETE THIS FUNCTION IN NEXT MERGE IF NOT OF USE
