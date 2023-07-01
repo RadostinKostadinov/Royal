@@ -2051,7 +2051,12 @@ export async function consumptionHistoryPage() {
         <table id="totalAll" class="mt-4 table fs-b table-dark text-center">
             <thead>
                 <tr class="fw-bold">
-                    <th scope="col" colspan="2">Общо за избран период</th>
+                    <th scope="col" colspan="3">Общо за избран период</th>
+                </tr>
+                <tr class="fw-bold">
+                    <th scope="col">Служител</th>
+                    <th scope="col">Доставна</th>
+                    <th scope="col">Продажна</th>
                 </tr>
             </thead>
             <tbody></tbody>
