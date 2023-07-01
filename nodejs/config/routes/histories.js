@@ -3,7 +3,7 @@ import { ProductHistory, RestockHistory } from "../../model/history.js";
 
 export function historiesRoutes(app, auth) {
 
-    app.post('/getAllConsumation', auth, async (req, res) => {
+    app.post('/getAllconsumption', auth, async (req, res) => {
         try {
             // Check if user admin
             if (req.user.role !== 'admin')

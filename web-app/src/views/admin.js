@@ -4,14 +4,34 @@ import { html, render } from 'lit/html.js';
 import $ from "jquery";
 import Sortable from 'sortablejs';
 import '../css/admin/admin.css';
-import { fixPrice, markProductAsScrapped, sortCategories, getProductById, getProductsFromCategory, getAllUsers, editCategory, deleteCategory, deleteUser, createUser, editUser, createCategory, scrapRestockProduct, createProduct, deleteProduct, editProduct, getAllCategories, getAllProducts, sortProducts, logout, getAllIngredients, createIngredient, deleteIngredient, getIngredientById, editIngredient, getAllProductsWithoutIngredients, getProductsWithoutIngredientsFromCategory, scrapRestockIngredient, getAllScrapped, getAllRestockedProducts, getAllReports, getProductsIngredients, getProductSells, getRestockHistory, getNumberOfExpiredProducts, markExpiredAsReviewed, getAllConsumation, saveRevision, getAllRevisions, getInformation } from '../api';
+import { fixPrice, markProductAsScrapped, sortCategories, getProductById, getProductsFromCategory, getAllUsers, editCategory, deleteCategory, deleteUser, createUser, editUser, createCategory, scrapRestockProduct, createProduct, deleteProduct, editProduct, getAllCategories, getAllProducts, sortProducts, logout, getAllIngredients, createIngredient, deleteIngredient, getIngredientById, editIngredient, getAllProductsWithoutIngredients, getProductsWithoutIngredientsFromCategory, scrapRestockIngredient, getAllScrapped, getAllRestockedProducts, getAllReports, getProductsIngredients, getProductSells, getRestockHistory, getNumberOfExpiredProducts, markExpiredAsReviewed, getAllconsumption, saveRevision, getAllRevisions, getInformation, getAllProductsFromIngredients } from '../api';
 
 const backBtn = html`<button @click=${() => page('/admin')} class="btn btn-secondary fs-3 mt-2 ms-2">Назад</button>`;
 let contentType; //  used in loadProducts to determine if we are loading/deleting a product or ingredient
 let selectedProductFromSearch,
-    selectedIngredientFromSearch;
+    selectedIngredientFromSearch,
+    numberOfExpiredProducts,
+    lastFoundRow;
 
-let numberOfExpiredProducts;
+async function findProduct(e) {
+    await selectProductFromSearch(e);
+
+    // Remove the coloring class from the lastFoundRow
+    if (lastFoundRow)
+        lastFoundRow.removeClass('table-success')
+
+
+    // Find the row that contains this product
+    lastFoundRow = $(`table tbody tr td:contains('${selectedProductFromSearch.nameWithoutUnit}')`).closest('tr');
+
+    // Add coloring class
+    lastFoundRow.addClass('table-success');
+
+    // Scroll to the row
+    lastFoundRow.get(0).scrollIntoView();
+    selectedProductFromSearch = undefined;
+
+}
 
 async function loadProducts(e, showProductsFromIngredients) {
     selectedProductFromSearch = undefined;
@@ -1343,8 +1363,8 @@ export async function informationsPage() {
 
         <div class="flex-fill border border-info rounded p-2 text-info">
             <h5>Оборот на доставни цени</h5>
-            <span>${info.grossIncomeDelivery.toFixed(2)} лв.</span >
-        </div >
+            <span>${info.grossIncomeDelivery.toFixed(2)} лв.</span>
+        </div>
 
         <div class="flex-fill border border-info rounded p-2 text-info">
             <h5>Печалба</h5>
@@ -1454,15 +1474,15 @@ export async function revisionsPage() {
 `;
 
     const revisionTemplate = () => html`
-    <div class="d-flex justify-content-between p-2" >
+    <div class="d-flex justify-content-between p-2">
         ${backBtn}
-<button @click=${() => page('/admin/createRevision')} class="btn btn-primary mt-2 fs-3" > Нова ревизия</button >
-        </div >
+<button @click=${() => page('/admin/createRevision')} class="btn btn-primary mt-2 fs-3"> Нова ревизия</button>
+        </div>
 
-    <select @change=${selectedRevision} class="form-control mt-2fs-4" >
+    <select @change=${selectedRevision} class="form-control mt-2fs-4">
         <option selected disabled>Избери</option>
             ${allRevisions.map((revision, i) => html`<option value=${i}>${revision.when}</option>`)}
-        </select >
+        </select>
 
     <table class="table table-striped table-dark table-hover text-center mt-2">
         <thead>
@@ -1553,7 +1573,7 @@ export async function createRevisionPage() {
                 </tbody>
             </table>
             <input class="btn w-auto btn-primary fs-3 mt-2 mb-2 ms-2" type="submit" value="Запази" />
-        </form >
+        </form>
     `;
 
     render(createRevisionTemplate(), container);
@@ -1564,7 +1584,6 @@ export async function inventoryPage() {
     const products = await getAllProductsWithoutIngredients();
     const ingredients = await getAllIngredients();
     const productsAndIngredients = ingredients.concat(products);
-    let lastFoundRow;
 
     let totals = {
         buyPrice: 0,
@@ -1643,23 +1662,6 @@ export async function inventoryPage() {
         render(productRows(productsToShow), document.querySelector('tbody'));
     }
 
-    async function findProduct(e) {
-        await selectProductFromSearch(e);
-
-        // Remove the coloring class from the lastFoundRow
-        if (lastFoundRow)
-            lastFoundRow.removeClass('table-success')
-
-        // Find the row that contains this product
-        lastFoundRow = $(`table tbody tr td: contains(${selectedProductFromSearch.nameWithoutUnit})`).closest('tr');
-
-        // Add coloring class
-        lastFoundRow.addClass('table-success');
-
-        // Scroll to the row
-        lastFoundRow.get(0).scrollIntoView();
-    }
-
     const inventoryTemplate = () => html`
         ${backBtn}
 
@@ -1684,7 +1686,7 @@ export async function inventoryPage() {
                 <option value="ingredients">Съставки</option>
                 ${categories.map((category) => html`<option value=${category._id}>${category.name}</option>`)}
             </select>
-        </div >
+        </div>
 
     <table class="table table-striped table-dark table-hover text-center">
         <thead>
@@ -1711,6 +1713,60 @@ export async function inventoryPage() {
     render(productRows(productsAndIngredients), document.querySelector('tbody'));
 }
 
+export async function buyPricesPage() {
+    let allProducts = await getAllProductsFromIngredients();
+    // If we want all product and ingredients to show up here instead, uncomment this:
+    /* let allProducts = await getAllProducts();
+    let allIngredients = await getAllIngredients();
+    allProducts = allProducts.concat(allIngredients); */
+
+    const buyPricesTemplate = () => html`
+        ${backBtn}
+
+        <div class="mb-3 p-3">
+                <label for="productSearch" class="form-label">Търси продукт</label>
+                <input @change=${findProduct} class="form-control fs-4" type="text" list="allproducts" name="productSearch" id="productSearch">
+                <datalist id="allproducts">
+                    ${allProducts.map(el => {
+        return html`
+                    <option _id=${el._id} value=${el.name} />`
+    })}
+                </datalist>
+        </div>
+
+        <table class="table table-striped table-dark table-hover text-center">
+            <thead>
+                <tr>
+                    <th scope="col">Тип</th>
+                    <th scope="col">Артикул</th>
+                    <th scope="col">Доставна цена</th>
+                </tr>
+            </thead>
+            <tbody>
+                ${allProducts.map(pr => {
+        let type;
+        if (pr.hasOwnProperty('category') && pr.ingredients.length) {
+            type = 'Продукт от съставки'
+        } else if (pr.hasOwnProperty('category')) {
+            type = 'Продукт'
+        } else {
+            type = 'Съставка'
+        }
+
+        return html`
+                    <tr>
+                        <td>${type}</td>
+                        <td>${pr.name}</td>
+                        <td>${fixPrice(pr.buyPrice)}</td>
+                    </tr>`
+    })}
+            </tbody>
+        </table>
+`;
+
+    render(buyPricesTemplate(), container);
+}
+
 export async function reportsPage() {
     let total = 0,
         income = 0,
@@ -1719,7 +1775,7 @@ export async function reportsPage() {
         discounts = 0;
 
     const reportTemplate = (report, dateString, timeString) => html`
-        <tr >
+        <tr>
             <td scope="row">${dateString}</td>
             <td scope="row">${timeString}</td>
             <td scope="row" class="text-capitalize">${report.user.name}</td>
@@ -1728,7 +1784,7 @@ export async function reportsPage() {
             <td scope="row">${fixPrice(report.consumed)}</td>
             <td scope="row">${report.discounts ? fixPrice(report.discounts) : '0.00'}</td>
             <td scope="row">${fixPrice(report.total)}</td>
-        </tr >
+        </tr>
     `;
 
     const reportsRows = (date) => html`
@@ -1782,7 +1838,7 @@ export async function reportsPage() {
         <tr class="table-success">
             <td>Приход</td>
             <td>${fixPrice(income)}</td>
-        </tr >
+        </tr>
         <tr class="table-danger">
             <td>Брак</td>
             <td>${fixPrice(scrapped)}</td>
@@ -1893,43 +1949,43 @@ export async function reportsPage() {
     loadReports();
 }
 
-export async function consumationHistoryPage() {
+export async function consumptionHistoryPage() {
     const users = await getAllUsers();
     let usersTotal = {};
 
-    const rowsTemplate = (consumations) => html`
-        ${consumations.map(consumation => {
-        const date = new Date(consumation.when);
+    const rowsTemplate = (consumptions) => html`
+        ${consumptions.map(consumption => {
+        const date = new Date(consumption.when);
         const dateString = `${date.getDate() > 9 ? date.getDate() : '0' + date.getDate()}.${(date.getMonth() + 1) > 9 ? date.getMonth() + 1 : '0' + (date.getMonth() + 1)}.${date.getFullYear()}`;
 
-        consumation.totalUpsell = 0;
-        consumation.total = 0;
-        for (let product of consumation.products) {
-            consumation.totalUpsell += product.buyPrice * product.qty;
-            consumation.total += product.sellPrice * product.qty;
+        consumption.totalUpsell = 0;
+        consumption.total = 0;
+        for (let product of consumption.products) {
+            consumption.totalUpsell += product.buyPrice * product.qty;
+            consumption.total += product.sellPrice * product.qty;
 
         }
 
-        if (usersTotal[consumation.user.name]) {
-            usersTotal[consumation.user.name].total += consumation.total;
-            usersTotal[consumation.user.name].totalUpsell += consumation.totalUpsell;
+        if (usersTotal[consumption.user.name]) {
+            usersTotal[consumption.user.name].total += consumption.total;
+            usersTotal[consumption.user.name].totalUpsell += consumption.totalUpsell;
         } else {
-            usersTotal[consumation.user.name] = {}
-            usersTotal[consumation.user.name].total = consumation.total;
-            usersTotal[consumation.user.name].totalUpsell = consumation.totalUpsell;
+            usersTotal[consumption.user.name] = {}
+            usersTotal[consumption.user.name].total = consumption.total;
+            usersTotal[consumption.user.name].totalUpsell = consumption.totalUpsell;
         }
 
         return html`
                 <tr>
                     <td>${dateString}</td>
-                    <td class="text-capitalize">${consumation.user.name}</td>
+                    <td class="text-capitalize">${consumption.user.name}</td>
                     <td>
-                        ${Object.values(consumation.products).map(product => {
+                        ${Object.values(consumption.products).map(product => {
             return html`${product.name} x ${product.qty} бр.<br>`
         })}
                     </td>
-                    <td>${fixPrice(consumation.totalUpsell)}</td>
-                    <td>${fixPrice(consumation.total)}</td>
+                    <td>${fixPrice(consumption.totalUpsell)}</td>
+                    <td>${fixPrice(consumption.total)}</td>
                 </tr>
             `
     })
@@ -1947,19 +2003,19 @@ export async function consumationHistoryPage() {
         }
 `;
 
-    async function loadConsumation() {
+    async function loadconsumption() {
         usersTotal = {};
         const fromDate = $('#fromDate').val();
         const toDate = $('#toDate').val();
         const user = $('#user').val();
 
-        const res = await getAllConsumation(fromDate, toDate, user);
+        const res = await getAllconsumption(fromDate, toDate, user);
 
         if (res.status === 200) {
-            const consumations = res.data;
+            const consumptions = res.data;
 
-            // Render consumation
-            render(rowsTemplate(consumations), document.querySelector('#selectedConsumations tbody'));
+            // Render consumption
+            render(rowsTemplate(consumptions), document.querySelector('#selectedconsumptions tbody'));
             render(allTotals(), document.querySelector('#totalAll tbody'));
         } else {
             console.error(res);
@@ -1967,30 +2023,30 @@ export async function consumationHistoryPage() {
         }
     }
 
-    const consumationTemplate = () => html`
+    const consumptionTemplate = () => html`
         ${backBtn}
         
         <div class="d-flex w-100 gap-3 p-3 fs-4 mb-3">
             <div class="w-50">
                 <label for="fromDate" class="form-label">От</label>
-                <input @change=${loadConsumation} name="fromDate" class="form-control fs-4" id="fromDate" type="date" />
+                <input @change=${loadconsumption} name="fromDate" class="form-control fs-4" id="fromDate" type="date" />
             </div>
         
             <div class="w-50">
                 <label for="toDate" class="form-label">До</label>
-                <input @change=${loadConsumation} name="toDate" class="form-control fs-4" id="toDate" type="date" />
+                <input @change=${loadconsumption} name="toDate" class="form-control fs-4" id="toDate" type="date" />
             </div>
         </div>
 
         <div class="p-3 fs-4 mb-3">
             <label for="user" class="form-label">Служител</label>
-            <select @change=${loadConsumation} class="form-control fs-4 text-capitalize" name="user" id="user">
+            <select @change=${loadconsumption} class="form-control fs-4 text-capitalize" name="user" id="user">
                 <option value="" selected>Всички</option>
                 ${users.map(user => html`
                     <option value="${user._id}">${user.name}</option>
                 `)}
             </select>
-        </div >
+        </div>
 
         <table id="totalAll" class="mt-4 table fs-b table-dark text-center">
             <thead>
@@ -2001,7 +2057,7 @@ export async function consumationHistoryPage() {
             <tbody></tbody>
         </table>
 
-        <table id="selectedConsumations" class="mt-4 table table-striped table-dark table-hover text-center">
+        <table id="selectedconsumptions" class="mt-4 table table-striped table-dark table-hover text-center">
             <thead>
                 <tr>
                     <th scope="col">Дата</th>
@@ -2015,8 +2071,8 @@ export async function consumationHistoryPage() {
         </table>
 `;
 
-    render(consumationTemplate(), container);
-    loadConsumation();
+    render(consumptionTemplate(), container);
+    loadconsumption();
 }
 
 export async function scrappedPage() {
@@ -2376,60 +2432,56 @@ export async function showAdminDashboard() {
     selectedProductFromSearch = undefined;
     selectedIngredientFromSearch = undefined;
     const dashboard = () => html`
-    <div class="p-3" >
+    <div class="p-3">
             <div class="text-center mt-4">
                 <h1>Специални</h1>
                 <div class="d-inline-flex flex-row flex-wrap gap-3 justify-content-center">
                     <button @click=${() => page('/admin/products/sold')} class="btn btn-success fs-4">Продажби</button>
                     <button @click=${() => page('/admin/revisions')} class="btn btn-info fs-4">Ревизии</button>
-                    <button @click=${() => page('/admin/consumationHistory')} class="btn btn-secondary fs-4" > История на консумация</button >
-    <button @click=${() => page('/admin/restockHistory')} class="btn btn-info fs-4" > История на зареждане</button>
-        <button @click=${() => page('/admin/inventory/scrapped')} class="btn btn-danger fs-4" > Бракувана стока</button>
-            <button @click=${() => page('/admin/expireProducts')} class="btn btn-primary fs-4 position-relative">
-                Срок на годност
-                    <span id = "numberOfExpiredProducts" class="${numberOfExpiredProducts === 0 && 'd-none'} position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" > ${numberOfExpiredProducts}</span >
-                    </button >
-    <button @click=${() => page('/admin/inventory')} class="btn btn-secondary fs-4" > Склад</button >
-        <button @click=${() => page('/admin/reports')} class="btn btn-secondary fs-4" > Отчети</button >
-            <button @click=${() => page('/admin/informations')} class="btn btn-secondary fs-4" > Обобщена информация</button >
-                </div >
-            </div >
+                    <button @click=${() => page('/admin/consumptionHistory')} class="btn btn-secondary fs-4">История на консумация</button>
+                    <button @click=${() => page('/admin/restockHistory')} class="btn btn-info fs-4">История на зареждане</button>
+                    <button @click=${() => page('/admin/inventory/scrapped')} class="btn btn-danger fs-4">Бракувана стока</button>
+                    <button @click=${() => page('/admin/expireProducts')} class="btn btn-primary fs-4 position-relative">Срок на годност<span id = "numberOfExpiredProducts" class="${numberOfExpiredProducts === 0 && 'd-none'} position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"> ${numberOfExpiredProducts}</span></button>
+                    <button @click=${() => page('/admin/inventory/buyPrices')} class="btn btn-info fs-4">Доставни цени</button>
+                    <button @click=${() => page('/admin/inventory')} class="btn btn-secondary fs-4">Склад</button>
+                    <button @click=${() => page('/admin/reports')} class="btn btn-secondary fs-4">Отчети</button>
+                    <button @click=${() => page('/admin/informations')} class="btn btn-secondary fs-4">Обобщена информация</button>
+                </div>
+            </div>
             <div class="text-center mt-4">
                 <h1>Стока</h1>
                 <div class="d-inline-flex flex-row flex-wrap gap-3 justify-content-center">
                     <button @click=${() => page('/admin/product/restock')} class="btn btn-primary fs-4">Зареди</button>
                     <button @click=${() => page('/admin/product/scrap')} class="btn btn-danger fs-4">Бракувай</button>
-                    <div class="d-inline-flex flex-row flex-wrap gap-3 justify-content-center">
-                        <button @click=${() => page('/admin/product/create')} class="btn btn-success fs-4">Създай</button>
-                        <button @click=${() => page('/admin/product/delete')} class="btn btn-danger fs-4" > Изтрий</button >
-    <button @click=${() => page('/admin/product/edit')} class="btn btn-secondary fs-4" > Редактирай</button >
-        <button @click=${() => page('/admin/product/reorder')} class="btn btn-secondary fs-4" > Подреди</button >
-                    </div >
-                </div >
-            </div >
+                    <button @click=${() => page('/admin/product/create')} class="btn btn-success fs-4">Създай</button>
+                    <button @click=${() => page('/admin/product/delete')} class="btn btn-danger fs-4">Изтрий</button>
+                    <button @click=${() => page('/admin/product/edit')} class="btn btn-secondary fs-4">Редактирай</button>
+                    <button @click=${() => page('/admin/product/reorder')} class="btn btn-secondary fs-4">Подреди</button>
+                </div>
+            </div>
             <div class="text-center mt-4">
                 <h1>Категории</h1>
                 <div class="d-inline-flex flex-row flex-wrap gap-3 justify-content-center">
                     <button @click=${() => page('/admin/category/create')} class="btn btn-success fs-4">Създай</button>
                     <button @click=${() => page('/admin/category/delete')} class="btn btn-danger fs-4">Изтрий</button>
-                    <button @click=${() => page('/admin/category/edit')} class="btn btn-secondary fs-4" > Редактирай</button >
-    <button @click=${() => page('/admin/category/reorder')} class="btn btn-secondary fs-4" > Подреди</button >
-                </div >
-            </div >
+                    <button @click=${() => page('/admin/category/edit')} class="btn btn-secondary fs-4">Редактирай</button>
+                    <button @click=${() => page('/admin/category/reorder')} class="btn btn-secondary fs-4">Подреди</button>
+                </div>
+            </div>
             <div class="text-center mt-4">
                 <h1>Служители</h1>
                 <div class="d-inline-flex flex-row flex-wrap gap-3 justify-content-center">
                     <button @click=${() => page('/admin/employee/create')} class="btn btn-success fs-4">Създай</button>
                     <button @click=${() => page('/admin/employee/delete')} class="btn btn-danger fs-4">Изтрий</button>
-                    <button @click=${() => page('/admin/employee/edit')} class="btn btn-secondary fs-4" > Редактирай</button >
-                </div >
-            </div >
+                    <button @click=${() => page('/admin/employee/edit')} class="btn btn-secondary fs-4">Редактирай</button>
+                </div>
+            </div>
             <div class="d-flex mt-5 flex-row flex-wrap gap-3 justify-content-end">
                 <button @click=${() => page('/waiter')} class="btn btn-secondary fs-4">Маси</button>
-                <button @click=${() => page('/bartender')} class="btn btn-secondary fs-4" > Поръчки</button >
-    <button @click=${logout} class="btn btn-danger fs-4" > Изход</button >
-            </div >
-        </div >
+                <button @click=${() => page('/bartender')} class="btn btn-secondary fs-4">Поръчки</button>
+                <button @click=${logout} class="btn btn-danger fs-4">Изход</button>
+            </div>
+        </div>
     `;
 
     render(dashboard(), container);

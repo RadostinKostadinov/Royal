@@ -376,6 +376,16 @@ export function productsRoutes(app, auth) {
         }
     });
 
+    app.get('/getAllProductsFromIngredients', auth, async (req, res) => {
+        try {
+            const products = await Product.find({ $where: "this.ingredients.length > 0" }).sort({ position: 1 });
+            res.json(products);
+        } catch (err) {
+            console.error(err);
+            res.status(500).send(err);
+        }
+    });
+
     app.get('/getAllProducts', auth, async (req, res) => {
         try {
             const products = await Product.find().sort({ position: 1 });

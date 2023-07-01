@@ -8,7 +8,7 @@ import { updateReport } from "./reports.js";
 
 export async function convertPersonalBillToHistory() {
     try {
-        // Find all consumation bills from today
+        // Find all consumption bills from today
         let date = new Date();
 
         // Check if date is between 00:00 and 04:00 hours
@@ -21,7 +21,7 @@ export async function convertPersonalBillToHistory() {
             date.setHours(4);
         }
 
-        const consumationBills = await Bill.find({
+        const consumptionBills = await Bill.find({
             when: {
                 $gte: date
             },
@@ -30,7 +30,7 @@ export async function convertPersonalBillToHistory() {
             }
         }).populate('products.product');
 
-        for (let bill of consumationBills) {
+        for (let bill of consumptionBills) {
             let historyProducts = [];
             let historyTotal = 0;
             const user = await User.findById(bill.user);
@@ -90,7 +90,7 @@ export async function convertPersonalBillToHistory() {
             await Bill.deleteOne({ _id: bill._id });
         }
 
-        console.log('All consumation bills are turned into history!');
+        console.log('All consumption bills are turned into history!');
     } catch (err) {
         console.error(err);
     }
@@ -420,17 +420,17 @@ export function billsRoutes(app, auth) {
 
                     // Recalculate totals
                     bill.total = 0;
-                    if (table) // if normal bill (not consumation)
+                    if (table) // if normal bill (not consumption)
                         table.total = 0;
 
                     for (let product of bill.products) {
                         bill.total += product.product.sellPrice * product.qty;
-                        if (table) // if normal bill (not consumation)
+                        if (table) // if normal bill (not consumption)
                             table.total += product.product.sellPrice * product.qty;
                     }
 
                     await bill.save();
-                    if (table) // if normal bill (not consumation)
+                    if (table) // if normal bill (not consumption)
                         await table.save();
 
                     return res.json(bill); // Return bill to rerender
@@ -619,7 +619,7 @@ export function billsRoutes(app, auth) {
 
     app.get('/generatePersonalBill', auth, async (req, res) => {
         try {
-            // Check if user already has consumation bill
+            // Check if user already has consumption bill
             let bill = await Bill.findOne({ user: req.user._id });
 
             if (bill)

@@ -3,7 +3,7 @@ import mongoose from "mongoose";
 const { Schema } = mongoose;
 
 const billSchema = new Schema({
-    user: { // If personal bill (for consumation)
+    user: { // If personal bill (for consumption)
         type: Schema.Types.ObjectId,
         ref: 'User',
     },

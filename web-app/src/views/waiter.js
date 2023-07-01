@@ -71,7 +71,7 @@ export async function waiterDashboardPage() {
 
         let month = date.getMonth() + 1;
         if (month < 10)
-            month = '0'+month;
+            month = '0' + month;
 
         return `${day}.${month}.${date.getFullYear()}`
     }
@@ -79,7 +79,7 @@ export async function waiterDashboardPage() {
     function getTime() {
         let hours = date.getHours();
         if (hours < 10)
-            hours = '0'+hours;
+            hours = '0' + hours;
 
         let minutes = date.getMinutes();
         if (minutes < 10)
@@ -177,7 +177,7 @@ export async function waiterDashboardPage() {
                         <button class=${lastRenderedLocation === 'middle' ? 'active' : ''} id="middleTablesBtn" @click=${(clickedBtn) => renderTablesView(clickedBtn, 'middle')}>Градина</button>
                     </div>
                     <div class="d-flex flex-column text-center gap-3 w-100">
-                        <button @click=${() => page('/consumation/')}>Консум.</button>
+                        <button @click=${() => page('/consumption/')}>Консум.</button>
                         <button id="reportButton" @click=${getTdsReport} data-bs-toggle="modal" data-bs-target="#reportModal">Брак</button>
                         <button @click=${logout}>Изход</button>
                     </div>
@@ -198,29 +198,29 @@ export async function waiterDashboardPage() {
     const gridTemplate = (gridId, elements) => html`
         <div id=${gridId} class="tablesGrid">
             ${elements.map((element) => {
-                const taken = element.total > 0 ? 'taken' : '';
-                const allClasses = `${element.type} ${element.class} ${taken}`;
-                //element.type = [table, text, wall]
-                //element.class = 1,2,3... || v1,v2,v3... || n1,n2,n3...
-                //element.name = Маса 1, Маса В1, Маса Н1..
-                //element.total = undefined (if != table) || number (ex. 12.50) (if == table)
-                if (element.type === 'wall')
-                    return html`
+        const taken = element.total > 0 ? 'taken' : '';
+        const allClasses = `${element.type} ${element.class} ${taken}`;
+        //element.type = [table, text, wall]
+        //element.class = 1,2,3... || v1,v2,v3... || n1,n2,n3...
+        //element.name = Маса 1, Маса В1, Маса Н1..
+        //element.total = undefined (if != table) || number (ex. 12.50) (if == table)
+        if (element.type === 'wall')
+            return html`
                         <div class=${allClasses}></div>
                     `;
-                    
-                if (element.type === 'text')
-                    return html`
+
+        if (element.type === 'text')
+            return html`
                         <div class=${allClasses}>${element.name}</div>
                     `;
 
-                return html`
+        return html`
                     <!-- <button @click=${() => page(`/waiter/table/${element.location}/${element._id}`)} class=${allClasses} _id=${element._id}> -->
                     <button @click=${() => page(`/waiter/table/${element._id}`)} class=${allClasses} _id=${element._id}>
                         <span class="name pe-none">${element.name}</span>
                         <span class="total pe-none">${element.total ? (element.total).toFixed(2) : ''}</span>
                     </button>`;
-            })}
+    })}
         </div>
     `;
 
@@ -246,7 +246,7 @@ export async function waiterDashboardPage() {
         }
 
         elements = res.data; // elements includes tables, walls, bar ..
-        
+
         lastRenderedLocation = viewName;
         render(dashboardTemplate(gridTemplate(lastRenderedLocation, elements)), container);
     }
@@ -265,7 +265,7 @@ const productsInBill = (bill, btnFunc) => html`
             </thead>
             <tbody>
                 ${bill.products.map((product) => {
-                    return html`
+    return html`
                     <tr>
                         <td @click=${() => btnFunc(product.product._id)} width="7%" class="remove bi bi-x-circle text-danger cursor-pointer"></td>
                         <td width="48%">${product.product.name}</td>
@@ -273,7 +273,7 @@ const productsInBill = (bill, btnFunc) => html`
                         <td width="15%">${product.product.sellPrice.toFixed(2)}</td>
                         <td width="15%">${(product.product.sellPrice * product.qty).toFixed(2)}</td>
                     </tr>`
-                })}
+})}
             </tbody>
             <tfoot class="text-uppercase">
                 <tr>
@@ -320,7 +320,7 @@ export async function tableControlsPage(ctx) {
         // Check if on same TABLE and BILL
         if (bill._id !== selectedBillId)
             return;
-        
+
         renderProductsInBill(bill); // if yes, rerender products in that bill
     });
 
@@ -342,13 +342,13 @@ export async function tableControlsPage(ctx) {
         if (addedProducts.length) {
             const res = await addProductsToHistory(addedProducts, selectedBillId);
             addedProducts = []; // Reset
-    
+
             if (res.status !== 200) {
                 console.error(res);
                 alert('Възникна грешка!');
             }
         }
-        
+
         if (Object.keys(newOrderProducts).length) {
             await createNewOrder(Object.values(newOrderProducts), ctx.params.tableId);
             socket.emit('order:change'); // notify bartender of new order
@@ -362,7 +362,7 @@ export async function tableControlsPage(ctx) {
 
         const _id = $(e.target).attr('_id');
         const action = 'added'; // used in addToHistory to make different arrays based on this value (added at once, removed at once, etc.)
-        
+
         // Add to history array
         addedProducts.push({ _id, selectedX, action });
 
@@ -372,14 +372,14 @@ export async function tableControlsPage(ctx) {
             newOrderProducts[_id].qty += selectedX;
         else
             newOrderProducts[_id] = { _id, qty: selectedX };
-        
+
 
         const res = await addProductToBill(_id, selectedX, selectedBillId);
 
         if (res.status === 200) {
             // get bill and render all products inside it
             billData = res.data;
-            
+
             markBillAsActiveInactive(billData);
             socket.emit('billChanged', billData); // send new bill to server to rerender for anyone in same view
             renderProductsInBill(billData);
@@ -403,13 +403,13 @@ export async function tableControlsPage(ctx) {
         else {
             // if button is clicked
             let btn = $(e.target);
-            
+
             // find and remove old category active class
             $('#tableControls .categories button.active').removeClass('active');
 
             // add active class
             btn.addClass('active');
-            
+
             _id = btn.attr('_id');
         }
 
@@ -419,9 +419,9 @@ export async function tableControlsPage(ctx) {
 
         if (res.status === 200) {
             const products = res.data;
-            
+
             render(productsTemplate(products, addToBill), document.querySelector('#tableControls .products'))
-        
+
             // Check if category has addons for products
             const addonsRes = await getAddonsForCategory(_id);
 
@@ -446,7 +446,7 @@ export async function tableControlsPage(ctx) {
         clearTimeout(awayTimeout);
         if (addedProducts.length) // If we have any products added to one bill, and we change the bill -> send products to server
             await addToHistoryAndCreateNewOrder();
-        
+
         const selectedBillEl = $(e.target);
         selectedBillId = selectedBillEl.attr('_id'); // set new bill as selected
 
@@ -475,10 +475,10 @@ export async function tableControlsPage(ctx) {
             selectedX = 1;
         } else {
             selectedX = newX; // set new X as selected
-    
+
             // find and remove "active" from old X
             $('#tableControls .xButtons button.active').removeClass('active');
-    
+
             // add active class to new X
             selectedXEl.addClass('active');
         }
@@ -492,7 +492,7 @@ export async function tableControlsPage(ctx) {
             // 201 == created, 200 == already created (no problem)
             const bills = res.data;
             selectedBillId = bills[0]._id; // set first bill as selected automatically
-                        
+
             await renderProductsInBill();// load its products
             render(billsTemplate(bills), document.querySelector('#tableControls .bills'));
             getLastPaidOnBill();
@@ -515,7 +515,7 @@ export async function tableControlsPage(ctx) {
 
         if (res.status === 200) {
             billData = res.data;
-            
+
             render(productsInBill(billData, rmvOneFromBill), document.querySelector('#tableControls .addedProducts'));
         } else {
             console.error(res);
@@ -527,7 +527,7 @@ export async function tableControlsPage(ctx) {
         awayTimeout = setTimeout(addToHistoryAndCreateNewOrder, awayTime);
 
         const action = 'removed'; // used in addToHistory to make different arrays based on this value (added at once, removed at once, etc.)
-        
+
         // Add to history array
         addedProducts.push({ _id, selectedX, action });
 
@@ -539,10 +539,10 @@ export async function tableControlsPage(ctx) {
             if (newOrderProducts[_id].qty === 0)
                 delete newOrderProducts[_id];
         }
-        
+
         // Remove 1 qty of this product from this bill
         const res = await removeOneFromBill(_id, selectedBillId);
-        
+
         if (res.status === 200) {
             billData = res.data;
 
@@ -557,7 +557,7 @@ export async function tableControlsPage(ctx) {
 
     async function getLastPaidOnBill() {
         const res = await getLastPaidBillByTableId(selectedTable, selectedBillId);
-        
+
         if (res.data) {
             render('Последна', document.querySelector('table tfoot .lastPaidText'))
             render(res.data.total.toFixed(2), document.querySelector('table tfoot .lastPaidPrice'))
@@ -581,7 +581,7 @@ export async function tableControlsPage(ctx) {
         if (res.status === 200) {
             billData = res.data.billData;
             socket.emit('billChanged', billData); // send new bill to server to rerender for anyone in same view
-            
+
             // If we want to print the bill
             if (toPrinter)
                 printBill(res.data.history, res.data.tableName);
@@ -591,18 +591,18 @@ export async function tableControlsPage(ctx) {
             console.error(res);
             alert('Възникна грешка!');
         }
-        
-    } 
+
+    }
 
     // i==0 (if first bill, mark it as "active")
     const billsTemplate = (bills) => html`
         ${bills.map((bill, i) => {
-            let classes = [
-                i === 0 ? 'active' : '',
-                bill.total > 0 ? 'hasProducts' : ''];
+        let classes = [
+            i === 0 ? 'active' : '',
+            bill.total > 0 ? 'hasProducts' : ''];
 
-            return html`<button @click=${changeSelectedBill} class=${classes.join(' ')} _id=${bill._id}>${i+1}</button>`
-        }) }
+        return html`<button @click=${changeSelectedBill} class=${classes.join(' ')} _id=${bill._id}>${i + 1}</button>`
+    })}
     `;
 
     async function goBack() {
@@ -674,7 +674,7 @@ export async function tableControlsPage(ctx) {
     render(controlsTemplate(), container);
 }
 
-export async function consumationPage(ctx) {
+export async function consumptionPage(ctx) {
     // Stop listening on old sockets
     stopAllSockets();
 
@@ -683,7 +683,7 @@ export async function consumationPage(ctx) {
         // Check if on same TABLE and BILL
         if (bill._id !== selectedBillId)
             return;
-        
+
         renderProductsInBill(bill); // if yes, rerender products in that bill
     });
 
@@ -698,7 +698,7 @@ export async function consumationPage(ctx) {
         if (addedProducts.length) {
             const res = await addProductsToHistory(addedProducts, selectedBillId);
             addedProducts = []; // Reset
-    
+
             if (res.status !== 200) {
                 console.error(res);
                 alert('Възникна грешка!');
@@ -709,7 +709,7 @@ export async function consumationPage(ctx) {
     async function addToBill(e) {
         const _id = $(e.target).attr('_id');
         const action = 'added'; // used in addToHistory to make different arrays based on this value (added at once, removed at once, etc.)
-        
+
         // Add to history array
         addedProducts.push({ _id, selectedX, action });
 
@@ -718,7 +718,7 @@ export async function consumationPage(ctx) {
         if (res.status === 200) {
             // get bill and render all products inside it
             billData = res.data;
-            
+
             socket.emit('billChanged', billData); // send new bill to server to rerender for anyone in same view
             renderProductsInBill(billData);
         } else {
@@ -740,13 +740,13 @@ export async function consumationPage(ctx) {
         else {
             // if button is clicked
             let btn = $(e.target);
-            
+
             // find and remove old category active class
             $('#tableControls .categories button.active').removeClass('active');
 
             // add active class
             btn.addClass('active');
-            
+
             _id = btn.attr('_id');
         }
 
@@ -756,9 +756,9 @@ export async function consumationPage(ctx) {
 
         if (res.status === 200) {
             const products = res.data;
-            
+
             render(productsTemplate(products, addToBill), document.querySelector('#tableControls .products'))
-        
+
             // Check if category has addons for products
             const addonsRes = await getAddonsForCategory(_id);
 
@@ -794,10 +794,10 @@ export async function consumationPage(ctx) {
             selectedX = 1;
         } else {
             selectedX = newX; // set new X as selected
-    
+
             // find and remove "active" from old X
             $('#tableControls .xButtons button.active').removeClass('active');
-    
+
             // add active class to new X
             selectedXEl.addClass('active');
         }
@@ -810,7 +810,7 @@ export async function consumationPage(ctx) {
             // 201 == created, 200 == already created (no problem)
             const bill = res.data;
             selectedBillId = bill._id; // set first bill as selected automatically
-                        
+
             await renderProductsInBill();// load its products
         } else {
             console.error(res);
@@ -831,7 +831,7 @@ export async function consumationPage(ctx) {
 
         if (res.status === 200) {
             billData = res.data;
-            
+
             render(productsInBill(billData, rmvOneFromBill), document.querySelector('#tableControls .addedProducts'));
         } else {
             console.error(res);
@@ -841,13 +841,13 @@ export async function consumationPage(ctx) {
 
     async function rmvOneFromBill(_id) {
         const action = 'removed'; // used in addToHistory to make different arrays based on this value (added at once, removed at once, etc.)
-        
+
         // Add to history array
         addedProducts.push({ _id, selectedX, action });
-        
+
         // Remove 1 qty of this product from this bill
         const res = await removeOneFromBill(_id, selectedBillId);
-        
+
         if (res.status === 200) {
             billData = res.data;
 
@@ -901,7 +901,7 @@ export async function consumationPage(ctx) {
 export async function moveProductsPage(ctx) {
     // Stop listening on old sockets
     stopAllSockets();
-    
+
     const selectedTable = ctx.params.tableId;
     let bill = (await getBillById(ctx.params.billId)).data;
     let productsToMove = {
@@ -979,7 +979,7 @@ export async function moveProductsPage(ctx) {
 
         productsToMove.total += product.product.sellPrice;
 
-        socket.emit('addToMove/returnToBill', { bill, productsToMove});
+        socket.emit('addToMove/returnToBill', { bill, productsToMove });
 
         // Rerender both bill and toPay
         rerender(bill, productsToMove);
@@ -1029,14 +1029,14 @@ export async function moveProductsPage(ctx) {
             </thead>
             <tbody>
                 ${bill.products.map((product, index) => {
-                    return html`
+        return html`
                     <tr>
                         <td width="50%">${product.product.name}</td>
                         <td width="15%">${product.qty}</td>
                         <td width="15%">${(product.product.sellPrice * product.qty).toFixed(2)}</td>
                         <td @click=${() => addToMove(index, product)} width="20%" class="text-uppercase remove cursor-pointer">Премести</td>
                     </tr>`
-                })}
+    })}
             </tbody>
         </table>
     `;
@@ -1053,14 +1053,14 @@ export async function moveProductsPage(ctx) {
             </thead>
             <tbody>
                 ${bill.products.map((product, index) => {
-                    return html`
+        return html`
                     <tr>
                         <td width="50%">${product.product.name}</td>
                         <td width="15%">${product.qty}</td>
                         <td width="15%">${(product.product.sellPrice * product.qty).toFixed(2)}</td>
                         <td @click=${() => returnToBill(index, product)} width="20%" class="cursor-pointer text-uppercase back">Върни</td>
                     </tr>`
-                })}
+    })}
             </tbody>
         </table>
     `;
@@ -1105,35 +1105,35 @@ export async function moveProductsPage(ctx) {
         }
 
         elements = res.data; // elements includes tables, walls, bar ..
-        
+
         render(gridTemplate(viewname, elements), document.getElementById('modal-tables'));
     }
 
     const gridTemplate = (gridId, elements) => html`
         <div id=${gridId} class="tablesGrid">
             ${elements.map((element) => {
-                const taken = element.total > 0 ? 'taken' : '';
-                const allClasses = `${element.type} ${element.class} ${taken}`;
-                //element.type = [table, text, wall]
-                //element.class = 1,2,3... || v1,v2,v3... || n1,n2,n3...
-                //element.name = Маса 1, Маса В1, Маса Н1..
-                //element.total = undefined (if != table) || number (ex. 12.50) (if == table)
-                if (element.type === 'wall')
-                    return html`
+        const taken = element.total > 0 ? 'taken' : '';
+        const allClasses = `${element.type} ${element.class} ${taken}`;
+        //element.type = [table, text, wall]
+        //element.class = 1,2,3... || v1,v2,v3... || n1,n2,n3...
+        //element.name = Маса 1, Маса В1, Маса Н1..
+        //element.total = undefined (if != table) || number (ex. 12.50) (if == table)
+        if (element.type === 'wall')
+            return html`
                         <div class=${allClasses}></div>
                     `;
-                    
-                if (element.type === 'text')
-                    return html`
+
+        if (element.type === 'text')
+            return html`
                         <div class=${allClasses}>${element.name}</div>
                     `;
 
-                return html`
+        return html`
                     <button @click=${movePrdcts} class=${allClasses} _id=${element._id}>
                         <span class="name pe-none">${element.name}</span>
                         <span class="total pe-none">${element.total ? (element.total).toFixed(2) : ''}</span>
                     </button>`;
-            })}
+    })}
         </div>
     `;
 
@@ -1190,7 +1190,7 @@ export async function moveProductsPage(ctx) {
 export async function payPartOfBillPage(ctx) {
     // Stop listening on old sockets
     stopAllSockets();
-    
+
     const selectedTable = ctx.params.tableId;
     let bill = (await getBillById(ctx.params.billId)).data;
     let productsToPay = {
@@ -1270,7 +1270,7 @@ export async function payPartOfBillPage(ctx) {
         $('input#discount').attr('max', productsToPay.total);
         calculateDiscount();
 
-        socket.emit('addToPay/returnToBill', { bill, productsToPay});
+        socket.emit('addToPay/returnToBill', { bill, productsToPay });
 
         // Rerender both bill and toPay
         rerender(bill, productsToPay);
@@ -1323,14 +1323,14 @@ export async function payPartOfBillPage(ctx) {
             </thead>
             <tbody>
                 ${bill.products.map((product, index) => {
-                    return html`
+        return html`
                     <tr>
                         <td width="50%">${product.product.name}</td>
                         <td width="15%">${product.qty}</td>
                         <td width="15%">${(product.product.sellPrice * product.qty).toFixed(2)}</td>
                         <td @click=${() => addToPay(index, product)} width="20%" class="text-uppercase remove cursor-pointer">Извади</td>
                     </tr>`
-                })}
+    })}
             </tbody>
         </table>
     `;
@@ -1347,14 +1347,14 @@ export async function payPartOfBillPage(ctx) {
             </thead>
             <tbody>
                 ${bill.products.map((product, index) => {
-                    return html`
+        return html`
                     <tr>
                         <td width="50%">${product.product.name}</td>
                         <td width="15%">${product.qty}</td>
                         <td width="15%">${(product.product.sellPrice * product.qty).toFixed(2)}</td>
                         <td @click=${() => returnToBill(index, product)} width="20%" class="cursor-pointer text-uppercase back">Върни</td>
                     </tr>`
-                })}
+    })}
             </tbody>
         </table>
     `;
@@ -1378,7 +1378,7 @@ export async function payPartOfBillPage(ctx) {
 
             // If we want to print the bill
             if (toPrinter)
-                printBill(res.data.history, res.data.tableName);
+                printBill(res.data.history, res.data.tableName, discount);
 
             // Notify anyone still paying products
             socket.emit('addToPay/returnToBill', { bill, productsToPay });
@@ -1398,7 +1398,7 @@ export async function payPartOfBillPage(ctx) {
         let maxDiscount = discountEl.attr('max');
         if (!maxDiscount)
             maxDiscount = 0;
-        
+
         if (e) { // Coming from input change
             if (discount > maxDiscount) {
                 discountEl.val('');
@@ -1419,8 +1419,6 @@ export async function payPartOfBillPage(ctx) {
         else
             discountEl.val(discount);
 
-        console.log(productsToPay.total, discount);
-
         return render(fixPrice(productsToPay.total - discount), document.querySelector('#totalToPay .price'));
     }
 
@@ -1435,7 +1433,7 @@ export async function payPartOfBillPage(ctx) {
                     </div>
                     <div>
                         <span>Отстъпка</span>
-                        <input @change=${calculateDiscount} min="0" type="number" class="form-control" id="discount" />
+                        <input @change=${calculateDiscount} step="0.1" min="0" type="number" class="form-control" id="discount" />
                     </div>
                     <div id="totalToPay" class="totalBlock">
                         <span>Извадена сума от масата</span>
@@ -1461,10 +1459,10 @@ export async function payPartOfBillPage(ctx) {
 export async function scrapProductsPage(ctx) {
     // Stop listening on old sockets
     stopAllSockets();
-    
+
     const selectedTable = ctx.params.tableId;
     let bill = (await getBillById(ctx.params.billId)).data;
-    
+
     let productsToScrap = {
         _id: bill._id, // bill id
         number: bill.number, // bill number
@@ -1589,14 +1587,14 @@ export async function scrapProductsPage(ctx) {
             </thead>
             <tbody>
                 ${bill.products.map((product, index) => {
-                    return html`
+        return html`
                     <tr>
                         <td width="50%">${product.product.name}</td>
                         <td width="15%">${product.qty}</td>
                         <td width="15%">${(product.product.sellPrice * product.qty).toFixed(2)}</td>
                         <td @click=${() => addToScrap(index, product)} width="20%" class="text-uppercase remove cursor-pointer">Бракувай</td>
                     </tr>`
-                })}
+    })}
             </tbody>
         </table>
     `;
@@ -1613,14 +1611,14 @@ export async function scrapProductsPage(ctx) {
             </thead>
             <tbody>
                 ${bill.products.map((product, index) => {
-                    return html`
+        return html`
                     <tr>
                         <td width="50%">${product.product.name}</td>
                         <td width="15%">${product.qty}</td>
                         <td width="15%">${(product.product.sellPrice * product.qty).toFixed(2)}</td>
                         <td @click=${() => returnToBill(index, product)} width="20%" class="cursor-pointer text-uppercase back">Върни</td>
                     </tr>`
-                })}
+    })}
             </tbody>
         </table>
     `;
@@ -1683,15 +1681,15 @@ export async function showPaidBillsPage() {
 
     const historiesRows = (histories) => html`
         ${histories.map((history) => {
-            let allProducts = [];
-            const date = new Date(history.when);
-            const dateString = `${date.getDate() > 9 ? date.getDate() : '0' + date.getDate()}.${(date.getMonth() + 1) > 9 ? date.getMonth() + 1 : '0' + (date.getMonth() + 1)}.${date.getFullYear()}`;
-            const timeString = `${date.getHours() > 9 ? date.getHours() : '0' + date.getHours()}:${date.getMinutes() > 9 ? date.getMinutes() : '0' + date.getMinutes()}`;
+        let allProducts = [];
+        const date = new Date(history.when);
+        const dateString = `${date.getDate() > 9 ? date.getDate() : '0' + date.getDate()}.${(date.getMonth() + 1) > 9 ? date.getMonth() + 1 : '0' + (date.getMonth() + 1)}.${date.getFullYear()}`;
+        const timeString = `${date.getHours() > 9 ? date.getHours() : '0' + date.getHours()}:${date.getMinutes() > 9 ? date.getMinutes() : '0' + date.getMinutes()}`;
 
-            for (let product of history.products)
-                allProducts.push(html`<div>${product.name} x ${product.qty} бр.</div>`)
+        for (let product of history.products)
+            allProducts.push(html`<div>${product.name} x ${product.qty} бр.</div>`)
 
-            return html`
+        return html`
             <tr>
                 <td>${dateString}</td>
                 <td>${timeString}</td>
@@ -1702,9 +1700,9 @@ export async function showPaidBillsPage() {
                 <td>${fixPrice(history.total)}</td>
                 <td>${history.discount ? fixPrice(history.discount) : ''}</td>
             </tr>`
-        })}
+    })}
     `;
-    
+
     const scrappedTemplate = () => html`
         <button class="gray-btn fs-5 mt-3 ms-3" @click=${() => page('/waiter')}>Назад</button>
 
@@ -1727,7 +1725,7 @@ export async function showPaidBillsPage() {
     `;
 
     render(scrappedTemplate(), container);
-    
+
     // Render all scrapped products
     render(historiesRows(allPaidBills), document.querySelector('tbody'));
 }

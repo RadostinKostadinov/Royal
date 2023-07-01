@@ -127,8 +127,8 @@ export async function completeOne(prodRef, orderId) {
     });
 }
 
-export async function getAllConsumation(fromDate, toDate, user) {
-    return await axios.post('/getAllConsumation', {
+export async function getAllconsumption(fromDate, toDate, user) {
+    return await axios.post('/getAllconsumption', {
         fromDate,
         toDate,
         user
@@ -464,6 +464,11 @@ export async function getAllProductsWithoutIngredients() {
     return res.data;
 }
 
+export async function getAllProductsFromIngredients() {
+    const res = await axios.get('/getAllProductsFromIngredients');
+    return res.data;
+}
+
 export async function getAllProducts() {
     const res = await axios.get('/getAllProducts');
     return res.data;
@@ -624,7 +629,7 @@ function cbConnect(data) {
         ePosDev.createDevice('local_printer', ePosDev.DEVICE_TYPE_PRINTER,
             { 'crypto': true, 'buffer': false }, cbCreateDevice_printer);
     } else {
-        console.error(data);
+        console.error('PRINTER ERROR: ' + data);
         // Remove old status icon color
         $('#printerStatusIcon').removeClass(printerStatusClass);
         printerStatusClass = 'text-danger';
@@ -647,12 +652,12 @@ function cbCreateDevice_printer(devobj, retcode) {
         // Set new status icon color
         $('#printerStatusIcon').addClass(printerStatusClass);
     } else {
-        console.error(retcode);
+        console.error('PRINTER ERROR: ' + retcode);
         alert('Възникна грешка с принтера!');
     }
 }
 
-export function printBill(history, tableName) {
+export function printBill(history, tableName, discount) {
     if (printer === null)
         return alert('Няма свързан принтер!');
 
@@ -697,6 +702,14 @@ export function printBill(history, tableName) {
         printer.addText(`  ${product.qty} x ${fixPrice(product.sellPrice)} =\n`); // Quantity line
     }
 
+    // Discount
+    if (discount > 0) {
+        let strDiscount = ['ОТСТЪПКА', '', fixPrice(discount) + ' ЛВ.']
+        for (let i = strDiscount[0].length + strDiscount[2].length; i < 24; i++) // Fill with spaces between
+            strDiscount[1] += ' ';
+        strDiscount = strDiscount.join('') + '\n\n'; // Result is: ОТСТЪПКА       3.00 ЛВ
+        printer.addText(strDiscount);
+    }
 
     // Bill total
     printer.addTextStyle(false, false, true, printer.COLOR_1);
