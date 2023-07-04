@@ -126,6 +126,7 @@ export function productsRoutes(app, auth) {
                     product: {
                         type: 'product',
                         name: product.name,
+                        buyPrice: product.buyPrice,
                         qty,
                         expireDate,
                         productRef: product._id

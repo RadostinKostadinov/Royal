@@ -2336,6 +2336,7 @@ export async function soldProductsPage() {
 export async function restockHistoryPage() {
     const ingredients = await getAllIngredients();
     const products = await getAllProductsWithoutIngredients();
+    let total = 0, totalQty = 0, totalUnit; // Used for displaying totals ONLY when a specific product is searched
 
     async function search(e) {
         // If selected  (else called in render at first load of page)
@@ -2348,16 +2349,21 @@ export async function restockHistoryPage() {
         const res = await getRestockHistory(fromDate, toDate, selectedProductFromSearch && selectedProductFromSearch._id, selectedProductFromSearch && selectedProductFromSearch.type);
 
         if (res.status === 200) {
+            total = 0;
+            totalQty = 0;
             const restocks = res.data;
 
-            render(rows(restocks), document.querySelector('table tbody'));
+            render(rows(restocks, selectedProductFromSearch), document.querySelector('table tbody'));
+            render(`${fixPrice(total)} лв.`, document.querySelector('table #total'))
+            if (selectedProductFromSearch)
+                render(`${totalQty} ${totalUnit}.`, document.querySelector('table #totalQty'))
         } else {
             console.error(res);
             alert('Възникна грешка!');
         }
     }
 
-    const rows = (restocks) => html`
+    const rows = (restocks, selectedProduct) => html`
         ${restocks.map((restock) => {
         const date = new Date(restock.when);
         const dateString = `${date.getDate() > 9 ? date.getDate() : '0' + date.getDate()}.${(date.getMonth() + 1) > 9 ? date.getMonth() + 1 : '0' + (date.getMonth() + 1)}.${date.getFullYear()}`;
@@ -2367,6 +2373,14 @@ export async function restockHistoryPage() {
         if (['кг', 'л'].includes(restock.product.unit)) {
             unit = restock.product.unit;
             restock.product.qty /= 1000;
+        }
+
+        total += restock.product.buyPrice * restock.product.qty;
+
+        // If product is searched for, then it means it has the same unit type, so add up to show the total qty
+        if (selectedProduct) {
+            totalUnit = unit;
+            totalQty += restock.product.qty;
         }
 
         return html`
@@ -2412,6 +2426,12 @@ export async function restockHistoryPage() {
 
         <table class="mt-3 table table-striped table-dark table-hover text-center">
             <thead>
+                <tr id="totals" class="table-primary fw-bold">
+                    <th scope="col" colspan="3">Общо</th>
+                    <th scope="col" id="totalQty"></th>
+                    <th scope="col"></th>
+                    <th scope="col" id="total"></th>
+                </tr>
                 <tr>
                     <th scope="col">Дата</th>
                     <th scope="col">Час</th>

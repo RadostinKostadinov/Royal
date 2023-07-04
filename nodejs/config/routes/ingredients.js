@@ -46,6 +46,7 @@ export function ingredientsRoutes(app, auth) {
                         type: 'ingredient',
                         unit: ingredient.unit,
                         name: ingredient.name,
+                        buyPrice: ingredient.buyPrice,
                         qty,
                         expireDate,
                         ingredientRef: ingredient._id
