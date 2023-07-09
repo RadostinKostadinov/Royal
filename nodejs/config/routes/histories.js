@@ -174,13 +174,28 @@ export function historiesRoutes(app, auth) {
                 }
             };
 
-            if (fromDate) // start of today
+            /* TODO DELETE THIS IF NOT USED ANYMORE
+                OLD WAY TO GET INFO (SIMPLER)
+                if (fromDate) // start of today
                 criteria.when.$gte = new Date(fromDate).setHours(0, 0, 0);
             else
                 criteria.when.$gte = new Date().setHours(0, 0, 0);
 
             if (toDate)
                 criteria.when.$lte = new Date(toDate).setHours(23, 59, 59);
+            */
+
+            if (fromDate) // start of today
+                criteria.when.$gte = new Date(fromDate).setHours(4);
+            else
+                criteria.when.$gte = new Date().setHours(4);
+
+            if (!toDate)
+                criteria.when.$lte = new Date().setHours(23, 59, 59);
+            else if (toDate && fromDate == toDate)
+                criteria.when.$lte = new Date(toDate).setHours(23, 59, 59);
+            else if (toDate && new Date(toDate).setHours(0, 0, 0, 0) != new Date().setHours(0, 0, 0, 0))
+                criteria.when.$lte = new Date(toDate).setHours(4, 0, 0);
 
             // Get all paid bills
             const bills = await ProductHistory.find(criteria).populate('products.productRef');
