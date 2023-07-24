@@ -1,8 +1,8 @@
-import axios from "axios";
-import { auth, fixPrice } from "../api/api";
 import page from 'page';
+import axios from "axios";
 import { html, render } from "lit";
 import { container } from "../../app";
+import { auth, fixPrice } from "../api/api";
 
 // FUNCTIONS
 
