@@ -200,7 +200,7 @@ export function productsRoutes(app, auth) {
 
             // Create product in database
             let pr = await Product.create({
-                name, qty, ingredients, sellPrice, category, forBartender
+                name, qty, ingredients, buyPrice, sellPrice, category, forBartender
             });
 
             // If product has ingredients, calculate its buy price

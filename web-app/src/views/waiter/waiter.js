@@ -1,18 +1,140 @@
 import page from 'page';
-import '../css/waiter/menu.css';
-import '../css/waiter/tables/tables.css';
-import '../css/waiter/tables/middle.css';
-import '../css/waiter/tables/inside.css';
-import '../css/waiter/tableControls.css';
-import '../css/waiter/payMoveScrap.css';
-import { container } from "../app";
+import '../../css/waiter/waiter.css';
+import { container } from "../../app";
+import { auth } from "../api/api.js";
 import { html, render } from 'lit/html.js';
 import $ from "jquery";
 import 'bootstrap-icons/font/bootstrap-icons.css';
-import { printerStatusClass, printBill, fixPrice, stopAllSockets, socket, getAllPaidBills, getAddonsForCategory, getLastPaidBillByTableId, addProductToBill, generateBills, getAllCategories, getProductsFromCategory, logout, getBillById, removeOneFromBill, sellProducts, scrapProducts, addProductsToHistory, getTables, getTableTotalById, createNewOrder, getTodaysReport, moveProducts, printReport, getConsumed, generatePersonalBill } from '../api';
+import { fixPrice, stopAllSockets, socket, logout, getTodaysReport, user } from '../api/api';
+import { getAllCategories } from '../admin/category';
+import { getProductsFromCategory } from '../admin/product';
+import { printerStatusClass, printBill, printReport } from '../api/printer';
+import axios from 'axios';
+import { billPages } from './bills';
 
 let lastRenderedLocation = 'middle'; // remembers the last rendered location, so when the user clicks "Back", take them there
 
+// FUNCTIONS
+
+async function getAddonsForCategory(_id) {
+    return await axios.post('/getAddonsForCategory', {
+        _id
+    }).catch((err) => {
+        return err.response;
+    });
+}
+
+async function getLastPaidBillByTableId(_id, billId) {
+    return await axios.post('/getLastPaidBillByTableId', {
+        _id,
+        billId
+    }).catch((err) => {
+        return err.response;
+    });
+}
+
+async function addProductToBill(_id, selectedX, selectedBillId) {
+    return await axios.post('/addProductToBill', {
+        _id, // product _id
+        selectedX, // 1,2,3,4,5 (how many qty of this product to add)
+        selectedBillId, // bill _id
+    }).catch((err) => {
+        return err.response;
+    });
+}
+
+async function generateBills(_id) {
+    return await axios.post('/generateBills', {
+        _id
+    }).catch((err) => {
+        return err.response;
+    });
+}
+
+async function getBillById(_id) {
+    return await axios.post('/getBillById', {
+        _id,
+    }).catch((err) => {
+        return err.response;
+    });
+}
+
+async function removeOneFromBill(_id, billId) {
+    return await axios.post('/removeOneFromBill', {
+        _id, // product id
+        billId
+    }).catch((err) => {
+        return err.response;
+    });
+}
+
+async function sellProducts(billToPay, discount) {
+    return await axios.post('/sellProducts', {
+        billToPay,
+        discount
+    }).catch((err) => {
+        return err.response;
+    });
+}
+
+async function scrapProducts(billToScrap) {
+    return await axios.post('/scrapProducts', {
+        billToScrap
+    }).catch((err) => {
+        return err.response;
+    });
+}
+
+async function addProductsToHistory(addedProducts, selectedBillId) {
+    return await axios.post('/addProductsToHistory', {
+        addedProducts, // array of products {_id, selectedX (qty)}
+        selectedBillId
+    }).catch((err) => {
+        return err.response;
+    });
+}
+
+async function getTables(location) {
+    return await axios.post('/getTables', {
+        location
+    }).catch((err) => {
+        return err.response;
+    });
+}
+
+async function moveProducts(_id, productsToMove) {
+    return await axios.post('/moveProducts', {
+        _id,
+        productsToMove
+    }).catch((err) => {
+        return err.response;
+    });
+}
+
+async function createNewOrder(products, tableId) {
+    return await axios.post('/createNewOrder', {
+        products,
+        tableId
+    }).catch((err) => {
+        return err.response;
+    });
+}
+
+async function getTableTotalById(_id) {
+    return await axios.post('/getTableTotalById', {
+        _id
+    }).catch((err) => {
+        return err.response;
+    });
+}
+
+async function generatePersonalBill() {
+    return await axios.get('/generatePersonalBill').catch((err) => {
+        return err.response;
+    });
+}
+
+// PAGES
 // Dashboard contains all the code for rendering the tables view (grid with tables)
 export async function waiterDashboardPage() {
     // Stop listening on old sockets
@@ -187,6 +309,8 @@ export async function waiterDashboardPage() {
             <div id="topMenuAndGrid">
                 <div id="topMenu">
                     <button @click=${() => page('/bartender')}>Поръчки</button>
+                    ${user.role === 'admin' ? html`
+                    <button @click=${() => page('/admin')}>АДМИН</button>` : ''}
                     <button @click=${() => page('/waiter/showPaidBills')}>Плащания</button>
                 </div>
     
@@ -674,7 +798,7 @@ export async function tableControlsPage(ctx) {
     render(controlsTemplate(), container);
 }
 
-export async function consumptionPage(ctx) {
+export async function consumptionPage() {
     // Stop listening on old sockets
     stopAllSockets();
 
@@ -1676,56 +1800,16 @@ export async function scrapProductsPage(ctx) {
     render(html`${(productsToScrap.total).toFixed(2)}`, document.querySelector('#totalToPay .price'))
 }
 
-export async function showPaidBillsPage() {
-    const allPaidBills = await getAllPaidBills();
+export function waiterPages() {
+    page('/waiter', auth, waiterDashboardPage);
+    billPages();
 
-    const historiesRows = (histories) => html`
-        ${histories.map((history) => {
-        let allProducts = [];
-        const date = new Date(history.when);
-        const dateString = `${date.getDate() > 9 ? date.getDate() : '0' + date.getDate()}.${(date.getMonth() + 1) > 9 ? date.getMonth() + 1 : '0' + (date.getMonth() + 1)}.${date.getFullYear()}`;
-        const timeString = `${date.getHours() > 9 ? date.getHours() : '0' + date.getHours()}:${date.getMinutes() > 9 ? date.getMinutes() : '0' + date.getMinutes()}`;
+    //TODO DO THE OTHER PAGES
 
-        for (let product of history.products)
-            allProducts.push(html`<div>${product.name} x ${product.qty} бр.</div>`)
 
-        return html`
-            <tr>
-                <td>${dateString}</td>
-                <td>${timeString}</td>
-                <td>${history.table.name}</td>
-                <td>${history.billNumber}</td>
-                <td class="text-capitalize">${history.user.name}</td>
-                <td>${allProducts}</td>
-                <td>${fixPrice(history.total)}</td>
-                <td>${history.discount ? fixPrice(history.discount) : ''}</td>
-            </tr>`
-    })}
-    `;
-
-    const scrappedTemplate = () => html`
-        <button class="gray-btn fs-5 mt-3 ms-3" @click=${() => page('/waiter')}>Назад</button>
-
-        <table class="mt-3 table table-striped table-dark table-hover text-center">
-            <thead>
-                <tr>
-                    <th scope="col">Дата</th>
-                    <th scope="col">Час</th>
-                    <th scope="col">Маса</th>
-                    <th scope="col">Сметка</th>
-                    <th scope="col">Служител</th>
-                    <th scope="col">Артикули</th>
-                    <th scope="col">Сума</th>
-                    <th scope="col">Отстъпка</th>
-                </tr>
-            </thead>
-            <tbody>
-            </tbody>
-        </table>
-    `;
-
-    render(scrappedTemplate(), container);
-
-    // Render all scrapped products
-    render(historiesRows(allPaidBills), document.querySelector('tbody'));
+    page('/consumption', auth, consumptionPage);
+    page('/waiter/table/:tableId', auth, tableControlsPage);
+    page('/waiter/table/:tableId/bill/:billId/pay', auth, payPartOfBillPage);
+    page('/waiter/table/:tableId/bill/:billId/scrap', auth, scrapProductsPage);
+    page('/waiter/table/:tableId/bill/:billId/move', auth, moveProductsPage);
 }

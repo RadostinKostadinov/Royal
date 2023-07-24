@@ -9,6 +9,7 @@ import { verifyToken as auth } from '../middleware/auth.js';
 import { historiesRoutes } from './routes/histories.js';
 import { ordersRoutes } from './routes/orders.js';
 import { reportsRoutes } from './routes/reports.js';
+import { expensesRoutes } from './routes/expenses.js';
 
 async function routesConfig(app) {
 
@@ -23,6 +24,7 @@ async function routesConfig(app) {
     ordersRoutes(app, auth);
     reportsRoutes(app, auth);
     revisionsRoutes(app, auth);
+    expensesRoutes(app, auth);
 
     // Set default 404 for all routes
     app.all('*', (req, res) => {

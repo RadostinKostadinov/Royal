@@ -2,8 +2,7 @@ import { ProductHistory, RestockHistory } from "../../model/history.js";
 
 
 export function historiesRoutes(app, auth) {
-
-    app.post('/getAllconsumption', auth, async (req, res) => {
+    app.post('/getAllConsumptions', auth, async (req, res) => {
         try {
             // Check if user admin
             if (req.user.role !== 'admin')
@@ -174,17 +173,6 @@ export function historiesRoutes(app, auth) {
                 }
             };
 
-            /* TODO DELETE THIS IF NOT USED ANYMORE
-                OLD WAY TO GET INFO (SIMPLER)
-                if (fromDate) // start of today
-                criteria.when.$gte = new Date(fromDate).setHours(0, 0, 0);
-            else
-                criteria.when.$gte = new Date().setHours(0, 0, 0);
-
-            if (toDate)
-                criteria.when.$lte = new Date(toDate).setHours(23, 59, 59);
-            */
-
             if (fromDate) // start of today
                 criteria.when.$gte = new Date(fromDate).setHours(4);
             else
@@ -264,6 +252,7 @@ export function historiesRoutes(app, auth) {
                 return res.status(403).send('Нямате права!');
 
             const allScrapped = await ProductHistory.find({ action: 'scrapped', reviewed: false }).sort({ when: -1 }).populate('table');
+
             res.json(allScrapped);
         } catch (err) {
             console.error(err);
