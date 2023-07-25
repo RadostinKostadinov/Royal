@@ -1,5 +1,4 @@
 import page from 'page';
-import $ from 'jquery';
 // import './bootstrap/bootstrap.min.css';
 import './bootstrap/bootstrap.dark.min.css';
 import './bootstrap/bootstrap.bundle.min.js';

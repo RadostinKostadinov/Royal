@@ -77,7 +77,6 @@ export async function informationsPage() {
 
         const res = await getInformation(fromDate, toDate);
 
-        console.log('here')
         if (res.status === 200) {
             const info = res.data;
             // Render reports

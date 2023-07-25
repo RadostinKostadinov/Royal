@@ -236,7 +236,7 @@ function openFullscreen() {
 }
 
 function closeFullscreen() {
-    if (document.exitFullscreen) {
+    if (document.exitFullscreenElement) {
         document.exitFullscreen();
     } else if (document.webkitExitFullscreen) { /* Safari */
         document.webkitExitFullscreen();

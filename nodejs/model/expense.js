@@ -2,13 +2,13 @@ import mongoose from "mongoose";
 
 const { Schema } = mongoose;
 
-const possibleExpenses = ['Ток', 'Вода', 'Стока', 'Заплатa', 'Друго'];
+export const expenseTypes = ['Ток', 'Вода', 'Стока', 'Заплатa', 'Друго'];
 
 export const expenseSchema = new Schema({
     type: {
         type: String,
         required: true,
-        enum: possibleExpenses,
+        enum: expenseTypes,
         required: true
     },
     price: {
@@ -19,6 +19,11 @@ export const expenseSchema = new Schema({
     note: {
         type: String,
         maxlength: 50
+    },
+    when: {
+        type: Date,
+        default: Date.now,
+        immutable: true
     }
 });
 

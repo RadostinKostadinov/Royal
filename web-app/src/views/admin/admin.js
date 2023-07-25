@@ -12,10 +12,11 @@ import { inventoryPages } from "./inventory";
 import { informationPages } from "./information";
 import { auth, logout } from "../api/api";
 
-export const backBtn = html`<button @click=${() => page('/admin')} class="btn btn-secondary fs-3 mt-2 ms-2">Назад</button>`;
+export const backBtn = html`<button @click=${() => page('/admin')} class="btn btn-secondary fs-3 mt-2 ms-2"><i class="pe-none bi bi-arrow-left"></i></button>`;
 let numberOfExpiredProducts;
 
 export function adminPages() {
+    //TODO Split all admin functions (ex. employee into employee/create, employee/edit, etc.)
     page('/admin', auth, showAdminDashboard);
     employeePages();
     categoryPages();
@@ -23,7 +24,7 @@ export function adminPages() {
     historyPages();
     inventoryPages();
     informationPages();
-    //TODO expensePages();
+    expensePages();
     //TODO FIX ALL BACKEND LINKS TO IMITATE THE FRONTEND (ex: from /getAllUsers, to /users/ with a GET request, etc...)
 }
 
