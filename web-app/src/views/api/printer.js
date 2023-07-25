@@ -7,9 +7,12 @@ var printer = null;
 export var printerStatusClass = 'text-warning';
 var ePosDev = new epson.ePOSDevice();
 
-initializePrinter();
+var printerInitialized = false;
+export function initializePrinter() {
+    if (printerInitialized === true)
+        return;
 
-function initializePrinter() {
+    printerInitialized = true;
     ePosDev.connect(printerIp, printerPort, cbConnect);
 }
 

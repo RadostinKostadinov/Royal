@@ -6,6 +6,7 @@ import { io } from "socket.io-client";
 import { container } from '../../app';
 
 import './printer.js'
+import { initializePrinter } from './printer.js';
 
 export let user = JSON.parse(sessionStorage.getItem('user'));
 // Set base url so you dont type ${url} in every request
@@ -34,8 +35,10 @@ let selectedUser,
 screensaver();
 
 export async function checkLogin() {
-    if (user)
+    if (user) {
+        initializePrinter();
         return page.redirect(`/${user.role}`);
+    }
 
     let res = await axios.get('/getAllUsers');
     let users = res.data;
@@ -103,8 +106,10 @@ export async function checkLogin() {
     async function tryLogin(screenCode) {
         let res = await sendLoginData(selectedUser, pinCode);
 
-        if (res === 'success')
+        if (res === 'success') {
+            initializePrinter();
             return page('/');
+        }
 
         if (res.status === 500) {
             // Server error
@@ -181,8 +186,9 @@ export async function checkLogin() {
 
 export async function auth(ctx, next) {
     if (!user || (ctx.path.includes('/admin') && user.role !== "admin"))
-        page('/'); // wrong permissions, go back go dashboard
+        return page('/'); // wrong permissions, go back go dashboard
 
+    initializePrinter();
     next(); // else continue work
 }
 
