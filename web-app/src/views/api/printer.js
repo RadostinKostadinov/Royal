@@ -1,4 +1,4 @@
-import { getTodaysReport } from "./api";
+import { fixPrice, getTodaysReport } from "./api";
 import $ from "jquery";
 
 // PRINTER
