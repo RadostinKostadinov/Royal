@@ -68,7 +68,7 @@ export function usersRoutes(app, auth) {
 
             // Create token
             const token = jwt.sign(
-                { _id: user._id, name: user.name, role: user.role },
+                { _id: user._id, name: user.name, role: user.role, isDev: user.isDev },
                 process.env.TOKEN_KEY || "p@JC@Ambo?&NNyR4Y9tJ9PbmrRHjK7H6EeGM@@5q",
                 /* {
                     expiresIn: "12h"
@@ -79,7 +79,7 @@ export function usersRoutes(app, auth) {
             user.token = token;
 
             // Success, return user
-            return res.status(200).send({ name: user.name, role: user.role, token });
+            return res.status(200).send({ name: user.name, role: user.role, isDev: user.isDev, token });
         } catch (err) {
             console.error(err);
             res.status(500).send(err);

@@ -1,4 +1,5 @@
 import { getTodaysReport } from "./api";
+import $ from "jquery";
 
 // PRINTER
 const printerIp = '192.168.0.171'; // Royal IP

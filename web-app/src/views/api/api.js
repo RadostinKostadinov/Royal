@@ -84,7 +84,8 @@ export async function checkLogin() {
                 user = {
                     name: res.data.name,
                     role: res.data.role,
-                    token: res.data.token
+                    token: res.data.token,
+                    isDev: res.data.isDev
                 }
 
                 // Save in session
@@ -185,7 +186,7 @@ export async function checkLogin() {
 }
 
 export async function auth(ctx, next) {
-    if (!user || (ctx.path.includes('/admin') && user.role !== "admin"))
+    if (!user || (ctx.path.includes('/admin') && (user.role !== "admin" || user.isDev !== true)))
         return page('/'); // wrong permissions, go back go dashboard
 
     initializePrinter();

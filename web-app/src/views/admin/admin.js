@@ -10,7 +10,7 @@ import '../../css/admin/admin.css';
 import { container } from "../../app";
 import { inventoryPages } from "./inventory";
 import { informationPages } from "./information";
-import { auth, logout } from "../api/api";
+import { auth, logout, user } from "../api/api";
 
 export const backBtn = html`<button @click=${() => page('/admin')} class="btn btn-secondary fs-3 mt-2 ms-2"><i class="pe-none bi bi-arrow-left"></i></button>`;
 let numberOfExpiredProducts;
@@ -33,7 +33,12 @@ async function showAdminDashboard() {
     numberOfExpiredProducts = res.data;
 
     const dashboard = () => html`
-    <div class="p-3">
+        <div class="p-3">
+            ${user.isDev && html`
+            <div class="text-center mt-4">
+                <button @click=${() => page('/developer')} class="btn btn-warning fs-4">Dev tools</button>
+            </div>
+            `}
             <div class="text-center mt-4">
                 <h1>Информация</h1>
                 <div class="d-inline-flex flex-row flex-wrap gap-3 justify-content-center">

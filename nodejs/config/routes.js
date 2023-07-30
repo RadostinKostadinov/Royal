@@ -10,9 +10,9 @@ import { historiesRoutes } from './routes/histories.js';
 import { ordersRoutes } from './routes/orders.js';
 import { reportsRoutes } from './routes/reports.js';
 import { expensesRoutes } from './routes/expenses.js';
+import { developerRoutes } from './routes/developer.js';
 
 async function routesConfig(app) {
-
     // Load all routes
     categoriesRoutes(app, auth);
     productsRoutes(app, auth);
@@ -25,6 +25,7 @@ async function routesConfig(app) {
     reportsRoutes(app, auth);
     revisionsRoutes(app, auth);
     expensesRoutes(app, auth);
+    developerRoutes(app, auth);
 
     // Set default 404 for all routes
     app.all('*', (req, res) => {
