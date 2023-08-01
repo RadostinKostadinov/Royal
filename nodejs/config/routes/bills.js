@@ -8,23 +8,7 @@ import { updateReport } from "./reports.js";
 
 export async function convertPersonalBillToHistory() {
     try {
-        // Find all consumption bills from today
-        let date = new Date();
-
-        // Check if date is between 00:00 and 04:00 hours
-        if (date.getHours() >= 0 && date.getHours() < 4) {
-            // Set date to yesterday at 04:00
-            date.setDate(date.getDate() - 1);
-            date.setHours(4);
-        } else {
-            // Set date to today at 04:00
-            date.setHours(4);
-        }
-
         const consumptionBills = await Bill.find({
-            when: {
-                $gte: date
-            },
             user: {
                 $ne: undefined
             }

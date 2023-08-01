@@ -6,7 +6,7 @@ const userTypes = ['admin', 'bartender', 'waiter'];
 
 const userSchema = new Schema({
     name: { type: String, unique: true, lowercase: true },
-    pin: { type: String, length: 4 },
+    pin: { type: String },
     role: { type: String, enum: userTypes },
     isDev: { type: Boolean, default: false }
 });

@@ -14,8 +14,6 @@ async function mongoConfig() {
             useNewUrlParser: true
         }
 
-
-
     await mongoose.connect(uri, options)
         .then(console.log('Connected to MongoDB at ' + uri))
         .catch(err => console.log('Error connecting to MongoDB: ' + err));
