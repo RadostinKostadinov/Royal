@@ -199,9 +199,9 @@ export function historiesRoutes(app, auth) {
 
             for (let bill of bills) {
                 info.totalSells += 1;
-                info.totalProductsSold += bill.products.length;
 
                 for (let product of bill.products) {
+                    info.totalProductsSold += product.qty;
                     info.grossIncome += product.sellPrice * product.qty;
                     info.grossIncomeDelivery += product.buyPrice * product.qty;
                 }
