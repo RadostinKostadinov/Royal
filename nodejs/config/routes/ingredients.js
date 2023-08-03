@@ -112,7 +112,7 @@ export function ingredientsRoutes(app, auth) {
             if (!ingredient)
                 return res.status(400).send('Няма съставка с това _id!');
 
-            await Ingredient.removeOne(_id); // Delete the ingredient
+            await Ingredient.deleteOne(ingredient); // Delete the ingredient
 
             // Find all products that contain this ingredient
             const products = await Product.find({ 'ingredients.ingredient': _id });

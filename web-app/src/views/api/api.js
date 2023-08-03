@@ -4,8 +4,6 @@ import $ from "jquery";
 import { render, html } from 'lit/html.js';
 import { io } from "socket.io-client";
 import { container } from '../../app';
-
-import './printer.js'
 import { initializePrinter } from './printer.js';
 
 export let user = JSON.parse(sessionStorage.getItem('user'));
