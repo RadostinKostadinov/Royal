@@ -39,7 +39,7 @@ async function createCategoryPage() {
 
     const categoryFields = () => html`
     ${backBtn}
-    <form @submit=${getData} class="m-auto mt-5 p-3 text-center fs-3">
+    <form autocomplete="off" @submit=${getData} class="m-auto mt-5 p-3 text-center fs-3">
         <div class="mb-3">
             <label for="name" class="form-label">Въведи име</label>
             <input required type="text" class="form-control fs-4" name="name" id="name" placeholder="пример: Безалкохолни">
@@ -85,7 +85,7 @@ async function deleteCategoryPage() {
 
     const categoryFields = () => html`
     ${backBtn}
-    <form @submit=${delCategory} class="m-auto mt-5 p-3 text-center fs-3">
+    <form autocomplete="off" @submit=${delCategory} class="m-auto mt-5 p-3 text-center fs-3">
         <div class="mb-3">
             <label for="selected" class="form-label">Избери категория</label>
             <select required type="text" class="form-control fs-4" name="_id" id="selected">
@@ -132,7 +132,7 @@ async function editCategoryPage() {
 
     const categoryFields = () => html`
     ${backBtn}
-    <form @submit=${edCategory} class="m-auto mt-5 p-3 text-center fs-3">
+    <form autocomplete="off" @submit=${edCategory} class="m-auto mt-5 p-3 text-center fs-3">
         <div class="mb-3">
             <label for="selected" class="form-label">1. Избери категория</label>
             <select required type="text" class="form-control fs-4" name="_id" id="selected">

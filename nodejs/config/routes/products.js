@@ -47,7 +47,7 @@ export async function deleteProductFromEverywhere(product) {
     }
 
     // Finally delete product
-    await product.remove();
+    await Product.deleteOne({ _id: product._id });
 }
 
 export function productsRoutes(app, auth) {
@@ -232,8 +232,6 @@ export function productsRoutes(app, auth) {
 
             if (!product)
                 return res.status(400).send('Няма продукт с това _id!');
-
-            // await product.remove(); // Delete the product
 
             await deleteProductFromEverywhere(product);
 

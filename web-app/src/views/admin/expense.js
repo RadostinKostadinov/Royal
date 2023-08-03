@@ -35,7 +35,7 @@ const createExpenseModal = () => html`
                 <h5 class="modal-title" id="createExpenseModalLabel">Създай нов разход</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <form @submit=${createExpense}>
+            <form autocomplete="off" @submit=${createExpense}>
                 <div class="modal-body">
                         <div class="mb-3">
                             <label for="type" class="form-label">Тип</label>
@@ -73,7 +73,7 @@ const editExpenseModal = () => html`
                 <h5 class="modal-title" id="editExpenseModalLabel">Редактирай разход</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <form @submit=${editExpense}>
+            <form autocomplete="off" @submit=${editExpense}>
                 <div class="modal-body">
                         <div class="mb-3">
                             <label for="type" class="form-label">Тип</label>
@@ -111,7 +111,7 @@ const deleteExpenseModal = () => html`
                 <h5 class="modal-title" id="deleteExpenseModalLabel">Изтрий разход</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <form @submit=${deleteExpense}>
+            <form autocomplete="off" @submit=${deleteExpense}>
                 <div class="modal-body">
                         <p>Сигурни ли сте, че искате да изтриете разхода?</p>
                 </div>

@@ -103,7 +103,7 @@ export async function deleteEmployeePage() {
 
     const deleteTemplate = () => html`
         ${backBtn}
-        <form @submit=${delUser} class="d-flex text-center fs-3 flex-column m-auto mt-5 gap-5 p-3">
+        <form autocomplete="off" @submit=${delUser} class="d-flex text-center fs-3 flex-column m-auto mt-5 gap-5 p-3">
             <div>
                 <label class="form-label">Избери служител</label>
                 <select required class="form-control fs-4 text-capitalize" name="_id">

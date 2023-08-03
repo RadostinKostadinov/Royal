@@ -747,7 +747,7 @@ async function createRevisionPage() {
 
     const createRevisionTemplate = () => html`
         ${backBtn}
-<form class="d-flex flex-column align-items-center" @submit=${svRevision}>
+        <form autocomplete="off" class="d-flex flex-column align-items-center" @submit=${svRevision}>
             <table class="table table-striped table-dark table-hover text-center mt-2">
                 <thead>
                     <tr>

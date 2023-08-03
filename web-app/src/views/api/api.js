@@ -186,7 +186,7 @@ export async function checkLogin() {
 }
 
 export async function auth(ctx, next) {
-    if (!user || (ctx.path.includes('/admin') && (user.role !== "admin" || user.isDev !== true)))
+    if (!user || (ctx.path.includes('/admin') && user.role !== "admin"))
         return page('/'); // wrong permissions, go back go dashboard
 
     initializePrinter();

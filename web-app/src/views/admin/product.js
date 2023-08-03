@@ -581,7 +581,7 @@ async function createProductPage() {
 
     const productFields = () => html`
     ${backBtn}
-    <form @submit=${createPrdct} class="m-auto mt-2 p-3 text-center fs-3">
+    <form autocomplete="off" @submit=${createPrdct} class="m-auto mt-2 p-3 text-center fs-3">
         <div class="mb-3">
             <label for="productType" class="form-label">Тип на продукт</label>
             <select @change=${selectProductType} required class="form-control fs-4" name="productType" id="productType">
@@ -598,7 +598,7 @@ async function createProductPage() {
 
     const ingredientFields = () => html`
     ${backBtn}
-    <form @submit=${createIngrdnt} class="m-auto mt-2 p-3 text-center fs-3">
+    <form autocomplete="off" @submit=${createIngrdnt} class="m-auto mt-2 p-3 text-center fs-3">
         <div class="mb-3">
             <label for="productType" class="form-label">Тип на продукт</label>
             <select @change=${selectProductType} required class="form-control fs-4" name="productType" id="productType">
@@ -615,7 +615,7 @@ async function createProductPage() {
 
     const productFromIngredientsFields = () => html`
     ${backBtn}
-    <form @submit=${createPrdctFromIngrdnts} class="m-auto mt-2 p-3 text-center fs-3">
+    <form autocomplete="off" @submit=${createPrdctFromIngrdnts} class="m-auto mt-2 p-3 text-center fs-3">
         <div class="mb-3">
             <label for="productType" class="form-label">Тип на продукт</label>
             <select @change=${selectProductType} required class="form-control fs-4" name="productType" id="productType">
@@ -678,10 +678,10 @@ async function deleteProductPage() {
 
     const deleteTemplate = () => html`
         ${backBtn}
-        <form @submit=${delProduct} class="d-flex text-center fs-3 flex-column m-auto mt-5 gap-5 p-3">
+        <form autocomplete="off" @submit=${delProduct} class="d-flex text-center fs-3 flex-column m-auto mt-5 gap-5 p-3">
             <div class="mb-3">
                 <label for="productSearch" class="form-label">Търси</label>
-                <input @change=${selectedProductFromSearch = selectProductFromSearch} class="form-control fs-4" type="text" list="allproducts" name="productSearch" id="productSearch">
+                <input @change=${(e) => selectedProductFromSearch = selectProductFromSearch(e)} class="form-control fs-4" type="text" list="allproducts" name="productSearch" id="productSearch">
                 <datalist id="allproducts">
                     ${allIngredients.map(el => {
         return html`<option type="ingredients" unit=${el.unit} _id=${el._id} value=${el.name + ` (${el.unit})`} />`
@@ -857,7 +857,7 @@ async function editProductPage(ctx) {
 
     const formTemplate = () => html`
     ${backBtn}
-    <form @submit=${edtProduct} class="m-auto p-3 text-center fs-3">
+    <form autocomplete="off" @submit=${edtProduct} class="m-auto p-3 text-center fs-3">
         <div class="mb-3">
                 <label for="productSearch" class="form-label">Търси</label>
                 <input @change=${loadProductInfo} class="form-control fs-4" type="text" list="allproducts" name="productSearch" id="productSearch">
@@ -1035,10 +1035,10 @@ async function scrapRestockProductPage(ctx) {
 
     const template = () => html`
         ${backBtn}
-        <form @submit=${scrapRestock} class="d-flex text-center fs-3 flex-column m-auto mt-5 gap-5 p-3">
+        <form autocomplete="off" @submit=${scrapRestock} class="d-flex text-center fs-3 flex-column m-auto mt-5 gap-5 p-3">
             <div class="mb-3 p-3">
                 <label for="productSearch" class="form-label">Търси</label>
-                <input @change=${selectedProductFromSearch = selectProductFromSearch} class="form-control fs-4" type="text" list="allproducts" name="productSearch" id="productSearch">
+                <input @change=${(e) => selectedProductFromSearch = selectProductFromSearch(e)} class="form-control fs-4" type="text" list="allproducts" name="productSearch" id="productSearch">
                 <datalist id="allproducts">
                     ${allIngredients.map(el => {
         return html`<option type="ingredients" unit=${el.unit} _id=${el._id} value=${el.name + ` (${el.unit})`} />`

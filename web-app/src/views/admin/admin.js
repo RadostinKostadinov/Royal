@@ -34,11 +34,10 @@ async function showAdminDashboard() {
 
     const dashboard = () => html`
         <div class="p-3">
-            ${user.isDev && html`
+            ${user.isDev ? html`
             <div class="text-center mt-4">
                 <button @click=${() => page('/developer')} class="btn btn-warning fs-4">Dev tools</button>
-            </div>
-            `}
+            </div>` : ''}
             <div class="text-center mt-4">
                 <h1>Информация</h1>
                 <div class="d-inline-flex flex-row flex-wrap gap-3 justify-content-center">
