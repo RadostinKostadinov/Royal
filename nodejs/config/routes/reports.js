@@ -56,10 +56,7 @@ export async function updateReport(req, res) {
 
         // Get consumption
         const consumptionBill = await Bill.findOne({
-            user: _id,
-            when: {
-                $gte: date
-            }
+            user: _id
         });
 
         if (consumptionBill)

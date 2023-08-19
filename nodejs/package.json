@@ -6,7 +6,7 @@
 	"scripts": {
 		"Start Node": "nodemon app.js",
 		"Run tests": "SET MONGO_URI=mongodb://127.0.0.1:27017/testdb&& mocha --reporter spec --exit",
-		"Docker build": "docker build -t newhappyrabbit/royal .",
+		"Docker build": "docker build --rm -f -t royal:latest .",
 		"Docker run": "docker run -p 27017:27017 -p 3000:3000 newhappyrabbit/royal"
 	},
 	"author": "",
@@ -20,7 +20,6 @@
 		"jsonwebtoken": "^9.0.1",
 		"mongoose": "^7.4.1",
 		"node-cron": "^3.0.2",
-		"qckwinsvc": "^1.0.0",
 		"socket.io": "^4.4.1"
 	},
 	"devDependencies": {
