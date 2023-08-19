@@ -15,7 +15,7 @@
 	color: var(--color-sidemenu);
 	background-color: var(--bg-btn);
 	border: 1px solid transparent;
-	border-radius: 20px;
+	border-radius: 5px;
 	font-weight: 600;
 	font-size: 1.1rem;
 	padding: 0.5rem;
@@ -91,6 +91,7 @@
 	padding: 0.5rem 0.5rem;
 	font-weight: 600;
 	border: none;
+	border-radius: 5px;
 }
 
 #bartenderDashboard button.removeAll {
@@ -99,6 +100,7 @@
 	padding: 0.5rem 0.5rem;
 	font-weight: 600;
 	border: none;
+	border-radius: 5px;
 }
 
 #bartenderDashboard #orders {
@@ -129,7 +131,7 @@
 
 #bartenderDashboard #orders .order {
 	border: 2px solid rgba(0, 200, 146, 0.6);
-	border-radius: 10px;
+	border-radius: 5px;
 }
 
 #bartenderDashboard #orders .order table thead {
