@@ -437,6 +437,17 @@ async function scrapRestockIngredient(_id, qty, action, expireDate) {
     });
 }
 
+async function scrapRestockProduct(_id, qty, action, expireDate) {
+    return await axios.post('/scrapRestockProduct', {
+        _id,
+        qty,
+        action,
+        expireDate
+    }).catch((err) => {
+        return err.response;
+    });
+}
+
 async function markExpiredAsReviewed(_id) {
     return await axios.post('/markExpiredAsReviewed', {
         _id
