@@ -383,10 +383,12 @@ async function restockHistoryPage() {
     async function search(e) {
         // If selected  (else called in render at first load of page)
         if (e)
-            selectedProductFromSearch = selectProductFromSearch(e);
+            selectedProductFromSearch = selectProductFromSearch();
 
         const fromDate = $('#fromDate').val();
         const toDate = $('#toDate').val();
+
+        console.log(fromDate, toDate, e, selectedProductFromSearch)
 
         const res = await getRestockHistory(fromDate, toDate, selectedProductFromSearch && selectedProductFromSearch._id, selectedProductFromSearch && selectedProductFromSearch.type);
 
@@ -502,7 +504,7 @@ async function productSellsPage() {
         totals.qty = 0;
         totals.price = 0;
 
-        selectedProductFromSearch = selectProductFromSearch(e);
+        selectedProductFromSearch = selectProductFromSearch();
 
         if (!selectedProductFromSearch) // After picking date this func activates, so check if product is selected
             return;
