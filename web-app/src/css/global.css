@@ -191,3 +191,15 @@ body {
 .cursor-pointer {
 	cursor: pointer;
 }
+
+/* Chrome, Safari, Edge, Opera */
+input.noArrows::-webkit-outer-spin-button,
+input.noArrows::-webkit-inner-spin-button {
+	-webkit-appearance: none;
+	margin: 0;
+}
+
+/* Firefox */
+input[type="number"].noArrows {
+	-moz-appearance: textfield;
+}
