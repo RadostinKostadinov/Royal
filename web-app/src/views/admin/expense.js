@@ -16,13 +16,12 @@ async function getExpenseTypes() {
     return res.data;
 }
 
-async function getExpenses(fromDate, toDate, id, type) {
+async function getExpenses(fromDate, toDate, id) {
     // When id is present, it retrieves a single expense!
     const res = await axios.post('/getExpenses', {
         fromDate,
         toDate,
-        id,
-        type
+        id
     });
 
     return res;
@@ -162,7 +161,7 @@ async function loadEditModal(e) {
     const id = e.srcElement.getAttribute('id')
     expenseToEditId = id;
 
-    const res = await getExpenses(null, null, id, null);
+    const res = await getExpenses(null, null, id);
     const expense = res.data;
 
     $(`#editExpenseModal option:contains(${expense.type})`).attr('selected', 'selected');
@@ -233,9 +232,8 @@ async function expensePage() {
     async function loadExpenses(e) {
         const fromDate = $('#fromDate').val();
         const toDate = $('#toDate').val();
-        const type = $('#typeSearch').val();
 
-        const res = await getExpenses(fromDate, toDate, null, type);
+        const res = await getExpenses(fromDate, toDate);
 
         if (res.status === 200) {
             const expenses = res.data;
@@ -290,14 +288,6 @@ async function expensePage() {
             </div>
         </div>
 
-        <div class="mb-3 p-3 fs-4">
-                <label for="typeSearch" class="form-label">Търси</label>
-                <input autocomplete="off"  @change=${loadExpenses} class="form-control fs-4" type="text" list="allTypes" name="typeSearch" id="typeSearch">
-                <datalist id="allTypes">
-                    ${expenseTypes.map(el => { return html`<option value=${el}/>` })}
-                </datalist>
-        </div>
-
         <table id="selectedexpenses" class="mt-4 table table-striped table-dark table-hover text-center">
             <thead>
                 <tr class="table-primary">
@@ -325,4 +315,7 @@ async function expensePage() {
 
 export function expensePages() {
     page('/admin/expense', auth, expensePage);
+    // page('/admin/expense/create', auth, createExpenseModal);
+    // page('/admin/expense/edit', auth, editExpenseModal);
+    // page('/admin/expense/delete', auth, deleteExpenseModal);
 }

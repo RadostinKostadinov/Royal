@@ -242,8 +242,8 @@ async function deleteProduct(_id) {
     });
 }
 
-export function selectProductFromSearch() {
-    const selected = $('#productSearch').val();
+export function selectProductFromSearch(e) {
+    const selected = e.target.value;
 
     if (!selected) return;
 
@@ -692,7 +692,7 @@ async function deleteProductPage() {
         <form autocomplete="off" @submit=${delProduct} class="d-flex text-center fs-3 flex-column m-auto mt-5 gap-5 p-3">
             <div class="mb-3">
                 <label for="productSearch" class="form-label">Търси</label>
-                <input @change=${(e) => selectedProductFromSearch = selectProductFromSearch()} class="form-control fs-4" type="text" list="allproducts" name="productSearch" id="productSearch">
+                <input @change=${(e) => selectedProductFromSearch = selectProductFromSearch(e)} class="form-control fs-4" type="text" list="allproducts" name="productSearch" id="productSearch">
                 <datalist id="allproducts">
                     ${allIngredients.map(el => {
         return html`<option type="ingredients" unit=${el.unit} _id=${el._id} value=${el.name + ` (${el.unit})`} />`
@@ -1049,7 +1049,7 @@ async function scrapRestockProductPage(ctx) {
         <form autocomplete="off" @submit=${scrapRestock} class="d-flex text-center fs-3 flex-column m-auto mt-5 gap-5 p-3">
             <div class="mb-3 p-3">
                 <label for="productSearch" class="form-label">Търси</label>
-                <input @change=${(e) => selectedProductFromSearch = selectProductFromSearch()} class="form-control fs-4" type="text" list="allproducts" name="productSearch" id="productSearch">
+                <input @change=${(e) => selectedProductFromSearch = selectProductFromSearch(e)} class="form-control fs-4" type="text" list="allproducts" name="productSearch" id="productSearch">
                 <datalist id="allproducts">
                     ${allIngredients.map(el => {
         return html`<option type="ingredients" unit=${el.unit} _id=${el._id} value=${el.name + ` (${el.unit})`} />`

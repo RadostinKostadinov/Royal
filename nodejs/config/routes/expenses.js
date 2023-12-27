@@ -21,7 +21,7 @@ export function expensesRoutes(app, auth) {
                 return res.status(403).send('Нямате права!');
 
 
-            const { fromDate, toDate, id, type } = req.body;
+            const { fromDate, toDate, id } = req.body;
 
             if (id) {
                 const expense = await Expense.findById(id);
@@ -43,9 +43,6 @@ export function expensesRoutes(app, auth) {
 
                 criteria.when.$lte = new Date(toDate).setHours(23, 59, 59);
             }
-
-            if (type)
-                criteria.type = type;
 
             const expenses = await Expense.find(criteria).sort({ when: -1 });
             res.json(expenses);

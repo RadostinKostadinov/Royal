@@ -27,7 +27,8 @@ export var socket = io(nodeURL);
 var elem = document.documentElement;
 
 let selectedUser,
-    pinCode = '';
+    pinCode = '',
+    enteredNumbers = '';
 
 // Activate screensaver once
 screensaver();
@@ -45,6 +46,7 @@ export async function checkLogin() {
         selectedUser = $(e.target).attr('userId');
 
         pinCode = '';
+        enteredNumbers = '';
         render(numpadTemplate(), container)
     }
 
@@ -52,15 +54,19 @@ export async function checkLogin() {
         let screenCode = $('#code');
         let enteredNumber = $(e.target).text();
 
-        if (enteredNumber === 'X')
+        if (enteredNumber === 'X') {
             pinCode = pinCode.slice(0, -1);
-        else
+            enteredNumbers = enteredNumbers.slice(0, -1);
+        }
+        else {
             pinCode += enteredNumber;
+            enteredNumbers += '*';
+        }
 
         // Show the entered PIN and add + to the end (until 4 numbers in total)
         // ex. if entered 1, show 1+++
         // if entered 15, show 15++
-        let addPluses = pinCode;
+        let addPluses = enteredNumbers;
         while (addPluses.length < 4)
             addPluses += '+';
         screenCode.text(addPluses);
@@ -120,6 +126,7 @@ export async function checkLogin() {
             // Client error (wrong pin, false info, etc)
             screenCode.addClass('wrong-pin');
             screenCode.text('++++');
+            enteredNumbers = '';
             return pinCode = ''; // Reset variable
         }
 

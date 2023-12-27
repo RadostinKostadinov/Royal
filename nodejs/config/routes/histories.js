@@ -217,18 +217,8 @@ export function historiesRoutes(app, auth) {
         }
     });
 
-    app.post('/getAllPaidBills', auth, async (req, res) => {
+    app.get('/getAllPaidBills', auth, async (req, res) => {
         try {
-            const limit = 10;
-            const pageNumber = req.body.pageNumber || 1;
-
-            const bills = await ProductHistory.find({
-                action: 'paid'
-            }).sort({ when: -1 }).populate('table').skip((pageNumber - 1) * limit).limit(limit);
-
-            res.json({ bills });
-
-            return;
             let date = new Date();
 
             // Check if date is between 00:00 and 04:00 hours
@@ -246,7 +236,7 @@ export function historiesRoutes(app, auth) {
                 when: {
                     $gte: date
                 }
-            }).sort({ when: -1 }).populate('table').limit(10);
+            }).sort({ when: -1 }).populate('table');
 
             res.json(allPaid);
         } catch (err) {

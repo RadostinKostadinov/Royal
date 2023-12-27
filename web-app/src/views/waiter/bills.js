@@ -8,11 +8,9 @@ import { auth, fixPrice } from "../api/api";
 
 // PAGES
 
-async function showPaidBillsPage(ctx) {
-    // const res = await axios.get('/getAllPaidBills');
-    const pageNumber = +ctx.params.page || 1;
-    const res = await axios.post('/getAllPaidBills', { pageNumber })
-    const { bills } = res.data;
+async function showPaidBillsPage() {
+    const res = await axios.get('/getAllPaidBills');
+    const allPaidBills = res.data;
 
     const historiesRows = (histories) => html`
         ${histories.map((history) => {
@@ -38,7 +36,7 @@ async function showPaidBillsPage(ctx) {
     })}
     `;
 
-    const billsTemplate = () => html`
+    const scrappedTemplate = () => html`
         <button class="gray-btn fs-5 mt-3 ms-3" @click=${() => page('/waiter')}>Назад</button>
 
         <table class="mt-3 table table-striped table-dark table-hover text-center">
@@ -57,34 +55,14 @@ async function showPaidBillsPage(ctx) {
             <tbody>
             </tbody>
         </table>
-        <ul class="pagination fs-3 justify-content-center">
-            ${pageNumber === 1 ? html`` : html`
-                <li class="page-item">
-                    <a class="page-link" href = ${`/waiter/showPaidBills/${pageNumber - 1}`} aria-label="Previous">
-                        <i class="bi bi-caret-left-fill"></i>
-                    </a>
-                </li>
-            `}
-
-            <li class="page-item">
-                <input type="number" @change=${(e) => page(`/waiter/showPaidBills/${e.target.value}`)} .value=${pageNumber} style="width: 10rem" class="noArrows page-link text-center"/>
-            </li>
-
-            <li class="page-item">
-                <a class="page-link" href = ${`/waiter/showPaidBills/${pageNumber + 1}`} aria-label="Next">
-                    <i class="bi bi-caret-right-fill"></i>
-                </a>
-            </li>
-        </ul>
     `;
 
-    render(billsTemplate(), container);
+    render(scrappedTemplate(), container);
 
     // Render all scrapped products
-    render(historiesRows(bills), document.querySelector('tbody'));
+    render(historiesRows(allPaidBills), document.querySelector('tbody'));
 }
 
 export function billPages() {
     page('/waiter/showPaidBills', auth, showPaidBillsPage);
-    page('/waiter/showPaidBills/:page', auth, showPaidBillsPage);
 }
