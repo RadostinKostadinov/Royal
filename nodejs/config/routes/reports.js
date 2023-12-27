@@ -54,16 +54,13 @@ export async function updateReport(req, res) {
                 scrapped += action.total;
         }
 
-        // Get consumation
-        const consumationBill = await Bill.findOne({
-            user: _id,
-            when: {
-                $gte: date
-            }
+        // Get consumption
+        const consumptionBill = await Bill.findOne({
+            user: _id
         });
 
-        if (consumationBill)
-            consumed = consumationBill.total;
+        if (consumptionBill)
+            consumed = consumptionBill.total;
 
         total = income - consumed - scrapped;
 
@@ -167,7 +164,8 @@ export async function createSystemReport() {
                     historyProducts.push({
                         name: prodRef.name,
                         qty: product.qty,
-                        price: prodRef.sellPrice,
+                        buyPrice: product.product.buyPrice,
+                        sellPrice: product.product.sellPrice,
                         productRef: product.product,
                         ingredients: ingredientsArray
                     });

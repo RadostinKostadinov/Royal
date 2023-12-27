@@ -43,7 +43,7 @@ export function ordersRoutes(app, auth) {
 
                     // Check if order has more products
                     if (order.products.length === 0)
-                        await order.remove();
+                        await Order.deleteOne({ _id: order._id });
                     else // Save the order
                         await order.save();
                 }
@@ -56,7 +56,7 @@ export function ordersRoutes(app, auth) {
 
                 // Check if order has more products
                 if (order.products.length === 0)
-                    await order.remove();
+                    await Order.deleteOne({ _id: order._id });
                 else // Save the order
                     await order.save();
             }
@@ -86,7 +86,7 @@ export function ordersRoutes(app, auth) {
 
             // Check if order has more products
             if (order.products.length === 0)
-                await order.remove();
+                await Order.deleteOne({ _id: order._id });
             else // Save the order
                 await order.save();
 

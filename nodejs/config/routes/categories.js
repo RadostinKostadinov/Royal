@@ -89,7 +89,7 @@ export function categoriesRoutes(app, auth) {
                 return res.status(401).send('Нямате админски достъп!')
 
             // Get array of categories in new order
-            const categories = req.body.categories;
+            const categories = req.body;
 
             for (let i = 0; i < categories.length; i++) {
                 // i will be the order number

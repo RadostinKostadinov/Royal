@@ -46,6 +46,7 @@ export function ingredientsRoutes(app, auth) {
                         type: 'ingredient',
                         unit: ingredient.unit,
                         name: ingredient.name,
+                        buyPrice: ingredient.buyPrice,
                         qty,
                         expireDate,
                         ingredientRef: ingredient._id
@@ -111,7 +112,7 @@ export function ingredientsRoutes(app, auth) {
             if (!ingredient)
                 return res.status(400).send('Няма съставка с това _id!');
 
-            await ingredient.remove(); // Delete the ingredient
+            await Ingredient.deleteOne(ingredient); // Delete the ingredient
 
             // Find all products that contain this ingredient
             const products = await Product.find({ 'ingredients.ingredient': _id });
@@ -122,7 +123,7 @@ export function ingredientsRoutes(app, auth) {
                 product.ingredients.splice(ingredientIndex, 1);
                 //FIXME ТРЯБВА ДА ИЗТРИВА ПРОДУКТА АКО НЯМА ПОВЕЧЕ СЪСТАВКИ, СЪЩО И ОТ ВСИЧКИ СМЕТКИ И МАСИ
                 if (product.ingredients.length === 0)
-                    await product.remove();
+                    await Product.deleteOne({ _id: product._id });
                 else
                     await product.save();
             }

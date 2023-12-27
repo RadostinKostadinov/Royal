@@ -1,11 +1,8 @@
 import { ProductHistory, RestockHistory } from "../../model/history.js";
-import { Product } from "../../model/product.js";
-import { Ingredient } from "../../model/ingredient.js";
 
 
 export function historiesRoutes(app, auth) {
-
-    app.post('/getAllConsumation', auth, async (req, res) => {
+    app.post('/getAllConsumptions', auth, async (req, res) => {
         try {
             // Check if user admin
             if (req.user.role !== 'admin')
@@ -32,7 +29,7 @@ export function historiesRoutes(app, auth) {
                 criteria.when.$lte = new Date(toDate).setHours(23, 59, 59);
             }
 
-            // Get all users reports from today
+            // Get all users reports
             const reports = await ProductHistory.find(criteria).sort({ when: -1 });
 
             res.json(reports);
@@ -106,7 +103,6 @@ export function historiesRoutes(app, auth) {
 
             const history = await RestockHistory.find(criteria).sort({ when: -1 });
 
-
             res.json(history);
         } catch (err) {
             console.error(err);
@@ -178,12 +174,16 @@ export function historiesRoutes(app, auth) {
             };
 
             if (fromDate) // start of today
-                criteria.when.$gte = new Date(fromDate).setHours(0, 0, 0);
+                criteria.when.$gte = new Date(fromDate).setHours(4);
             else
-                criteria.when.$gte = new Date().setHours(0, 0, 0);
+                criteria.when.$gte = new Date().setHours(4);
 
-            if (toDate)
+            if (!toDate)
+                criteria.when.$lte = new Date().setHours(23, 59, 59);
+            else if (toDate && fromDate == toDate)
                 criteria.when.$lte = new Date(toDate).setHours(23, 59, 59);
+            else if (toDate && new Date(toDate).setHours(0, 0, 0, 0) != new Date().setHours(0, 0, 0, 0))
+                criteria.when.$lte = new Date(toDate).setHours(4, 0, 0);
 
             // Get all paid bills
             const bills = await ProductHistory.find(criteria).populate('products.productRef');
@@ -198,17 +198,17 @@ export function historiesRoutes(app, auth) {
             }
 
             for (let bill of bills) {
-                info.grossIncome += bill.total;
                 info.totalSells += 1;
-                info.totalProductsSold += bill.products.length;
 
                 for (let product of bill.products) {
-                    info.grossIncomeDelivery += product.productRef.buyPrice * product.qty;
+                    info.totalProductsSold += product.qty;
+                    info.grossIncome += product.sellPrice * product.qty;
+                    info.grossIncomeDelivery += product.buyPrice * product.qty;
                 }
             }
 
             info.totalIncome = info.grossIncome - info.grossIncomeDelivery;
-            info.upsellPercentage = (info.grossIncome - info.grossIncomeDelivery) / info.grossIncome * 100;
+            info.upsellPercentage = (info.grossIncome - info.grossIncomeDelivery) / info.grossIncomeDelivery * 100;
 
             res.json(info);
         } catch (err) {
@@ -252,6 +252,7 @@ export function historiesRoutes(app, auth) {
                 return res.status(403).send('Нямате права!');
 
             const allScrapped = await ProductHistory.find({ action: 'scrapped', reviewed: false }).sort({ when: -1 }).populate('table');
+
             res.json(allScrapped);
         } catch (err) {
             console.error(err);

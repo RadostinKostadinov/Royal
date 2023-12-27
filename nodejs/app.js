@@ -8,7 +8,7 @@ import { socketsInitialize } from './config/sockets.js';
 import http from 'http';
 import { Server } from 'socket.io';
 
-const app = express();
+export const app = express();
 
 const httpPort = process.env.HTTP_PORT || 3000;
 const httpServer = http.createServer(app);
@@ -21,10 +21,13 @@ const io = new Server(httpServer, {
     }
 });
 
-mongoConfig();
+await mongoConfig(); // Added await because mocha was not waiting for server to listen before running tests
 expressConfig(app, express);
 routesConfig(app);
 startCronJobs();
 socketsInitialize(io);
 
-httpServer.listen(httpPort, () => console.log(`Node HTTP listening on port ${httpPort}!`));
+httpServer.listen(httpPort, () => {
+    console.log(`Node HTTP listening on port ${httpPort}!`);
+    app.emit("appStarted");
+});

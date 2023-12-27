@@ -1,12 +1,45 @@
 import page from 'page';
 import { html, render } from 'lit';
-import { container, unbindScreensaver } from '../app.js';
-import '../css/bartender/bartender.css';
-import { stopAllSockets, getAllOrders, socket, logout, completeOne, completeAll, completeOrder, clearAllOrders } from '../api.js';
+import { container } from '../../app.js';
+import { auth } from "../api/api.js";
+import '../../css/bartender/bartender.css';
+import { stopAllSockets, socket, logout } from '../api/api.js';
+import axios from 'axios';
 
-export async function bartenderDashboardPage() {
+// FUNCTIONS 
+
+async function completeAll(prodRef, orderId) {
+    return await axios.post('/completeAll', {
+        prodRef,
+        orderId
+    }).catch((err) => {
+        return err.response;
+    });
+}
+
+async function completeOne(prodRef, orderId) {
+    return await axios.post('/completeOne', {
+        prodRef,
+        orderId
+    }).catch((err) => {
+        return err.response;
+    });
+}
+
+async function completeOrder(_id) {
+    return await axios.post('/completeOrder', {
+        _id
+    }).catch((err) => {
+        return err.response;
+    });
+}
+
+// PAGES
+
+async function bartenderDashboardPage() {
     stopAllSockets();
-    let { orders, allProducts } = await getAllOrders();
+    const res = await axios.get('/getAllOrders');
+    let { orders, allProducts } = res.data;
 
     socket.on('order:change', async (data) => {
         orders = data.orders;
@@ -105,7 +138,7 @@ export async function bartenderDashboardPage() {
                     ${order.products.map((product) => productTemplate(product, order._id))}
                 </tbody>
             </table>
-            <button @click=${()=> cmpltOrder(order._id)} class="finish text-uppercase">Завърши</button>
+            <button @click=${() => cmpltOrder(order._id)} class="finish text-uppercase">Завърши</button>
         </div>
     `};
 
@@ -138,4 +171,8 @@ export async function bartenderDashboardPage() {
 
     render(dashboard(), container);
     rerender(orders, allProducts);
+}
+
+export function bartenderPages() {
+    page('/bartender', auth, bartenderDashboardPage);
 }

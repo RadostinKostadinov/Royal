@@ -47,7 +47,7 @@ export async function deleteProductFromEverywhere(product) {
     }
 
     // Finally delete product
-    await product.remove();
+    await Product.deleteOne({ _id: product._id });
 }
 
 export function productsRoutes(app, auth) {
@@ -126,6 +126,7 @@ export function productsRoutes(app, auth) {
                     product: {
                         type: 'product',
                         name: product.name,
+                        buyPrice: product.buyPrice,
                         qty,
                         expireDate,
                         productRef: product._id
@@ -199,7 +200,7 @@ export function productsRoutes(app, auth) {
 
             // Create product in database
             let pr = await Product.create({
-                name, qty, ingredients, sellPrice, category, forBartender
+                name, qty, ingredients, buyPrice, sellPrice, category, forBartender
             });
 
             // If product has ingredients, calculate its buy price
@@ -232,9 +233,6 @@ export function productsRoutes(app, auth) {
             if (!product)
                 return res.status(400).send('Няма продукт с това _id!');
 
-            // await product.remove(); // Delete the product
-
-            //FIXME ТРЯБВА ДА ИЗТРИВА ОТ ВСИЧКИ СМЕТКИ И МАСИ
             await deleteProductFromEverywhere(product);
 
             res.send('Успешно изтрихте този продукт!');
@@ -370,6 +368,16 @@ export function productsRoutes(app, auth) {
     app.get('/getAllProductsWithoutIngredients', auth, async (req, res) => {
         try {
             const products = await Product.find({ ingredients: { $size: 0 } }).sort({ position: 1 });
+            res.json(products);
+        } catch (err) {
+            console.error(err);
+            res.status(500).send(err);
+        }
+    });
+
+    app.get('/getAllProductsFromIngredients', auth, async (req, res) => {
+        try {
+            const products = await Product.find({ $where: "this.ingredients.length > 0" }).sort({ position: 1 });
             res.json(products);
         } catch (err) {
             console.error(err);

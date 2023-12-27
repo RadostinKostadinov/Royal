@@ -8,29 +8,13 @@ import { updateReport } from "./reports.js";
 
 export async function convertPersonalBillToHistory() {
     try {
-        // Find all consumation bills from today
-        let date = new Date();
-
-        // Check if date is between 00:00 and 04:00 hours
-        if (date.getHours() >= 0 && date.getHours() < 4) {
-            // Set date to yesterday at 04:00
-            date.setDate(date.getDate() - 1);
-            date.setHours(4);
-        } else {
-            // Set date to today at 04:00
-            date.setHours(4);
-        }
-
-        const consumationBills = await Bill.find({
-            when: {
-                $gte: date
-            },
+        const consumptionBills = await Bill.find({
             user: {
                 $ne: undefined
             }
         }).populate('products.product');
 
-        for (let bill of consumationBills) {
+        for (let bill of consumptionBills) {
             let historyProducts = [];
             let historyTotal = 0;
             const user = await User.findById(bill.user);
@@ -65,7 +49,8 @@ export async function convertPersonalBillToHistory() {
                 historyProducts.push({
                     name: product.product.name,
                     qty: product.qty,
-                    price: product.product.sellPrice,
+                    buyPrice: product.product.buyPrice,
+                    sellPrice: product.product.sellPrice,
                     productRef: product.product._id,
                     ingredients: ingredientsArray
                 });
@@ -89,7 +74,7 @@ export async function convertPersonalBillToHistory() {
             await Bill.deleteOne({ _id: bill._id });
         }
 
-        console.log('All consumation bills are turned into history!');
+        console.log('All consumption bills are turned into history!');
     } catch (err) {
         console.error(err);
     }
@@ -266,7 +251,8 @@ export function billsRoutes(app, auth) {
                 historyProducts.push({
                     name: product.product.name,
                     qty: product.qty,
-                    price: product.product.sellPrice,
+                    buyPrice: product.product.buyPrice,
+                    sellPrice: product.product.sellPrice,
                     productRef: product.product._id,
                     ingredients: ingredientsArray
                 });
@@ -418,17 +404,17 @@ export function billsRoutes(app, auth) {
 
                     // Recalculate totals
                     bill.total = 0;
-                    if (table) // if normal bill (not consumation)
+                    if (table) // if normal bill (not consumption)
                         table.total = 0;
 
                     for (let product of bill.products) {
                         bill.total += product.product.sellPrice * product.qty;
-                        if (table) // if normal bill (not consumation)
+                        if (table) // if normal bill (not consumption)
                             table.total += product.product.sellPrice * product.qty;
                     }
 
                     await bill.save();
-                    if (table) // if normal bill (not consumation)
+                    if (table) // if normal bill (not consumption)
                         await table.save();
 
                     return res.json(bill); // Return bill to rerender
@@ -617,7 +603,7 @@ export function billsRoutes(app, auth) {
 
     app.get('/generatePersonalBill', auth, async (req, res) => {
         try {
-            // Check if user already has consumation bill
+            // Check if user already has consumption bill
             let bill = await Bill.findOne({ user: req.user._id });
 
             if (bill)

@@ -11,7 +11,7 @@ export async function startCronJobs() {
             await Order.deleteMany({});
             console.log('All orders have been automatically deleted!');
 
-            // Finalize consumation for all users
+            // Finalize consumption for all users
             await convertPersonalBillToHistory();
 
             // Create report from leftovers, zero table totals and delete all bills

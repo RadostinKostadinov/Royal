@@ -7,3 +7,11 @@
 .qty-numpad button {
 	font-size: 2rem;
 }
+
+#informations div {
+	background-color: var(--bg-menu);
+}
+
+#informations div span {
+	color: rgba(255, 255, 255, 0.9);
+}

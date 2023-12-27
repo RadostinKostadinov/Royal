@@ -18,7 +18,7 @@
 	background-color: var(--bg-btn-categories);
 	border: 2px solid var(--border-btn-categories);
 	color: white;
-	border-radius: 40px;
+	border-radius: 5px;
 	font-weight: 600;
 	text-transform: uppercase;
 }
@@ -52,7 +52,7 @@
 	background-color: var(--bg-btn-categories);
 	border: 2px solid var(--border-btn-categories);
 	color: white;
-	border-radius: 40px;
+	border-radius: 5px;
 	font-weight: 600;
 	padding: 5% 0%;
 	text-transform: uppercase;
@@ -68,7 +68,7 @@
 	background-color: var(--bg-btn-xQty);
 	border: 2px solid var(--border-btn-xQty);
 	color: white;
-	border-radius: 40px;
+	border-radius: 5px;
 	font-weight: 600;
 	font-size: 1.5rem;
 	padding: 0.3rem 1.4rem;
@@ -149,6 +149,7 @@
 #tableControls .addedProducts table tbody tr td {
 	padding: 0.5rem 0px;
 	font-weight: 500;
+	text-transform: capitalize;
 }
 
 #tableControls .controlsAndAddons {
@@ -167,7 +168,7 @@
 	color: var(--color-sidemenu);
 	background-color: var(--bg-btn);
 	border: 1px solid transparent;
-	border-radius: 20px;
+	border-radius: 5px;
 	font-weight: 600;
 	font-size: 1.1rem;
 	padding: 0.5rem;
@@ -211,6 +212,7 @@
 	color: var(--color-btn-bills);
 	font-weight: 600;
 	font-size: 1.5rem;
+	border-radius: 5px;
 }
 
 #tableControls .bills button.active,
