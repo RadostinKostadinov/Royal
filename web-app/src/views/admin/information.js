@@ -4,7 +4,7 @@ import page from 'page';
 import { html, render } from 'lit/html.js';
 import $ from "jquery";
 import axios from "axios";
-import { auth } from "../api/api.js";
+import { auth, fixPrice, separateThousands } from "../api/api.js";
 
 // FUNCTIONS
 
@@ -42,17 +42,17 @@ export async function informationsPage() {
     const infoTemplate = (info) => html`
         <div class="flex-fill border border-info rounded p-2 text-info">
             <h5>Общ оборот</h5>
-            <span>${info.grossIncome.toFixed(2)} лв.</span>
+            <span>${fixPrice(info.grossIncome)} лв.</span>
         </div>
 
         <div class="flex-fill border border-info rounded p-2 text-info">
             <h5>Оборот на доставни цени</h5>
-            <span>${info.grossIncomeDelivery.toFixed(2)} лв.</span>
+            <span>${fixPrice(info.grossIncomeDelivery)} лв.</span>
         </div>
 
         <div class="flex-fill border border-info rounded p-2 text-info">
             <h5>Печалба</h5>
-            <span>${info.totalIncome.toFixed(2)} лв.</span>
+            <span>${fixPrice(info.totalIncome)} лв.</span>
         </div>
 
         <div class="flex-fill border border-info rounded p-2 text-info">
@@ -62,17 +62,17 @@ export async function informationsPage() {
 
         <div class="flex-fill border border-info rounded p-2 text-info">
             <h5>Брой сметки</h5>
-            <span>${info.totalSells} бр.</span>
+            <span>${separateThousands(info.totalSells)} бр.</span>
         </div>
 
         <div class="flex-fill border border-info rounded p-2 text-info">
             <h5>Брой продадени продукти</h5>
-            <span>${info.totalProductsSold} бр.</span>
+            <span>${separateThousands(info.totalProductsSold)} бр.</span>
         </div>
 
         <div class="flex-fill border border-info rounded p-2 text-info">
             <h5>Среден оборот на ден</h5>
-            <span>${info.averageIncomePerDay.toFixed(2)} лв.</span>
+            <span>${fixPrice(info.averageIncomePerDay)} лв.</span>
         </div>
 `;
 
@@ -84,8 +84,6 @@ export async function informationsPage() {
 
         if (res.status === 200) {
             const info = res.data;
-
-            console.log(info)
 
             // Render reports
             render(infoTemplate(info), document.querySelector('#informations'));
