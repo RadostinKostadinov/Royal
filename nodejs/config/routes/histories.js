@@ -194,8 +194,11 @@ export function historiesRoutes(app, auth) {
                 totalIncome: 0,
                 totalSells: 0, // Total number of sells (bills)
                 totalProductsSold: 0, // Total number of products sold
-                upsellPercentage: 0
+                upsellPercentage: 0,
+                averageIncomePerDay: 0
             }
+
+            let daysInPeriod = [];
 
             for (let bill of bills) {
                 info.totalSells += 1;
@@ -205,10 +208,21 @@ export function historiesRoutes(app, auth) {
                     info.grossIncome += product.sellPrice * product.qty;
                     info.grossIncomeDelivery += product.buyPrice * product.qty;
                 }
+
+                // Convert bill.when to dd-mm-yyyy and check if it exists in daysInPeriod
+                let date = new Date(bill.when);
+                let day = date.getDate();
+                let month = date.getMonth() + 1;
+                let year = date.getFullYear();
+                let fullDate = `${day}-${month}-${year}`;
+
+                if (!daysInPeriod.includes(fullDate))
+                    daysInPeriod.push(fullDate);
             }
 
             info.totalIncome = info.grossIncome - info.grossIncomeDelivery;
             info.upsellPercentage = (info.grossIncome - info.grossIncomeDelivery) / info.grossIncomeDelivery * 100;
+            info.averageIncomePerDay = info.grossIncome ? info.grossIncome / daysInPeriod.length : 0;
 
             res.json(info);
         } catch (err) {

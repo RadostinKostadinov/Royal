@@ -69,6 +69,11 @@ export async function informationsPage() {
             <h5>Брой продадени продукти</h5>
             <span>${info.totalProductsSold} бр.</span>
         </div>
+
+        <div class="flex-fill border border-info rounded p-2 text-info">
+            <h5>Среден оборот на ден</h5>
+            <span>${info.averageIncomePerDay.toFixed(2)} лв.</span>
+        </div>
 `;
 
     async function loadInformation() {
@@ -79,6 +84,9 @@ export async function informationsPage() {
 
         if (res.status === 200) {
             const info = res.data;
+
+            console.log(info)
+
             // Render reports
             render(infoTemplate(info), document.querySelector('#informations'));
         } else {
