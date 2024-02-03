@@ -1,3 +1,4 @@
+import { Expense } from "../../model/expense.js";
 import { ProductHistory, RestockHistory } from "../../model/history.js";
 
 
@@ -192,6 +193,7 @@ export function historiesRoutes(app, auth) {
                 grossIncome: 0,
                 grossIncomeDelivery: 0,
                 totalIncome: 0,
+                incomeWithExpenses: 0, // like totalIncome but substract all expenses from it
                 totalSells: 0, // Total number of sells (bills)
                 totalProductsSold: 0, // Total number of products sold
                 upsellPercentage: 0,
@@ -223,6 +225,19 @@ export function historiesRoutes(app, auth) {
             info.totalIncome = info.grossIncome - info.grossIncomeDelivery;
             info.upsellPercentage = (info.grossIncome - info.grossIncomeDelivery) / info.grossIncomeDelivery * 100;
             info.averageIncomePerDay = info.grossIncome ? info.grossIncome / daysInPeriod.length : 0;
+
+            // Get all expenses for period to calculate incomeWithExpenses
+            info.incomeWithExpenses = info.totalIncome;
+
+            const expenses = await Expense.find({
+                when: {
+                    $gte: criteria.when.$gte,
+                    $lte: criteria.when.$lte
+                }
+            });
+
+            for (let expense of expenses)
+                info.incomeWithExpenses -= expense.price;
 
             res.json(info);
         } catch (err) {

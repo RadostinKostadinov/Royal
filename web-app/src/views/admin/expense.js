@@ -16,13 +16,9 @@ async function getExpenseTypes() {
     return res.data;
 }
 
-async function getExpenses(fromDate, toDate, id) {
+async function getExpenses(data) {
     // When id is present, it retrieves a single expense!
-    const res = await axios.post('/getExpenses', {
-        fromDate,
-        toDate,
-        id
-    });
+    const res = await axios.post('/getExpenses', data);
 
     return res;
 }
@@ -161,7 +157,7 @@ async function loadEditModal(e) {
     const id = e.srcElement.getAttribute('id')
     expenseToEditId = id;
 
-    const res = await getExpenses(null, null, id);
+    const res = await getExpenses({ id });
     const expense = res.data;
 
     $(`#editExpenseModal option:contains(${expense.type})`).attr('selected', 'selected');
@@ -232,8 +228,11 @@ async function expensePage() {
     async function loadExpenses(e) {
         const fromDate = $('#fromDate').val();
         const toDate = $('#toDate').val();
+        const type = $('#expenseType').val();
 
-        const res = await getExpenses(fromDate, toDate);
+        console.log(type);
+
+        const res = await getExpenses({ fromDate, toDate, type });
 
         if (res.status === 200) {
             const expenses = res.data;
@@ -276,15 +275,23 @@ async function expensePage() {
             <button class="btn btn-success fs-3 mt-2" data-bs-toggle="modal" data-bs-target="#createExpenseModal"><i class="bi bi-plus-lg"></i></button>
         </div>
         
-        <div class="d-flex w-100 gap-3 p-3 fs-4 mb-3">
-            <div class="w-50">
+        <div class="d-flex flex-wrap w-100 gap-3 p-3 fs-4 mb-3">
+            <div class="flex-grow-1">
                 <label for="fromDate" class="form-label">От</label>
                 <input @change=${loadExpenses} name="fromDate" class="form-control fs-4" id="fromDate" type="date" />
             </div>
         
-            <div class="w-50">
+            <div class="flex-grow-1">
                 <label for="toDate" class="form-label">До</label>
                 <input @change=${loadExpenses} name="toDate" class="form-control fs-4" id="toDate" type="date" />
+            </div>
+
+            <div class="flex-grow-1">
+                <label for="expenseType" class="form-label fs-4">Тип</label>
+                <select @change=${loadExpenses} type="text" class="form-control fs-4" name="expenseType" id="expenseType">
+                    <option selected value="">Всички</option>
+                    ${expenseTypes.map((expense) => html`<option value=${expense}>${expense}</option>`)}
+                </select>
             </div>
         </div>
 

@@ -56,6 +56,11 @@ export async function informationsPage() {
         </div>
 
         <div class="flex-fill border border-info rounded p-2 text-info">
+            <h5>Печалба след разходи</h5>
+            <span>${fixPrice(info.incomeWithExpenses)} лв.</span>
+        </div>
+
+        <div class="flex-fill border border-info rounded p-2 text-info">
             <h5>Обща надценка</h5>
             <span>${info.upsellPercentage ? info.upsellPercentage.toFixed(2) : "0"}%</span>
         </div>

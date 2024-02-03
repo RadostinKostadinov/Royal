@@ -21,14 +21,19 @@ export function expensesRoutes(app, auth) {
                 return res.status(403).send('Нямате права!');
 
 
-            const { fromDate, toDate, id } = req.body;
+            const { fromDate, toDate, type, id } = req.body;
 
             if (id) {
                 const expense = await Expense.findById(id);
                 return res.json(expense);
             }
 
-            let criteria = {}
+            let criteria = {};
+
+            console.log(type);
+
+            if (type)
+                criteria.type = type;
 
             if (fromDate) {
                 if (!criteria.hasOwnProperty('when'))
