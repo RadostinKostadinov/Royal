@@ -90,6 +90,8 @@ export async function informationsPage() {
         if (res.status === 200) {
             const info = res.data;
 
+            console.log({ res, info });
+
             // Render reports
             render(infoTemplate(info), document.querySelector('#informations'));
         } else {

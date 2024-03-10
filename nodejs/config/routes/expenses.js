@@ -30,8 +30,6 @@ export function expensesRoutes(app, auth) {
 
             let criteria = {};
 
-            console.log(type);
-
             if (type)
                 criteria.type = type;
 
@@ -39,14 +37,17 @@ export function expensesRoutes(app, auth) {
                 if (!criteria.hasOwnProperty('when'))
                     criteria.when = {};
 
-                criteria.when.$gte = new Date(fromDate).setHours(0, 0, 0);
+                criteria.when.$gte = new Date(fromDate).setHours(4);
             }
 
             if (toDate) {
                 if (!criteria.hasOwnProperty('when'))
                     criteria.when = {};
 
-                criteria.when.$lte = new Date(toDate).setHours(23, 59, 59);
+                // grab the date and set the next day as value
+                const nextDay = new Date(toDate);
+                nextDay.setDate(nextDay.getDate() + 1);
+                criteria.when.$lte = nextDay.setHours(4);
             }
 
             const expenses = await Expense.find(criteria).sort({ when: -1 });

@@ -21,13 +21,15 @@ export function historiesRoutes(app, auth) {
             if (fromDate) {
                 if (!criteria.hasOwnProperty('when'))
                     criteria.when = {};
-                criteria.when.$gte = new Date(fromDate);
+                criteria.when.$gte = new Date(fromDate).setHours(0, 0, 0);
             }
 
             if (toDate) {
                 if (!criteria.hasOwnProperty('when'))
                     criteria.when = {};
-                criteria.when.$lte = new Date(toDate).setHours(23, 59, 59);
+                const nextDay = new Date(toDate);
+                nextDay.setDate(nextDay.getDate() + 1);
+                criteria.when.$lte = nextDay.setHours(4);
             }
 
             // Get all users reports
@@ -93,13 +95,15 @@ export function historiesRoutes(app, auth) {
             if (fromDate) {
                 if (!criteria.hasOwnProperty('when'))
                     criteria.when = {};
-                criteria.when.$gte = new Date(fromDate);
+                criteria.when.$gte = new Date(fromDate).setHours(4);
             }
 
             if (toDate) {
                 if (!criteria.hasOwnProperty('when'))
                     criteria.when = {};
-                criteria.when.$lte = new Date(toDate).setHours(23, 59, 59);
+                const nextDay = new Date(toDate);
+                nextDay.setDate(nextDay.getDate() + 1);
+                criteria.when.$lte = nextDay.setHours(4);
             }
 
             const history = await RestockHistory.find(criteria).sort({ when: -1 });
@@ -127,13 +131,15 @@ export function historiesRoutes(app, auth) {
             if (fromDate) {
                 if (!criteria.hasOwnProperty('when'))
                     criteria.when = {};
-                criteria.when.$gte = new Date(fromDate);
+                criteria.when.$gte = new Date(fromDate).setHours(4);
             }
 
             if (toDate) {
                 if (!criteria.hasOwnProperty('when'))
                     criteria.when = {};
-                criteria.when.$lte = new Date(toDate).setHours(23, 59, 59);
+                const nextDay = new Date(toDate);
+                nextDay.setDate(nextDay.getDate() + 1);
+                criteria.when.$lte = nextDay.setHours(4);
             }
 
             const sells = await ProductHistory.find(criteria).sort({ when: -1 });
@@ -179,12 +185,16 @@ export function historiesRoutes(app, auth) {
             else
                 criteria.when.$gte = new Date().setHours(4);
 
-            if (!toDate)
-                criteria.when.$lte = new Date().setHours(23, 59, 59);
-            else if (toDate && fromDate == toDate)
-                criteria.when.$lte = new Date(toDate).setHours(23, 59, 59);
-            else if (toDate && new Date(toDate).setHours(0, 0, 0, 0) != new Date().setHours(0, 0, 0, 0))
-                criteria.when.$lte = new Date(toDate).setHours(4, 0, 0);
+            if (!toDate) {
+                const nextDay = new Date();
+                nextDay.setDate(nextDay.getDate() + 1);
+                criteria.when.$lte = nextDay.setHours(4);
+            }
+            else {
+                const nextDay = new Date(toDate);
+                nextDay.setDate(nextDay.getDate() + 1);
+                criteria.when.$lte = nextDay.setHours(4);
+            }
 
             // Get all paid bills
             const bills = await ProductHistory.find(criteria).populate('products.productRef');
