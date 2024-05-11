@@ -21,27 +21,33 @@ export function expensesRoutes(app, auth) {
                 return res.status(403).send('Нямате права!');
 
 
-            const { fromDate, toDate, id } = req.body;
+            const { fromDate, toDate, type, id } = req.body;
 
             if (id) {
                 const expense = await Expense.findById(id);
                 return res.json(expense);
             }
 
-            let criteria = {}
+            let criteria = {};
+
+            if (type)
+                criteria.type = type;
 
             if (fromDate) {
                 if (!criteria.hasOwnProperty('when'))
                     criteria.when = {};
 
-                criteria.when.$gte = new Date(fromDate).setHours(0, 0, 0);
+                criteria.when.$gte = new Date(fromDate).setHours(4);
             }
 
             if (toDate) {
                 if (!criteria.hasOwnProperty('when'))
                     criteria.when = {};
 
-                criteria.when.$lte = new Date(toDate).setHours(23, 59, 59);
+                // grab the date and set the next day as value
+                const nextDay = new Date(toDate);
+                nextDay.setDate(nextDay.getDate() + 1);
+                criteria.when.$lte = nextDay.setHours(4);
             }
 
             const expenses = await Expense.find(criteria).sort({ when: -1 });

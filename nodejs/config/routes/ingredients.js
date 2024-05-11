@@ -1,6 +1,7 @@
 import { RestockHistory } from "../../model/history.js";
 import { Ingredient } from "../../model/ingredient.js";
 import { Product } from "../../model/product.js";
+import { recalculateProductBuyPrice } from "./products.js";
 
 export function ingredientsRoutes(app, auth) {
     app.post('/scrapRestockIngredient', auth, async (req, res) => {
@@ -160,12 +161,22 @@ export function ingredientsRoutes(app, auth) {
             if (!(ingredient))
                 return res.status(400).send('Съставката не съществува!');
 
+            const newBuyPrice = ingredient.buyPrice !== buyPrice;
             // Update product values
             ingredient.name = name;
             ingredient.unit = unit;
-            ingredient.qty = ['кг', 'л'].includes(ingredient.unit) ? qty * 1000 : qty;
             ingredient.buyPrice = buyPrice;
+            ingredient.qty = ['кг', 'л'].includes(ingredient.unit) ? qty * 1000 : qty;
             await ingredient.save();
+
+            if (newBuyPrice) {
+                ingredient.buyPrice = buyPrice;
+
+                // find all products that contain this ingredient and update their buyPrice
+                const products = await Product.find({ 'ingredients.ingredient': _id });
+                for (let product of products)
+                    await recalculateProductBuyPrice(product);
+            }
 
             // Done
             res.send('Успешно променена съставка!');

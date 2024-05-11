@@ -317,13 +317,15 @@ export function reportsRoutes(app, auth) {
             if (fromDate) {
                 if (!criteria.hasOwnProperty('when'))
                     criteria.when = {};
-                criteria.when.$gte = new Date(fromDate);
+                criteria.when.$gte = new Date(fromDate).setHours(4);
             }
 
             if (toDate) {
                 if (!criteria.hasOwnProperty('when'))
                     criteria.when = {};
-                criteria.when.$lte = new Date(toDate).setHours(23, 59, 59);
+                const nextDay = new Date(toDate);
+                nextDay.setDate(nextDay.getDate() + 1);
+                criteria.when.$lte = nextDay.setHours(4);
             }
 
             // Get all users reports from today

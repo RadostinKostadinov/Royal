@@ -1,3 +1,4 @@
+import { Expense } from "../../model/expense.js";
 import { ProductHistory, RestockHistory } from "../../model/history.js";
 
 
@@ -20,13 +21,15 @@ export function historiesRoutes(app, auth) {
             if (fromDate) {
                 if (!criteria.hasOwnProperty('when'))
                     criteria.when = {};
-                criteria.when.$gte = new Date(fromDate);
+                criteria.when.$gte = new Date(fromDate).setHours(0, 0, 0);
             }
 
             if (toDate) {
                 if (!criteria.hasOwnProperty('when'))
                     criteria.when = {};
-                criteria.when.$lte = new Date(toDate).setHours(23, 59, 59);
+                const nextDay = new Date(toDate);
+                nextDay.setDate(nextDay.getDate() + 1);
+                criteria.when.$lte = nextDay.setHours(4);
             }
 
             // Get all users reports
@@ -92,13 +95,15 @@ export function historiesRoutes(app, auth) {
             if (fromDate) {
                 if (!criteria.hasOwnProperty('when'))
                     criteria.when = {};
-                criteria.when.$gte = new Date(fromDate);
+                criteria.when.$gte = new Date(fromDate).setHours(4);
             }
 
             if (toDate) {
                 if (!criteria.hasOwnProperty('when'))
                     criteria.when = {};
-                criteria.when.$lte = new Date(toDate).setHours(23, 59, 59);
+                const nextDay = new Date(toDate);
+                nextDay.setDate(nextDay.getDate() + 1);
+                criteria.when.$lte = nextDay.setHours(4);
             }
 
             const history = await RestockHistory.find(criteria).sort({ when: -1 });
@@ -126,13 +131,15 @@ export function historiesRoutes(app, auth) {
             if (fromDate) {
                 if (!criteria.hasOwnProperty('when'))
                     criteria.when = {};
-                criteria.when.$gte = new Date(fromDate);
+                criteria.when.$gte = new Date(fromDate).setHours(4);
             }
 
             if (toDate) {
                 if (!criteria.hasOwnProperty('when'))
                     criteria.when = {};
-                criteria.when.$lte = new Date(toDate).setHours(23, 59, 59);
+                const nextDay = new Date(toDate);
+                nextDay.setDate(nextDay.getDate() + 1);
+                criteria.when.$lte = nextDay.setHours(4);
             }
 
             const sells = await ProductHistory.find(criteria).sort({ when: -1 });
@@ -178,12 +185,16 @@ export function historiesRoutes(app, auth) {
             else
                 criteria.when.$gte = new Date().setHours(4);
 
-            if (!toDate)
-                criteria.when.$lte = new Date().setHours(23, 59, 59);
-            else if (toDate && fromDate == toDate)
-                criteria.when.$lte = new Date(toDate).setHours(23, 59, 59);
-            else if (toDate && new Date(toDate).setHours(0, 0, 0, 0) != new Date().setHours(0, 0, 0, 0))
-                criteria.when.$lte = new Date(toDate).setHours(4, 0, 0);
+            if (!toDate) {
+                const nextDay = new Date();
+                nextDay.setDate(nextDay.getDate() + 1);
+                criteria.when.$lte = nextDay.setHours(4);
+            }
+            else {
+                const nextDay = new Date(toDate);
+                nextDay.setDate(nextDay.getDate() + 1);
+                criteria.when.$lte = nextDay.setHours(4);
+            }
 
             // Get all paid bills
             const bills = await ProductHistory.find(criteria).populate('products.productRef');
@@ -192,10 +203,14 @@ export function historiesRoutes(app, auth) {
                 grossIncome: 0,
                 grossIncomeDelivery: 0,
                 totalIncome: 0,
+                incomeWithExpenses: 0, // like totalIncome but substract all expenses from it
                 totalSells: 0, // Total number of sells (bills)
                 totalProductsSold: 0, // Total number of products sold
-                upsellPercentage: 0
+                upsellPercentage: 0,
+                averageIncomePerDay: 0
             }
+
+            let daysInPeriod = [];
 
             for (let bill of bills) {
                 info.totalSells += 1;
@@ -205,10 +220,34 @@ export function historiesRoutes(app, auth) {
                     info.grossIncome += product.sellPrice * product.qty;
                     info.grossIncomeDelivery += product.buyPrice * product.qty;
                 }
+
+                // Convert bill.when to dd-mm-yyyy and check if it exists in daysInPeriod
+                let date = new Date(bill.when);
+                let day = date.getDate();
+                let month = date.getMonth() + 1;
+                let year = date.getFullYear();
+                let fullDate = `${day}-${month}-${year}`;
+
+                if (!daysInPeriod.includes(fullDate))
+                    daysInPeriod.push(fullDate);
             }
 
             info.totalIncome = info.grossIncome - info.grossIncomeDelivery;
             info.upsellPercentage = (info.grossIncome - info.grossIncomeDelivery) / info.grossIncomeDelivery * 100;
+            info.averageIncomePerDay = info.grossIncome ? info.grossIncome / daysInPeriod.length : 0;
+
+            // Get all expenses for period to calculate incomeWithExpenses
+            info.incomeWithExpenses = info.totalIncome;
+
+            const expenses = await Expense.find({
+                when: {
+                    $gte: criteria.when.$gte,
+                    $lte: criteria.when.$lte
+                }
+            });
+
+            for (let expense of expenses)
+                info.incomeWithExpenses -= expense.price;
 
             res.json(info);
         } catch (err) {
