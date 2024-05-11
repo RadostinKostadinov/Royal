@@ -667,7 +667,7 @@ async function revisionsPage() {
     const revisionTemplate = () => html`
     <div class="d-flex justify-content-between p-2">
         ${backBtn}
-<button @click=${() => page('/admin/history/revision/create')} class="btn btn-primary mt-2 fs-3">Нова ревизия</button>
+<a href='/admin/history/revision/create' class="btn btn-primary mt-2 fs-3">Нова ревизия</a>
         </div>
 
     <select @change=${selectedRevision} class="form-control mt-2fs-4">

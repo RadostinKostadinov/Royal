@@ -165,7 +165,7 @@ export async function checkLogin() {
 
     const numpadTemplate = () => html`
     <button @click=${() => render(usersTemplate(), container)}
-        class="btn btn-secondary fs-1 mt-3 ms-3">Назад</button>
+        class="btn btn-secondary fs-1 mt-3 ms-3"><i class="pe-none bi bi-arrow-left"></i></button>
     
     <div id="numpad-wrapper">
         <div id="code">

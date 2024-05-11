@@ -33,7 +33,9 @@
 	font-weight: 600;
 }
 
+#waiterMenu a,
 #waiterMenu button,
+#topMenu a,
 #topMenu button {
 	color: var(--color-sidemenu);
 	background-color: var(--bg-btn);
@@ -43,9 +45,16 @@
 	font-size: 1.3rem;
 	padding: 0.5rem 0px;
 	text-transform: uppercase;
+	text-decoration: none;
 }
 
+#topMenu a {
+	padding-top: 2rem;
+}
+
+#waiterMenu a.active,
 #waiterMenu button.active,
+#topMenu a.active,
 #topMenu button.active {
 	background-color: var(--bg-btn-active);
 	border-color: var(--border-btn-active);
@@ -54,9 +63,4 @@
 #waiterMenu #todayInfo > div {
 	background-color: var(--bg-btn);
 	font-size: 0.9rem;
-}
-
-#topMenu button {
-	padding: 0.5rem;
-	/* padding: 0px 0.5rem; */
 }

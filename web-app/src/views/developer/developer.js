@@ -5,7 +5,7 @@ import { container } from '../../app';
 import { databasePages } from './database/database';
 import { backBtn } from '../admin/admin';
 
-export const devBackBtn = html`<button @click=${() => page('/developer')} class="btn btn-secondary fs-3 mt-2 ms-2"><i class="pe-none bi bi-arrow-left"></i></button>`;
+export const devBackBtn = html`<a href='/developer' class="btn btn-secondary fs-3 mt-2 ms-2"><i class="pe-none bi bi-arrow-left"></i></a>`;
 
 function developerDashboard() {
     const dashboard = () => html`
@@ -13,7 +13,7 @@ function developerDashboard() {
             ${backBtn}
             <div class="text-center mt-4">
                 <div class="d-inline-flex flex-row flex-wrap gap-3 justify-content-center">
-                    <button class="btn btn-primary fs-4" @click=${() => page('/developer/database')}>База данни</button>
+                    <a class="btn btn-primary fs-4" href='/developer/database'>База данни</a>
                 </div>
             </div>
         </div>

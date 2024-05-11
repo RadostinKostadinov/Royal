@@ -217,6 +217,21 @@ export function historiesRoutes(app, auth) {
         }
     });
 
+    app.get('/getLatestPaidBills/:page', auth, async (req, res) => {
+        try {
+
+            const page = req.params.page;
+            const shownResults = 10;
+
+            const latestPaid = await ProductHistory.find({ action: 'paid' }).sort({ when: -1 }).populate('table').limit(shownResults).skip((page - 1) * shownResults);
+
+            res.json(latestPaid);
+        } catch (err) {
+            console.error(err);
+            res.status(500).send(err);
+        }
+    });
+
     app.get('/getAllPaidBills', auth, async (req, res) => {
         try {
             let date = new Date();

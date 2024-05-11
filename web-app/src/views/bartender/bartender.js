@@ -150,14 +150,13 @@ async function bartenderDashboardPage() {
                     <button @click=${() => socket.emit('order:clearAll')}>Изчисти всички</button>
                 </div>
                 <div class="d-flex h-50 flex-column justify-content-end gap-3">
-                    <button @click=${() => page('/waiter')}>Маси</button>
+                    <a class="btn gray-btn" href='/waiter'>Маси</a>
                     <button @click=${logout}>Изход</button>
                 </div>
             </div>
             <div class="overflow-auto">
                 <table id="allOrders">
                     <tbody>
-        
                     </tbody>
                 </table>
             </div>

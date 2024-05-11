@@ -289,8 +289,9 @@ async function waiterDashboardPage() {
                         <button class=${lastRenderedLocation === 'middle' ? 'active' : ''} id="middleTablesBtn" @click=${(clickedBtn) => renderTablesView(clickedBtn, 'middle')}>Градина</button>
                     </div>
                     <div class="d-flex flex-column text-center gap-3 w-100">
-                        <button @click=${() => page('/consumption/')}>Консум.</button>
-                        <button id="reportButton" @click=${getTdsReport} data-bs-toggle="modal" data-bs-target="#reportModal">Брак</button>
+                        <a class="btn gray-btn" href='/consumption/'>Консум.</a>
+                        ${user.role === 'admin' ? html`<button id="reportButton" @click=${getTdsReport} data-bs-toggle="modal" data-bs-target="#reportModal">Отчет</button>` : ''}
+                        
                         <button @click=${logout}>Изход</button>
                     </div>
                 </div>
@@ -298,10 +299,10 @@ async function waiterDashboardPage() {
             
             <div id="topMenuAndGrid">
                 <div id="topMenu">
-                    <button @click=${() => page('/bartender')}>Поръчки</button>
+                    <a href='/bartender'>Поръчки</a>
                     ${user.role === 'admin' ? html`
-                    <button @click=${() => page('/admin')}>АДМИН</button>` : ''}
-                    <button @click=${() => page('/waiter/showPaidBills')}>Плащания</button>
+                    <a href='/admin'>АДМИН</a>` : ''}
+                    <a href='/waiter/showPaidBills'>Брак</a>
                 </div>
     
                 ${grid}

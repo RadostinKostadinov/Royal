@@ -11,7 +11,8 @@
 	background-color: var(--dark-grey);
 }
 
-#bartenderDashboard #menu button {
+#bartenderDashboard #menu button,
+.bartenderMenuBtn {
 	color: var(--color-sidemenu);
 	background-color: var(--bg-btn);
 	border: 1px solid transparent;
@@ -20,6 +21,8 @@
 	font-size: 1.1rem;
 	padding: 0.5rem;
 	text-transform: uppercase;
+	text-align: center;
+	text-decoration: none;
 }
 
 #bartenderDashboard #allOrders td:first-of-type {

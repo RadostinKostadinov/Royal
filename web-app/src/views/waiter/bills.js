@@ -8,9 +8,12 @@ import { auth, fixPrice } from "../api/api";
 
 // PAGES
 
-async function showPaidBillsPage() {
-    const res = await axios.get('/getAllPaidBills');
-    const allPaidBills = res.data;
+async function showPaidBillsPage(ctx) {
+    const pageNumber = ctx.params.page || 1;
+    const prevPage = parseInt(pageNumber) - 1;
+    const nextPage = parseInt(pageNumber) + 1;
+    const res = await axios.get(`/getLatestPaidBills/${pageNumber}`);
+    const latestPaidBills = res.data;
 
     const historiesRows = (histories) => html`
         ${histories.map((history) => {
@@ -37,7 +40,11 @@ async function showPaidBillsPage() {
     `;
 
     const scrappedTemplate = () => html`
-        <button class="gray-btn fs-5 mt-3 ms-3" @click=${() => page('/waiter')}>Назад</button>
+        <a class="btn gray-btn fs-3 mt-3 ms-3" href='/waiter'><i class="pe-none bi bi-arrow-left"></i></a>
+        <div class="d-flex justify-content-center">
+            ${pageNumber == 1 ? '' : html`<a class="btn gray-btn fs-5 mt-3 ms-3" href=${`/waiter/showPaidBills/${prevPage}`}><i class="bi bi-chevron-double-left"></i> Страница ${prevPage}</a>`}
+            <a class="btn gray-btn fs-5 mt-3 ms-3" href=${`/waiter/showPaidBills/${nextPage}`}>Страница ${nextPage} <i class="bi bi-chevron-double-right"></i></a>
+        </div>
 
         <table class="mt-3 table table-striped table-dark table-hover text-center">
             <thead>
@@ -60,9 +67,10 @@ async function showPaidBillsPage() {
     render(scrappedTemplate(), container);
 
     // Render all scrapped products
-    render(historiesRows(allPaidBills), document.querySelector('tbody'));
+    render(historiesRows(latestPaidBills), document.querySelector('tbody'));
 }
 
 export function billPages() {
     page('/waiter/showPaidBills', auth, showPaidBillsPage);
+    page('/waiter/showPaidBills/:page', auth, showPaidBillsPage);
 }
