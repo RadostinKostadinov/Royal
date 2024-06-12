@@ -518,6 +518,7 @@ async function waiterDashboardPage() {
 
     elements = [
       {
+        _id: 1,
         location: "middle",
         total: 0,
         name: "Маса 1",
@@ -528,6 +529,7 @@ async function waiterDashboardPage() {
         rotation: 1,
       },
       {
+        _id: 2,
         location: "middle",
         total: 0,
         name: "Маса 2",
@@ -538,6 +540,7 @@ async function waiterDashboardPage() {
         rotation: 1,
       },
       {
+        _id: 3,
         location: "middle",
         total: 0,
         name: "Маса 3",
@@ -548,6 +551,7 @@ async function waiterDashboardPage() {
         rotation: 45,
       },
       {
+        _id: 4,
         location: "middle",
         total: 0,
         name: "Маса 4",
@@ -558,6 +562,7 @@ async function waiterDashboardPage() {
         rotation: 0,
       },
       {
+        _id: 5,
         location: "middle",
         total: 0,
         name: "Маса 5",
@@ -568,6 +573,7 @@ async function waiterDashboardPage() {
         rotation: 0,
       },
       {
+        _id: 6,
         location: "middle",
         total: 0,
         name: "Маса 6",
@@ -578,6 +584,7 @@ async function waiterDashboardPage() {
         rotation: 0,
       },
       {
+        _id: 7,
         location: "middle",
         total: 0,
         name: "Маса 7",
