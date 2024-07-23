@@ -8,7 +8,7 @@ import { auth } from "../api/api.js";
 
 // PAGES
 
-export function createTablePage() {
+export async function createTablePage() {
   async function submitTableForm(e) {
     e.preventDefault();
     const formData = new FormData(document.querySelector(".rado-add-table"));
@@ -18,8 +18,10 @@ export function createTablePage() {
     const tableName = formData.get("table-name");
     const tableRoom = formData.get("table-room");
 
+    console.log("here1");
+
     render(
-      moveTableLayout({
+      await moveTableLayout({
         tableType,
         tableSize,
         tableRotation,
@@ -30,14 +32,13 @@ export function createTablePage() {
     );
   }
 
-  function onFormStateChange(e) {
-    const formData = new FormData(document.querySelector(".rado-add-table"));
-    const tableType = formData.get("table-type");
-    const tableSize = formData.get("table-size");
-    const tableRotation = formData.get("table-rotation");
-    const tableName = formData.get("table-name");
-    const tableRoom = formData.get("table-room");
-
+  function calculateTableSpecs(
+    tableType,
+    tableSize,
+    tableRotation,
+    tableName,
+    tableRoom
+  ) {
     let allClasses = "table-rado";
 
     if (tableType === "circle") {
@@ -120,13 +121,30 @@ export function createTablePage() {
     const height = tableTypes[tableType][tableSize].height;
     const rotation = tableRotation.split("degrees")[0];
 
+    return { width, height, rotation, allClasses };
+  }
+
+  function onFormStateChange(e) {
+    const formData = new FormData(document.querySelector(".rado-add-table"));
+    const tableType = formData.get("table-type");
+    const tableSize = formData.get("table-size");
+    const tableRotation = formData.get("table-rotation");
+    const tableName = formData.get("table-name");
+    const tableRoom = formData.get("table-room");
+
+    const tableHTMLSpecs = calculateTableSpecs(
+      tableType,
+      tableSize,
+      tableRotation
+    );
+
     const displayElement = document.querySelector(
       "#create-table-preview > div"
     );
-    displayElement.style.width = `${width}px`;
-    displayElement.style.height = `${height}px`;
-    displayElement.style.transform = `rotate(${rotation}deg)`;
-    displayElement.setAttribute("class", allClasses);
+    displayElement.style.width = `${tableHTMLSpecs.width}px`;
+    displayElement.style.height = `${tableHTMLSpecs.height}px`;
+    displayElement.style.transform = `rotate(${tableHTMLSpecs.rotation}deg)`;
+    displayElement.setAttribute("class", tableHTMLSpecs.allClasses);
   }
 
   const createTableForm = () => html`
@@ -279,10 +297,84 @@ export function createTablePage() {
     </form>
   `;
 
-  const moveTableLayout = (tableData) => html`
-    ${backBtn}
-    <div id="render-tables-layout">${tableData.tableType}</div>
-  `;
+  async function getTables(tableData) {
+    const res = await axios.post("/getTables", {
+      location: tableData.tableRoom,
+    });
+    return res;
+  }
+
+  let firstTouchX = 0;
+  let firstTouchY = 0;
+
+  const onTableDrag = (event) => {
+    const deltaX = event.touches[0].clientX - firstTouchX;
+    const deltaY = event.touches[0].clientY - firstTouchY;
+    event.target.style.left = `${deltaX}px`;
+    event.target.style.top = `${deltaY}px`;
+    event.preventDefault();
+  };
+
+  const onTableDragStart = (event) => {
+    firstTouchX = Math.abs(event.target.offsetLeft - event.touches[0].clientX);
+    firstTouchY = Math.abs(event.target.offsetTop - event.touches[0].clientY);
+  };
+
+  const onTableDragEnd = (event) => {};
+
+  const moveTableLayout = async (tableData) => {
+    // Get all tables for the selected room
+
+    const tables = await getTables(tableData);
+    const tableHTMLSpecs = calculateTableSpecs(
+      tableData.tableType,
+      tableData.tableSize,
+      tableData.tableRotation
+    );
+    console.log(tables);
+    console.log(tableHTMLSpecs);
+
+    return html`
+      <style>
+        #created-table {
+          width: ${tableHTMLSpecs.width}px;
+          height: ${tableHTMLSpecs.height}px;
+          transform: rotate(${tableHTMLSpecs.rotation}deg);
+          pointer-events: all;
+        }
+      </style>
+      <div
+        id="created-table"
+        draggable="true"
+        class="${tableHTMLSpecs.allClasses}"
+        @touchstart=${onTableDragStart}
+        @touchmove=${onTableDrag}
+        @touchend="${onTableDragEnd}"
+      >
+        1
+      </div>
+    `;
+    // return html` <p>${JSON.stringify(tableData)}</p> `;
+
+    // Render all tables for the selected room
+    const tableElements = tables.map((table) => {
+      return html`
+        <div
+          class="table-layout-item"
+          style="width: ${tableData.tableWidth}px; height: ${tableData.tableHeight}px; transform: rotate(${tableData.tableRotation}deg)"
+        >
+          <div class="table-layout-item-name">${table.name}</div>
+        </div>
+      `;
+    });
+
+    // return html`
+    //   ${backBtn}
+    //   <div id="render-tables-layout">
+    //     <div></div>
+    //   </div>
+    // `;
+  };
 
   render(createTableForm(), container);
 }
