@@ -19,7 +19,7 @@ import { billPages } from "./bills";
 import { consumptionPages } from "./consumption";
 import { tablePages } from "./table/table";
 
-let lastRenderedLocation = "middle"; // remembers the last rendered location, so when the user clicks "Back", take them there
+let lastRenderedLocation = "garden"; // remembers the last rendered location, so when the user clicks "Back", take them there
 
 // FUNCTIONS
 
@@ -351,9 +351,9 @@ async function waiterDashboardPage() {
               Вътре
             </button>
             <button
-              class=${lastRenderedLocation === "middle" ? "active" : ""}
+              class=${lastRenderedLocation === "garden" ? "active" : ""}
               id="middleTablesBtn"
-              @click=${(clickedBtn) => renderTablesView(clickedBtn, "middle")}
+              @click=${(clickedBtn) => renderTablesView(clickedBtn, "garden")}
             >
               Градина
             </button>
@@ -519,7 +519,7 @@ async function waiterDashboardPage() {
     elements = [
       {
         _id: 1,
-        location: "middle",
+        location: "garden",
         total: 0,
         name: "Маса 1",
         position_x: 10,
@@ -530,7 +530,7 @@ async function waiterDashboardPage() {
       },
       {
         _id: 2,
-        location: "middle",
+        location: "garden",
         total: 0,
         name: "Маса 2",
         position_x: 100,
@@ -541,7 +541,7 @@ async function waiterDashboardPage() {
       },
       {
         _id: 3,
-        location: "middle",
+        location: "garden",
         total: 0,
         name: "Маса 3",
         position_x: 200,
@@ -552,7 +552,7 @@ async function waiterDashboardPage() {
       },
       {
         _id: 4,
-        location: "middle",
+        location: "garden",
         total: 0,
         name: "Маса 4",
         position_x: 400,
@@ -563,7 +563,7 @@ async function waiterDashboardPage() {
       },
       {
         _id: 5,
-        location: "middle",
+        location: "garden",
         total: 0,
         name: "Маса 5",
         position_x: 100,
@@ -574,7 +574,7 @@ async function waiterDashboardPage() {
       },
       {
         _id: 6,
-        location: "middle",
+        location: "garden",
         total: 0,
         name: "Маса 6",
         position_x: 300,
@@ -585,7 +585,7 @@ async function waiterDashboardPage() {
       },
       {
         _id: 7,
-        location: "middle",
+        location: "garden",
         total: 0,
         name: "Маса 7",
         position_x: 500,

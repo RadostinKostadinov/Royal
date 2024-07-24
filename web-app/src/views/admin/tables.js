@@ -8,6 +8,7 @@ import { auth } from "../api/api.js";
 
 // PAGES
 
+let tableData = {};
 export async function createTablePage() {
   async function submitTableForm(e) {
     e.preventDefault();
@@ -18,18 +19,15 @@ export async function createTablePage() {
     const tableName = formData.get("table-name");
     const tableRoom = formData.get("table-room");
 
-    console.log("here1");
+    tableData = {
+      tableType,
+      tableSize,
+      tableRotation,
+      tableName,
+      tableRoom,
+    };
 
-    render(
-      await moveTableLayout({
-        tableType,
-        tableSize,
-        tableRotation,
-        tableName,
-        tableRoom,
-      }),
-      container
-    );
+    render(await moveTableLayout(tableData), container);
   }
 
   function calculateTableSpecs(
@@ -145,6 +143,16 @@ export async function createTablePage() {
     displayElement.style.height = `${tableHTMLSpecs.height}px`;
     displayElement.style.transform = `rotate(${tableHTMLSpecs.rotation}deg)`;
     displayElement.setAttribute("class", tableHTMLSpecs.allClasses);
+  }
+
+  async function createTable(event) {
+    const res = await axios.post("/createTable", tableData);
+
+    if (res.status === 201) {
+      page(`/`);
+    } else {
+      // TODO: Show alert with error message according to status code / server error code
+    }
   }
 
   const createTableForm = () => html`
@@ -320,7 +328,11 @@ export async function createTablePage() {
     firstTouchY = Math.abs(event.target.offsetTop - event.touches[0].clientY);
   };
 
-  const onTableDragEnd = (event) => {};
+  const onTableDragEnd = (event) => {
+    // Save target coordinates
+    tableData.HTMLSpecs.left = event.target.offsetLeft;
+    tableData.HTMLSpecs.top = event.target.offsetTop;
+  };
 
   const moveTableLayout = async (tableData) => {
     // Get all tables for the selected room
@@ -331,27 +343,53 @@ export async function createTablePage() {
       tableData.tableSize,
       tableData.tableRotation
     );
-    console.log(tables);
-    console.log(tableHTMLSpecs);
+    tableData.HTMLSpecs = tableHTMLSpecs;
 
     return html`
       <style>
-        #created-table {
+        #created-table.table-rado {
+          background-color: #00ff1d;
           width: ${tableHTMLSpecs.width}px;
           height: ${tableHTMLSpecs.height}px;
           transform: rotate(${tableHTMLSpecs.rotation}deg);
           pointer-events: all;
+          position: relative;
+        }
+
+        #created-table.table-rado::before {
+          background-color: #518ed6;
+        }
+
+        .room-view {
+          width: 88%;
+          height: calc(100% - 72px);
+          overflow: hidden;
+          background-color: #518ed6;
+          display: inline-block;
         }
       </style>
-      <div
-        id="created-table"
-        draggable="true"
-        class="${tableHTMLSpecs.allClasses}"
-        @touchstart=${onTableDragStart}
-        @touchmove=${onTableDrag}
-        @touchend="${onTableDragEnd}"
-      >
-        1
+      <div class="room-view">
+        <div
+          id="created-table"
+          draggable="true"
+          class="${tableHTMLSpecs.allClasses}"
+          @touchstart=${onTableDragStart}
+          @touchmove=${onTableDrag}
+          @touchend="${onTableDragEnd}"
+        >
+          1
+        </div>
+      </div>
+
+      <style>
+        .side-buttons {
+          display: inline-flex;
+          gap: 10px;
+          flex-direction: column;
+        }
+      </style>
+      <div class="side-buttons">
+        <button type="button" @click=${createTable}>ЗАПАЗИ</button>
       </div>
     `;
     // return html` <p>${JSON.stringify(tableData)}</p> `;
