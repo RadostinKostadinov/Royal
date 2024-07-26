@@ -18,8 +18,9 @@ import axios from "axios";
 import { billPages } from "./bills";
 import { consumptionPages } from "./consumption";
 import { tablePages } from "./table/table";
+import { loadRoom } from "../../components/loadRoom.js";
 
-let lastRenderedLocation = "garden"; // remembers the last rendered location, so when the user clicks "Back", take them there
+let lastRenderedLocation = "outside"; // remembers the last rendered location, so when the user clicks "Back", take them there
 
 // FUNCTIONS
 
@@ -504,103 +505,10 @@ async function waiterDashboardPage() {
       $(clickedBtn).addClass("active");
     }
 
-    let elements;
-
     lastRenderedLocation = viewName;
-    const res = await getTables(lastRenderedLocation);
+    const room = await loadRoom(lastRenderedLocation, true);
 
-    if (res.status !== 200) {
-      console.error(res);
-      return alert("Възникна грешка!");
-    }
-
-    elements = res.data; // elements includes tables, walls, bar ..
-
-    elements = [
-      {
-        _id: 1,
-        location: "garden",
-        total: 0,
-        name: "Маса 1",
-        position_x: 10,
-        position_y: 10,
-        type: "rectangle",
-        size: "small",
-        rotation: 1,
-      },
-      {
-        _id: 2,
-        location: "garden",
-        total: 0,
-        name: "Маса 2",
-        position_x: 100,
-        position_y: 100,
-        type: "square",
-        size: "medium",
-        rotation: 1,
-      },
-      {
-        _id: 3,
-        location: "garden",
-        total: 0,
-        name: "Маса 3",
-        position_x: 200,
-        position_y: 100,
-        type: "square",
-        size: "medium",
-        rotation: 45,
-      },
-      {
-        _id: 4,
-        location: "garden",
-        total: 0,
-        name: "Маса 4",
-        position_x: 400,
-        position_y: 100,
-        type: "circle",
-        size: "medium",
-        rotation: 0,
-      },
-      {
-        _id: 5,
-        location: "garden",
-        total: 0,
-        name: "Маса 5",
-        position_x: 100,
-        position_y: 300,
-        type: "corner",
-        size: "small",
-        rotation: 0,
-      },
-      {
-        _id: 6,
-        location: "garden",
-        total: 0,
-        name: "Маса 6",
-        position_x: 300,
-        position_y: 300,
-        type: "corner",
-        size: "medium",
-        rotation: 0,
-      },
-      {
-        _id: 7,
-        location: "garden",
-        total: 0,
-        name: "Маса 7",
-        position_x: 500,
-        position_y: 300,
-        type: "corner",
-        size: "large",
-        rotation: 0,
-      },
-    ];
-
-    lastRenderedLocation = viewName;
-    render(
-      dashboardTemplate(gridTemplate(lastRenderedLocation, elements)),
-      container
-    );
+    render(dashboardTemplate(room), container);
   }
 }
 

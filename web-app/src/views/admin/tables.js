@@ -5,6 +5,7 @@ import $ from "jquery";
 import { html, render } from "lit/html.js";
 import axios from "axios";
 import { auth } from "../api/api.js";
+import { loadRoom } from "../../components/loadRoom.js";
 
 // PAGES
 
@@ -305,13 +306,6 @@ export async function createTablePage() {
     </form>
   `;
 
-  async function getTables(tableData) {
-    const res = await axios.post("/getTables", {
-      location: tableData.tableRoom,
-    });
-    return res;
-  }
-
   let firstTouchX = 0;
   let firstTouchY = 0;
 
@@ -337,16 +331,25 @@ export async function createTablePage() {
   const moveTableLayout = async (tableData) => {
     // Get all tables for the selected room
 
-    const tables = await getTables(tableData);
     const tableHTMLSpecs = calculateTableSpecs(
       tableData.tableType,
       tableData.tableSize,
       tableData.tableRotation
     );
     tableData.HTMLSpecs = tableHTMLSpecs;
+    // setTimeout(async () => {
+    //   render(
+    //     ,
+    //     document.querySelector(".room-wrapper")
+    //   );
+    // }, 100);
 
     return html`
       <style>
+        body {
+          background-color: var(--bg-menu);
+        }
+
         #created-table.table-rado {
           background-color: #00ff1d;
           width: ${tableHTMLSpecs.width}px;
@@ -357,37 +360,47 @@ export async function createTablePage() {
         }
 
         #created-table.table-rado::before {
-          background-color: #518ed6;
+          background-color: var(--bg-dark);
+        }
+
+        .room-wrapper {
+          width: calc(88.24% + 1rem);
+          height: calc(100% - 72px - 1rem);
+          overflow: hidden;
+          display: inline-block;
+          position: relative;
         }
 
         .room-view {
-          width: 88%;
-          height: calc(100% - 72px);
+          width: 100%;
+          height: 100%;
           overflow: hidden;
-          background-color: #518ed6;
-          display: inline-block;
+          position: absolute;
+          top: 0;
+          left: 0;
         }
-      </style>
-      <div class="room-view">
-        <div
-          id="created-table"
-          draggable="true"
-          class="${tableHTMLSpecs.allClasses}"
-          @touchstart=${onTableDragStart}
-          @touchmove=${onTableDrag}
-          @touchend="${onTableDragEnd}"
-        >
-          1
-        </div>
-      </div>
 
-      <style>
         .side-buttons {
           display: inline-flex;
           gap: 10px;
           flex-direction: column;
         }
       </style>
+      <div class="room-wrapper">
+        ${await loadRoom(tableData.tableRoom)}
+        <div class="room-view">
+          <div
+            id="created-table"
+            draggable="true"
+            class="${tableHTMLSpecs.allClasses}"
+            @touchstart=${onTableDragStart}
+            @touchmove=${onTableDrag}
+            @touchend="${onTableDragEnd}"
+          >
+            1
+          </div>
+        </div>
+      </div>
       <div class="side-buttons">
         <button type="button" @click=${createTable}>ЗАПАЗИ</button>
       </div>
