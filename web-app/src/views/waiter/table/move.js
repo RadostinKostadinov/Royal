@@ -5,6 +5,7 @@ import { container } from "../../../app";
 import page from "page";
 import $ from "jquery";
 import axios from "axios";
+import { loadRoom } from "../../../components/loadRoom";
 
 async function moveProducts(_id, productsToMove) {
   return await axios
@@ -208,7 +209,7 @@ export async function moveProductsPage(ctx) {
 
   async function movePrdcts(e) {
     // Get selected table _id
-    const _id = $(e.target).attr("_id");
+    const _id = $(e.target).attr("id");
     if (productsToMove.products.length === 0) return;
 
     if (bill.table === _id) return;
@@ -235,10 +236,10 @@ export async function moveProductsPage(ctx) {
     }
   }
 
-  async function renderTables(viewname) {
+  async function renderTables(room) {
     // Get tables for inside or middle
     let elements;
-    const res = await getTables(viewname);
+    const res = await getTables(room);
 
     if (res.status !== 200) {
       console.error(res);
@@ -247,10 +248,8 @@ export async function moveProductsPage(ctx) {
 
     elements = res.data; // elements includes tables, walls, bar ..
 
-    render(
-      gridTemplate(viewname, elements),
-      document.getElementById("modal-tables")
-    );
+    const roomHTML = await loadRoom(room, false, movePrdcts);
+    render(roomHTML, document.getElementById("modal-tables"));
   }
 
   const gridTemplate = (gridId, elements) => html`
@@ -292,10 +291,7 @@ export async function moveProductsPage(ctx) {
     >
       <div class="modal-dialog modal-dialog-centered modal-fullscreen">
         <div class="modal-content">
-          <div class="modal-header">
-            <h5 class="modal-title" id="tablesModalLabel">Избери маса</h5>
-          </div>
-          <div class="modal-body">
+          <div class="modal-body" style="padding: 0.5rem;">
             <div id="modal-tables"></div>
           </div>
           <div class="modal-footer">
@@ -312,6 +308,13 @@ export async function moveProductsPage(ctx) {
               class="gray-btn"
             >
               Градина
+            </button>
+            <button
+              @click=${() => renderTables("outside")}
+              type="button"
+              class="gray-btn"
+            >
+              Навън
             </button>
             <button type="button" class="gray-btn" data-bs-dismiss="modal">
               Затвори
@@ -355,7 +358,7 @@ export async function moveProductsPage(ctx) {
   `;
 
   // Load default table in modal
-  renderTables("garden");
+  renderTables("outside");
 
   render(template(), container);
   rerender(bill, productsToMove);

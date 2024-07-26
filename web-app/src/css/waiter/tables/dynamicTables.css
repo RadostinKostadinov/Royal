@@ -6,6 +6,19 @@
   overflow: hidden;
 }
 
+#waiterDashboard .table-rado.taken,
+.modal .table-rado.taken {
+  color: white;
+  background-color: var(--table-taken);
+}
+
+#waiterDashboard .table-rado,
+.modal .table-rado {
+  background-color: var(--table-free);
+  opacity: 1;
+  text-align: center;
+}
+
 .tables-container {
   position: relative;
   background-color: #9ed2ff;
