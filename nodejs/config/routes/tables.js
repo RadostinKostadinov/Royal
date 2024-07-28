@@ -67,4 +67,18 @@ export function tablesRoutes(app, auth) {
       res.status(500).send(err);
     }
   });
+
+  app.patch("/editTable/:tableId", auth, async (req, res) => {
+    try {
+      const { tableId } = req.params;
+      const updates = req.body;
+      const table = await Table.findByIdAndUpdate(tableId, updates, {
+        new: true,
+      });
+      res.status(200).json(table);
+    } catch (err) {
+      console.log(err);
+      res.status(500).send(err);
+    }
+  });
 }

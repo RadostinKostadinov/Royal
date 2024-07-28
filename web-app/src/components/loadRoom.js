@@ -5,8 +5,9 @@ import "../css/waiter/tables/dynamicTables.css";
 
 export async function loadRoom(
   room = "garden",
-  openTables = false,
-  moveProducts = false
+  openTables = null,
+  moveProducts = null,
+  editTable = null
 ) {
   // Fetch rooms from the database
   const { data: tables } = await getTables(room);
@@ -30,14 +31,21 @@ export async function loadRoom(
                     left: ${table.HTMLSpecs.left}px;
                     top: ${table.HTMLSpecs.top}px;"
           @click=${(e) => {
-            console.log(moveProducts ? "yes" : "no");
             if (openTables) {
               page(`/waiter/table/${table._id}`);
             } else if (moveProducts) {
-              console.log("inside if");
               moveProducts(e);
             }
           }}
+          @touchstart=${(e) => {
+            editTable && editTable.onTableDragStart(e);
+          }}
+          @touchmove=${(e) => {
+            editTable && editTable.onTableDrag(e);
+          }}
+          @touchend="${async (e) => {
+            editTable && (await editTable.onTableDragEnd(e, table));
+          }}"
         >
           <span class="name pe-none">${table.name}</span><br />
           <span class="total pe-none"
@@ -55,9 +63,3 @@ async function getTables(room) {
   });
   return res;
 }
-
-/*
-
-
-
-              */

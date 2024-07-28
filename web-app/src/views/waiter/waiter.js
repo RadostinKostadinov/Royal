@@ -89,14 +89,15 @@ export async function addProductsToHistory(addedProducts, selectedBillId) {
     });
 }
 
-export async function getTables(location) {
-  return await axios
-    .post("/getTables", {
-      location,
-    })
-    .catch((err) => {
-      return err.response;
+export async function getTables(room) {
+  try {
+    const res = await axios.post("/getTables", {
+      location: room,
     });
+    return res;
+  } catch (err) {
+    return err.response;
+  }
 }
 
 async function getTableTotalById(_id) {
@@ -357,6 +358,13 @@ async function waiterDashboardPage() {
               @click=${(clickedBtn) => renderTablesView(clickedBtn, "garden")}
             >
               Градина
+            </button>
+            <button
+              class=${lastRenderedLocation === "outside" ? "active" : ""}
+              id="middleTablesBtn"
+              @click=${(clickedBtn) => renderTablesView(clickedBtn, "outside")}
+            >
+              Навън
             </button>
           </div>
           <div class="d-flex flex-column text-center gap-3 w-100">

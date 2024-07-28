@@ -4,6 +4,7 @@ import { employeePages } from "./employee";
 import { historyPages } from "./history";
 import { expensePages } from "./expense";
 import { tablesPages } from "./tables";
+import { tablesEditPage } from "./tablesEdit";
 import { html, render } from "lit-html";
 import axios from "axios";
 import page from "page";
@@ -31,6 +32,7 @@ export function adminPages() {
   informationPages();
   expensePages();
   tablesPages();
+  tablesEditPage();
   //TODO FIX ALL BACKEND LINKS TO IMITATE THE FRONTEND (ex: from /getAllUsers, to /users/ with a GET request, etc...)
 }
 
@@ -152,8 +154,16 @@ async function showAdminDashboard() {
           <a href="/admin/employee/edit" class="btn btn-secondary fs-4"
             >Редактирай</a
           >
-          <a href="/admin/employee/tables" class="btn btn-secondary fs-4"
-            >Маси</a
+        </div>
+      </div>
+      <div class="text-center mt-4">
+        <h1>Маси</h1>
+        <div
+          class="d-inline-flex flex-row flex-wrap gap-3 justify-content-center"
+        >
+          <a href="/admin/tables/create" class="btn btn-success fs-4">Създай</a>
+          <a href="/admin/tables/edit" class="btn btn-secondary fs-4"
+            >Редактирай</a
           >
         </div>
       </div>

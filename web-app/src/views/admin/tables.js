@@ -352,6 +352,7 @@ export async function createTablePage() {
 
         #created-table.table-rado {
           background-color: #00ff1d;
+          z-index: 9999;
           width: ${tableHTMLSpecs.width}px;
           height: ${tableHTMLSpecs.height}px;
           transform: rotate(${tableHTMLSpecs.rotation}deg);
@@ -431,5 +432,5 @@ export async function createTablePage() {
 }
 
 export function tablesPages() {
-  page("/admin/employee/tables", auth, createTablePage);
+  page("/admin/tables/create", auth, createTablePage);
 }
